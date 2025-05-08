@@ -1,0 +1,19 @@
+[project]
+name = "mass_budget"
+version = "0.0.1"
+description = "Mass budget calculations for a reusable second stage liquid hydrogen tanker"
+authors = [
+    { name = "Jiri Kovar", email = "j.kovar@student.tudelft.nl" },
+]
+license = "MIT"
+requires-python = ">=3.13"
+readme = "README.md"
+dependencies = [
+    "marimo>=0.13.6",
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.5",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
