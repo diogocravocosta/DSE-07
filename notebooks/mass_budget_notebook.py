@@ -4,17 +4,8 @@ __generated_with = "0.13.6"
 app = marimo.App(width="medium")
 
 
-@app.cell
-def _(
-    cryogenic,
-    glom1,
-    glom2,
-    latitude,
-    launch_site,
-    mo,
-    payload_mass,
-    propellant,
-):
+@app.cell(hide_code=True)
+def _(cryogenic, glom1, glom2, launch_site, mo, payload_mass, propellant):
     mo.md(
         rf"""
     # Mass Budget Tool
@@ -85,54 +76,32 @@ def _():
         """
         if payload_mass_kg < 0:
             raise ValueError("Payload mass cannot be negative.")
-    
+
         payload_mass_ton = payload_mass_kg / 1000.0
         glom_ton = 25.138 * payload_mass_ton + 169.358
         return glom_ton*1000
     return glom1, glom2
 
 
-@app.cell
-def _(payload_mass_kg):
-    # The below are functions used to calculate ΔV
+@app.function
+def latitude(launch_site: str) -> float:
+    """
+    Returns the latitude of the launch site in degrees.
 
-    def DeltaV(orbit_height: float, orbit_inclination: float) -> float:
-        """
-        Calculates the ΔV for a launch vehicle with a payload mass
-    
-        Args:
-            payload_mass_kg: The payload mass in kilograms.
+    Args:
+        launch_site: The name of the launch site.
 
-        Returns:
-            The calculated delta-v in m/s.
-        """
-        if payload_mass_kg < 0:
-            raise ValueError("Payload mass cannot be negative.")
-
-        payload_mass_ton = payload_mass_kg / 1000.0
-        delta_v_m_s = 4.5 * payload_mass_ton + 2.5
-        return delta_v_m_s
-
-
-    def latitude(launch_site: str) -> float:
-        """
-        Returns the latitude of the launch site in degrees.
-    
-        Args:
-            launch_site: The name of the launch site.
-
-        Returns:
-            The latitude of the launch site in degrees.
-        """
-        if launch_site == "Kourou":
-            return 5.236
-        elif launch_site == "Vandenberg":
-            return 34.736
-        elif launch_site == "Cape Canaveral":
-            return 28.392
-        else:
-            raise ValueError("Invalid launch site.")
-    return (latitude,)
+    Returns:
+        The latitude of the launch site in degrees.
+    """
+    if launch_site == "Kourou":
+        return 5.236
+    elif launch_site == "Vandenberg":
+        return 34.736
+    elif launch_site == "Cape Canaveral":
+        return 28.392
+    else:
+        raise ValueError("Invalid launch site.")
 
 
 @app.cell(hide_code=True)
@@ -151,7 +120,7 @@ def _(mo):
 
     Steering loss equation (from Design of Rockets and Space Launch Vehicles, Chapter 6):
 
-    $$\Delta V_s = TBD$$
+    $$\Delta V_s = \int_{t_0}^{t_f} \frac{2T(h(t)) \sin^2 (\frac{\alpha + \delta}{2})}{m} dt$$
 
     Tsiolkovski rocket equation:
 
