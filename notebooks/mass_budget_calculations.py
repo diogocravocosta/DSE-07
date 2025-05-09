@@ -18,31 +18,32 @@ def _():
     return
 
 
-@app.cell
-def _():
-    # Zandbergen Methods
+@app.function
+# Zandbergen Methods
 
-    #assuming new glenn with barge landing
-
+#assuming new glenn with barge landing
+def zandbergen(option,S, mp, n_s,eng_bool, f_v, n_e): #input which option you want, faring surface, mass of propellant, number of stages, take into account engines True/False, optional if engine true: vaccuum thrust, number of engines
     #initial inputs of values
-
+    
     options = ['no', 'Steel', 'Composite'] #choose no for no particular material, Steel or composite if you know a material
-
-    engine = True # if true, use more granular method
-
-    S_fairing = 1 #m2 S faring in range 15-250 m2
-    m_prop = 930*1000 #kg, the mass of propellant, may take into account residual propellant (not being used)
-    n_stages = 2 #[-] the number of stages in your vehicle
-    f_vac = 1 #N the vaccuum thrust for each engine
-
-    choice = options[0]
-
+    choice = options[option]
+    
+    engine = eng_bool # if true, use more granular method
+    
+    S_fairing = S #m2 S faring in range 15-250 m2
+    m_prop = mp #kg, the mass of propellant, may take into account residual propellant (not being used)
+    n_stages = n_s #[-] the number of stages in your vehicle
+    f_vac = f_v #N the vaccuum thrust for each engine
+    n_engine = n_e #[-] number of engines, if you want to calculate using the granular method
+    
+    
+    
     #--------------------------------------------------------------------------------------
     # Results Calculation Zone
     #--------------------------------------------------------------------------------------
-
+    
     m_fairing = 10.3*S_fairing #kg/m2, the mass per meter squared of surface area of the faring
-
+    
     if not engine:
         if choice == 'no':
             m_dry = (0.1011*m_prop/1000+1.201) *1000 #kg | valid for 8-985 tons, r2 = 0.9914, RSE = 26% | cryogenic stage dry mass N_data = 29
@@ -52,25 +53,46 @@ def _():
             m_dry == 0.1173*m_prop #kg | n_data = 11, r2 = 0.9833, RSE = 24.1% | 
     elif engine:
         c_mass = (0.0872*m_prop/1000 + 1.013) * 1000 #kg | n_data = 11, r2 = 0.9833, RSE = 24.1% | construction mass, dry mass minus total engine mass
+        m_eng = 0.0016*f_vac +36.1
+        m_dry = c_mass+m_eng
     
-
     VEB = 0.345*(m_dry)**0.703 #kg | n_data = 11, r2 = 0.9381, RSE = 72% | vehicle equipment bay
 
 
+@app.function
+# Maryland 'murica Methods (yee haw)
+
+#assuming new glenn with barge landing
+
+#mass of lox, mass of lh2, surface area of lox and lh2 tanks, mass of gas (if gas tank used), surface area of fairing, engine thrust, area expansion ratio, estimation of total rocket mass
 
 
+def maryland(m_lox, m_lh2, S_lox, S_lh2, m_gas, S_fairing, f_eng, exp_ratio, m_tot):
+    m_lox_tank = 0.0152*m_lox+318 #kg
+    m_lox_insulation = 1.123*S_lox #kg
+    m_lh2_tank = 0.0694*m_lh2+363 #kg
+    m_lh2_insulation = 2.88*S_lh2 #kg
+    if m_gas:
+        m_gas_tank = 2 #kg
+    m_eng = 7.81*10**-4 * f_eng + 3.37 *10**-5 * f_eng * exp_ratio**0.5 + 59 #kg
+    m_thrust_structure = 2.55*10**-4 * f_eng #kg
+    m_fairing = 13.3 * S_fairing
+    m_avionics = 10*(m_tot)**0.361
+    m_wiring = 1.058 * m_tot **(1/8)
 
-    return
 
+app._unparsable_cell(
+    r"""
+    # Apel Methods
 
-@app.cell
-def _():
+    #assuming new glenn with barge landing
 
+    #
 
-
-
-
-    return
+    def model_d():
+    """,
+    name="_"
+)
 
 
 if __name__ == "__main__":
