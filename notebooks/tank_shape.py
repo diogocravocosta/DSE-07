@@ -167,8 +167,8 @@ def _(np, propellant_density, propellant_mass, tank_diameter):
     tank_length = cylinder_length + tank_diameter.value
 
     # feasibility check
-    if cylinder_length < 0:
-        raise ValueError("Negative tank length. Restart kernel.")
+    # if cylinder_length < 0:
+    #     raise ValueError("Negative tank length. Restart kernel.")
     return cylinder_length, propellant_volume, tank_length
 
 
@@ -233,12 +233,15 @@ def _(mo):
 
 
 @app.cell
-def _(io, mo, plt):
+def _(io, mo):
     def change_plot_style():
+        """ this breaks the web version
         plt.rcParams.update({
             "text.usetex": True,
             "font.family": "Computer Modern Roman"
         })
+        """
+        pass
 
     def convert_fig_to_svg(fig):
         # Save the plot to an in-memory SVG buffer
