@@ -94,5 +94,25 @@ def _(m_recovery, np):
     return
 
 
+@app.cell
+def _(ms):
+    #Pietrobon methods
+
+    #this method seems to be redirected to upper stages, nice for us!
+    #its mass without engines
+
+    def pietrobon(m_prop, common_bulkhead, al_li, safe):# propellant mass in the stage, common bulkhead true or false, using AlLi 2195 true otherwise false and its Al 2219, also safe true if you want to add the 15% margin he advises
+        if not common_bulkhead:
+            m_s = (0.19*m_prop/1000**0.848)*1000#kg, the original relation was wih tonnes, but since we are using kg everywhere here I decided not to complicate it
+        if common_bulkhead:
+            m_s = (0.1583*m_prop/1000**0.848)*1000 #kg
+        #he assumes an average reduction in weight of 26% if we use AlLi 2195 compared to Al 2219 (used before)
+        if al_li:
+            ms = ms*(1-0.26)
+        if safe:
+            ms = ms*1.15
+    return
+
+
 if __name__ == "__main__":
     app.run()
