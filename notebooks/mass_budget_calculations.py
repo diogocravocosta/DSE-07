@@ -3,22 +3,22 @@
 # auto_instantiate = false
 # ///
 
-import marimo
+# import marimo
 
-__generated_with = "0.13.6"
-app = marimo.App(width="medium")
-
-
-@app.cell
-def _():
-    import marimo as mo
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
-    return (np,)
+# __generated_with = "0.13.6"
+# app = marimo.App(width="medium")
 
 
-@app.function
+# @app.cell
+# def _():
+#     import marimo as mo
+#     import pandas as pd
+#     import numpy as np
+#     import matplotlib.pyplot as plt
+#     return (np,)
+
+
+#@app.function
 # Zandbergen Methods
 
 def zandbergen(option,S, mp, n_s,eng_bool, f_v, n_e): #input which option you want, faring surface, mass of propellant, number of stages, take into account engines True/False, optional if engine true: vaccuum thrust, number of engines
@@ -58,7 +58,7 @@ def zandbergen(option,S, mp, n_s,eng_bool, f_v, n_e): #input which option you wa
     VEB = 0.345*(m_dry)**0.703 #kg | n_data = 11, r2 = 0.9381, RSE = 72% | vehicle equipment bay
 
 
-@app.function
+#@app.function
 # Maryland 'murica Methods (yee haw)
 
 #mass of lox, mass of lh2, surface area of lox and lh2 tanks, mass of gas (if gas tank used), surface area of fairing, engine thrust, area expansion ratio, estimation of total rocket mass
@@ -78,41 +78,41 @@ def maryland(m_lox, m_lh2, S_lox, S_lh2, m_gas, S_fairing, f_eng, exp_ratio, m_t
     m_wiring = 1.058 * m_tot **(1/8)
 
 
-@app.cell
-def _(m_recovery, np):
+##@app.cell
+#def _(m_recovery, np):
     # Apel Methods
 
 
-    def model_d(delta_v, isp, m_prop, rho_prop, v_tank, f_vac, m_0, m_recovered, m_landing, m_prop_usable): # delta v, isp, propellant mass, propellant mass density, tank volume, vaccuum thrust, initial vehicle mass, vehicle mass recovered, vehicle mass at landing, usable propellant mass
-        m_struct = 1000*(0.1*((m_prop/1000)/(6*rho_prop))**0.95 + 0.02*m_0) #kg
-        m_tank = (2.903+46.25/(np.log(v_tank)))*v_tank #kg
-        m_eng = 8.09*10**-3 * f_vac**0.9 #kg zandbergen says this relation is sus
-        m_avionics = 1000*(5.938-0.00404*(m_struct+m_eng))*(0.01*(m_struct+m_eng))
-        m_parachute = 0.1*m_recovery
-        m_landing_gear = 0.03* m_landing
-        m_prop_residual = 0.01*m_prop_usable
+def model_d(delta_v, isp, m_prop, rho_prop, v_tank, f_vac, m_0, m_recovered, m_landing, m_prop_usable): # delta v, isp, propellant mass, propellant mass density, tank volume, vaccuum thrust, initial vehicle mass, vehicle mass recovered, vehicle mass at landing, usable propellant mass
+    m_struct = 1000*(0.1*((m_prop/1000)/(6*rho_prop))**0.95 + 0.02*m_0) #kg
+    m_tank = (2.903+46.25/(np.log(v_tank)))*v_tank #kg
+    m_eng = 8.09*10**-3 * f_vac**0.9 #kg zandbergen says this relation is sus
+    m_avionics = 1000*(5.938-0.00404*(m_struct+m_eng))*(0.01*(m_struct+m_eng))
+    m_parachute = 0.1*m_recovery
+    m_landing_gear = 0.03* m_landing
+    m_prop_residual = 0.01*m_prop_usable
     return
 
 
-@app.cell
-def _(ms):
+#@app.cell
+#def _(ms):
     #Pietrobon methods
 
     #this method seems to be redirected to upper stages, nice for us!
     #its mass without engines
 
-    def pietrobon(m_prop, common_bulkhead, al_li, safe):# propellant mass in the stage, common bulkhead true or false, using AlLi 2195 true otherwise false and its Al 2219, also safe true if you want to add the 15% margin he advises
-        if not common_bulkhead:
-            m_s = (0.19*m_prop/1000**0.848)*1000#kg, the original relation was wih tonnes, but since we are using kg everywhere here I decided not to complicate it
-        if common_bulkhead:
-            m_s = (0.1583*m_prop/1000**0.848)*1000 #kg
-        #he assumes an average reduction in weight of 26% if we use AlLi 2195 compared to Al 2219 (used before)
-        if al_li:
-            ms = ms*(1-0.26)
-        if safe:
-            ms = ms*1.15
-    return
+def pietrobon(m_prop, common_bulkhead, al_li, safe):# propellant mass in the stage, common bulkhead true or false, using AlLi 2195 true otherwise false and its Al 2219, also safe true if you want to add the 15% margin he advises
+    if not common_bulkhead:
+        m_s = (0.19*m_prop/1000**0.848)*1000#kg, the original relation was wih tonnes, but since we are using kg everywhere here I decided not to complicate it
+    if common_bulkhead:
+        m_s = (0.1583*m_prop/1000**0.848)*1000 #kg
+    #he assumes an average reduction in weight of 26% if we use AlLi 2195 compared to Al 2219 (used before)
+    if al_li:
+        ms = ms*(1-0.26)
+    if safe:
+        ms = ms*1.15
+return
 
 
-if __name__ == "__main__":
-    app.run()
+#if __name__ == "__main__":
+#    app.run()
