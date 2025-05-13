@@ -9,9 +9,13 @@ license = "MIT"
 requires-python = ">=3.13"
 readme = "README.md"
 dependencies = [
+    "coolprop>=6.8.0",
+    "cython>=3.1.0",
     "marimo>=0.13.6",
     "matplotlib>=3.10.1",
     "numpy>=2.2.5",
+    "pandas>=2.2.3",
+    "tqdm>=4.67.1",
 ]
 
 [build-system]
