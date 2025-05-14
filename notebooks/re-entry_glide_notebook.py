@@ -88,7 +88,6 @@ def _(
         plt):
     # the tank is plotted as two vertical lines and two semicircles.
     fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-    ax.plot(V_Vc_ratio, height, label=r"$V/V_c$", color="blue")
 
     ax.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
     ax.set_xlim(0.001, 1)
