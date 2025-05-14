@@ -278,6 +278,20 @@ def _(np):
         a_max_no_weight = g * lift_drag_ratio ** (-1)
         return a_weight, a_no_weight, a_max_weight, a_max_no_weight
 
+    def get_stagnation_heatflux(nose_radius,
+                                lift_parameter,
+                                Vc,
+                                V_Vc_ratio,
+                                n,
+                                m,
+                                rho):
+        cstar = 1.1097e8
+        c1 = cstar * (1 / np.sqrt(rho)) * (1 / Vc ** 3)
+        c2 = c1 * (1 / nose_radius ** n) * (2 * lift_parameter / Vc ** 2) ** (1 - n) * Vc ** m
+
+        qc = c2 * (((1 / V_Vc_ratio ** 2) - 1) ** (1 - n)) * V_Vc_ratio ** m
+        return qc
+
     return (get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time, get_max_decelaration)
 
 
