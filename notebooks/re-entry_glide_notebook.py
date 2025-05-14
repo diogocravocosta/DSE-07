@@ -84,12 +84,14 @@ def _(
         height,
         flight_range_ratio,
         entry_circular_ratio,
+        a_weight_amax_ratio,
+        a_no_weight_amax_ratio,
         change_plot_style,
         convert_fig_to_svg,
         plot_svg,
         plt):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 15))
 
     ax1.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
     ax1.set_xlim(0.001, 1)
@@ -104,8 +106,17 @@ def _(
     ax2.set_ylim(0, 4)
     ax2.set_xlabel(r"$\frac{V_E}{V_c}$" + "[-]")
     ax2.set_ylabel(r"$\frac{R}{R_E}$" + "[-]")
-    ax2.set_title("Velocity Ratio during gliding re-entry")
+    ax2.set_title("Range flight ratio during gliding re-entry")
     ax2.grid(True)
+
+    ax3.plot(V_Vc_ratio, a_weight_amax_ratio, label=r"$a/a_max$", color="blue")
+    ax3.plot(V_Vc_ratio, a_no_weight_amax_ratio, label=r"$a/a_max$", color="blue", linestyle="dotted")
+    ax3.set_xlim(0.001, 1)
+    ax3.set_ylim(0.001, 1)
+    ax3.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
+    ax3.set_ylabel(r"$\frac{a}{a_max}$" + "[-]")
+    ax3.set_title("Acceleration ratio during gliding re-entry")
+    ax3.grid(True)
 
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
@@ -119,7 +130,7 @@ def _(
 
 
 @app.cell
-def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time,
+def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time, get_max_decelaration,
       lift_parameter, np, scale_height, altitude, lift_drag_ratio, entry_circular_ratio):
     beta = 1 / scale_height.value
 
@@ -141,9 +152,14 @@ def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_ti
 
     flight_range_ratio = get_flight_range(lift_drag_ratio.value, entry_circular_ratio)
 
-    flight_duration = get_flight_time(Vc, lift_drag_ratio, entry_circular_ratio, g)  # TODO: add to table
+    flight_duration = get_flight_time(Vc, lift_drag_ratio.value, entry_circular_ratio, g)  # TODO: add to table
 
-    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio, flight_duration
+    decelaration_weight, decelaration_no_weight, max_deceleration_weight, max_deceleration_no_weight = get_max_decelaration(
+        g, lift_drag_ratio.value, beta, Re, V_Vc_ratio)
+    a_weight_amax_ratio = decelaration_weight / max_deceleration_weight
+    a_no_weight_amax_ratio = decelaration_no_weight / max_deceleration_no_weight
+
+    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio, flight_duration, a_weight_amax_ratio, a_no_weight_amax_ratio
 
 
 @app.cell
@@ -251,7 +267,18 @@ def _(np):
 
         return t_flight
 
-    return (get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time)
+    def get_max_decelaration(g,
+                             lift_drag_ratio,
+                             beta,
+                             Re,
+                             v_vc_ratio):
+        a_weight = g * lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2) - (2 / (beta * Re * v_vc_ratio ** 2)))
+        a_no_weight = g * lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2))
+        a_max_weight = g * lift_drag_ratio ** (-1) * (1 - 2 * np.sqrt(2 / (beta * Re)))
+        a_max_no_weight = g * lift_drag_ratio ** (-1)
+        return a_weight, a_no_weight, a_max_weight, a_max_no_weight
+
+    return (get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time, get_max_decelaration)
 
 
 @app.cell
