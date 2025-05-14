@@ -48,6 +48,10 @@ def _(mo):
 
     ### Deceleration
 
+    Deceleration as a function of velocity is given by:
+
+    $$ \bar{a} = -\frac{\text{d} V}{\text{d} t} = \beta \sin \gamma_E V_E^2 \left( \frac{V}{V_E} \right) ^2 \ln \frac{V}{V_E} $$
+
     Maximum deceleration is given by:
 
     $$ \bar{a}_{\text{max}} = - \left( \frac{dV}{dt} \right)_{\text{max}} = - \frac{\beta \sin \gamma_E}{2e} V_E^2 $$
@@ -65,7 +69,7 @@ def _(mo):
 
 @app.cell
 def _(
-    ballistic_coefficient,
+    ballistic_parameter,
     entry_flight_path_angle,
     entry_speed,
     mo,
@@ -77,7 +81,7 @@ def _(
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Ballistic Coefficient | {ballistic_coefficient} | {ballistic_coefficient.value} N/m^2 |
+    | Ballistic Parameter | {ballistic_parameter} | {ballistic_parameter.value} N/m^2 |
     | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
     | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} ° |
     | Scale Height | {scale_height} | {scale_height.value} m |
@@ -91,20 +95,30 @@ def _(
     altitude,
     change_plot_style,
     convert_fig_to_svg,
+    deceleration,
     normalised_velocity,
     plot_svg,
     plt,
 ):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, ax = plt.subplots()
-    ax.plot(normalised_velocity, altitude/1000, label="V/V_e", color="blue")
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
 
-    ax.set_xlim(0.001, 1)
-    ax.set_ylim(0, 80)
-    ax.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
-    ax.set_ylabel("h [km]")
-    ax.set_title("Normalized velocity during ballistic re-entry")
-    ax.grid(True)
+    ax1.plot(normalised_velocity, altitude/1000, label="V/V_e", color="blue")
+    ax1.set_xlim(0.001, 1)
+    ax1.set_ylim(0, 80)
+    ax1.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    ax1.set_ylabel("h [km]")
+    ax1.set_title("Normalized velocity during ballistic re-entry")
+    ax1.grid(True)
+
+    ax2.plot(normalised_velocity, deceleration, label="a", color="red")
+    ax2.set_xlim(0.001, 1)
+    ax2.set_ylim(0)
+    ax2.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    ax2.set_ylabel("a [m/s^2]")
+    ax2.set_title("Deceleration during ballistic re-entry")
+    ax2.grid(True)
+
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
     # Change plotting style
@@ -118,9 +132,10 @@ def _(
 
 @app.cell
 def _(
-    ballistic_coefficient,
+    ballistic_parameter,
     entry_flight_path_angle,
     entry_speed,
+    get_ballistic_deceleration,
     get_ballistic_normalised_velocity,
     np,
     scale_height,
@@ -129,23 +144,30 @@ def _(
 
     normalised_velocity = get_ballistic_normalised_velocity(
         altitude,
-        ballistic_coefficient=ballistic_coefficient.value,
+        ballistic_parameter=ballistic_parameter.value,
         entry_speed=entry_speed.value,
         entry_flight_path_angle=entry_flight_path_angle.value,
         scale_height=scale_height.value,
     )
-    return altitude, normalised_velocity
+
+    deceleration = get_ballistic_deceleration(
+        normalised_velocity,
+        entry_speed=entry_speed.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+    )
+    return altitude, deceleration, normalised_velocity
 
 
 @app.cell
 def _(mo):
     # sliders
-    ballistic_coefficient = mo.ui.slider(0, 10000, 100, value=2000)
+    ballistic_parameter = mo.ui.slider(0, 10000, 100, value=2000)
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
     entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
     scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
     return (
-        ballistic_coefficient,
+        ballistic_parameter,
         entry_flight_path_angle,
         entry_speed,
         scale_height,
@@ -156,7 +178,7 @@ def _(mo):
 def _(np):
     def get_ballistic_normalised_velocity(
         altitude: np.ndarray,
-        ballistic_coefficient: float,
+        ballistic_parameter: float,
         entry_speed: float,
         entry_flight_path_angle: float,
         scale_height: float,
@@ -166,8 +188,8 @@ def _(np):
 
         Parameters:
         ----------
-        ballistic_coefficient : float
-            Ballistic coefficient of the spacecraft.
+        ballistic_parameter : float
+            Ballistic parameter of the spacecraft.
         entry_speed : float
             Entry speed of the spacecraft.
         entry_flight_path_angle : float
@@ -189,11 +211,48 @@ def _(np):
 
         # Calculate normalised velocity
         normalised_velocity = np.exp(
-            (0.5 * g * rho_0 * np.exp(-beta*altitude)) / (ballistic_coefficient * beta * np.sin(np.radians(entry_flight_path_angle)))
+            (0.5 * g * rho_0 * np.exp(-beta*altitude)) / (ballistic_parameter * beta * np.sin(np.radians(entry_flight_path_angle)))
         )
 
         return normalised_velocity
-    return (get_ballistic_normalised_velocity,)
+
+    def get_ballistic_deceleration(
+        normalised_velocity: np.ndarray,
+        entry_speed: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+    ) -> float:
+        """
+        Calculate the deceleration for a ballistic entry.
+
+        Parameters:
+        ----------
+        normalised_velocity : np.ndarray
+            Normalised velocity of the spacecraft.
+        entry_speed : float
+            Entry speed of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+
+        Returns:
+        -------
+        float
+            Deceleration.
+        """
+        # Constants
+        g = 9.81  # m/s^2
+        rho_0 = 1.225  # kg/m^3
+
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate deceleration
+        deceleration = beta * np.sin(np.radians(entry_flight_path_angle)) * (entry_speed**2) * (normalised_velocity**2) * np.log(normalised_velocity)
+
+        return deceleration
+    return get_ballistic_deceleration, get_ballistic_normalised_velocity
 
 
 @app.cell
