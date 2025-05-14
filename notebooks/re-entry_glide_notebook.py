@@ -119,7 +119,7 @@ def _(
 
 
 @app.cell
-def _(get_velocity_ratio, get_flight_path_angle, get_flight_range,
+def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time,
       lift_parameter, np, scale_height, altitude, lift_drag_ratio, entry_circular_ratio):
     beta = 1 / scale_height.value
 
@@ -137,11 +137,13 @@ def _(get_velocity_ratio, get_flight_path_angle, get_flight_range,
     V_Vc_ratio, height = get_velocity_ratio(lift_parameter.value, beta, altitude.value, Vc, rho)
 
     # equilibrium flight path
-    flight_path_eq = get_flight_path_angle(V_Vc_ratio, beta, lift_drag_ratio.value)
+    flight_path_eq = get_flight_path_angle(V_Vc_ratio, beta, lift_drag_ratio.value)  # TODO: add to table
 
     flight_range_ratio = get_flight_range(lift_drag_ratio.value, entry_circular_ratio)
 
-    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio
+    flight_duration = get_flight_time(Vc, lift_drag_ratio, entry_circular_ratio, g)  # TODO: add to table
+
+    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio, flight_duration
 
 
 @app.cell
@@ -240,7 +242,16 @@ def _(np):
 
         return Rf_Re
 
-    return (get_velocity_ratio, get_flight_path_angle, get_flight_range)
+    def get_flight_time(Vc,
+                        lift_drag_ratio,
+                        entry_circular_ratio,
+                        g):
+        t_flight = ((0.5 * Vc * lift_drag_ratio) / (2 * g)) * np.log(
+            (1 + entry_circular_ratio) / (1 - entry_circular_ratio))
+
+        return t_flight
+
+    return (get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time)
 
 
 @app.cell
