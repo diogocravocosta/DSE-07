@@ -67,6 +67,12 @@ def _(mo):
     - laminar boundary layer, $n=0.2$
     - turbulent boundary layer, $n=0.5$
 
+    The maximum heat flux can be very roughly estimated using the following relationship:
+
+    $$ q_{c,max} = c_1 V_E^3 \sqrt{-\frac{1}{3e} \frac{1}{R_N} \frac{K \beta}{g} \sin \gamma_E} $$
+
+    where $c_1 = c^* \frac{1}{R_N^n} \left( \frac{\rho}{\rho_0} \right)^{1-n} \left( \frac{V}{V_c} \right)^m$ with $c^* = 1.1097\cdot 10^8 \sqrt{m}$ (constant), $R_N$ as the nose radius, $V_c$ as the critical velocity (assumed equivalent to the entry velocity $V_E$, and $m = 3$ as a costant specific to Earth.
+
     ### Ballistic parameter
 
     There are two different definitions of the ballistic parameter:
@@ -84,7 +90,9 @@ def _(
     boundary_layer,
     entry_flight_path_angle,
     entry_speed,
+    maximum_ballistic_heat_flux,
     mo,
+    nose_radius,
     scale_height,
 ):
     mo.md(
@@ -98,6 +106,8 @@ def _(
     | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} ° |
     | Scale Height | {scale_height} | {scale_height.value} m |
     | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
+    | Nose radius | {nose_radius} | {nose_radius.value} m |
+    | Maximum heat flux | - | {round(maximum_ballistic_heat_flux*1e-3, 1)} kW/m^2 |
     """
     )
     return
@@ -106,20 +116,16 @@ def _(
 @app.cell
 def _(
     altitude,
-    boundary_layer,
     change_plot_style,
     convert_fig_to_svg,
     deceleration,
-    entry_flight_path_angle,
-    entry_speed,
-    get_ballistic_normalised_heat_flux,
+    normalised_heat_flux,
     normalised_velocity,
     plot_svg,
     plt,
-    scale_height,
 ):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
     ax1.plot(normalised_velocity, altitude/1000, label=r"$V/V_E$", color="blue")
     ax1.set_xlim(0.001, 1)
@@ -137,7 +143,7 @@ def _(
     ax2.set_title("Deceleration during ballistic re-entry")
     ax2.grid(True)
 
-    ax3.plot(normalised_velocity, get_ballistic_normalised_heat_flux(normalised_velocity, entry_speed.value, entry_flight_path_angle.value, scale_height.value, boundary_layer.value), label="$q_c/q_{c,\text{max}}$", color="green")
+    ax3.plot(normalised_velocity, normalised_heat_flux, label="$q_c/q_{c,\text{max}}$", color="green")
     ax3.set_xlim(0.001, 1)
     ax3.set_ylim(0)
     ax3.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
@@ -159,10 +165,14 @@ def _(
 @app.cell
 def _(
     ballistic_parameter,
+    boundary_layer,
     entry_flight_path_angle,
     entry_speed,
     get_ballistic_deceleration,
+    get_ballistic_normalised_heat_flux,
     get_ballistic_normalised_velocity,
+    get_maximum_ballistic_heat_flux,
+    nose_radius,
     np,
     scale_height,
 ):
@@ -183,8 +193,35 @@ def _(
         scale_height=scale_height.value,
     )
 
+    normalised_heat_flux = get_ballistic_normalised_heat_flux(
+        normalised_velocity,
+        entry_speed=entry_speed.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+        n=boundary_layer.value,
+    )
 
-    return altitude, deceleration, normalised_velocity
+    # constants
+    cstar = 1.1097e8
+    rho_0 = 1.225
+
+    # maximum heat flux calculations
+    c1 = cstar * (1 / np.sqrt(rho_0)) * (1 / entry_speed.value**3)
+    maximum_ballistic_heat_flux = get_maximum_ballistic_heat_flux(
+        ballistic_parameter=ballistic_parameter.value,
+        entry_speed=entry_speed.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+        nose_radius=nose_radius.value,
+        c1=c1
+    )
+    return (
+        altitude,
+        deceleration,
+        maximum_ballistic_heat_flux,
+        normalised_heat_flux,
+        normalised_velocity,
+    )
 
 
 @app.cell
@@ -194,6 +231,7 @@ def _(mo):
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
     entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
     scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
+    nose_radius = mo.ui.slider(3, 10, 0.1, value=7)
 
     # dropdowns
     boundary_layer = mo.ui.dropdown({
@@ -205,6 +243,7 @@ def _(mo):
         boundary_layer,
         entry_flight_path_angle,
         entry_speed,
+        nose_radius,
         scale_height,
     )
 
@@ -323,10 +362,54 @@ def _(np):
         normalised_heat_flux = ((3 * np.e) / (1 - n))**(1 - n) * np.abs(np.log(normalised_velocity))**(1 - n) * (normalised_velocity**3)
 
         return normalised_heat_flux
+
+    def get_maximum_ballistic_heat_flux(
+        ballistic_parameter: float,
+        entry_speed: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+        nose_radius: float,
+        c1: float,
+    ) -> float:
+        """
+        Calculate the maximum heat flux for a ballistic entry.
+
+        Parameters:
+        ----------
+        ballistic_parameter : float
+            Ballistic parameter of the spacecraft.
+        entry_speed : float
+            Entry speed of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+        nose_radius : float
+            Nose radius of the spacecraft.
+        c1 : float
+            Constant for maximum heat flux calculation.
+
+        Returns:
+        -------
+        float
+            Maximum heat flux.
+        """
+        # Constants
+        g = 9.81  # m/s^2
+
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate maximum heat flux
+        max_heat_flux = c1 * entry_speed**3 * np.sqrt(-1 / (3 * np.e) * (1 / nose_radius) * (ballistic_parameter * beta / g) * np.sin(np.radians(entry_flight_path_angle)))
+
+        return max_heat_flux
+
     return (
         get_ballistic_deceleration,
         get_ballistic_normalised_heat_flux,
         get_ballistic_normalised_velocity,
+        get_maximum_ballistic_heat_flux,
     )
 
 
