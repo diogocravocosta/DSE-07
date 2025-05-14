@@ -95,6 +95,24 @@ def _(mo):
 
 
 @app.cell
+def _(drag_coefficient, mo, vehicle_diameter, vehicle_mass):
+    mo.md(
+        rf"""
+    The below table provides a rapid way to estimate the ballistic parameter. The reference area and drag coefficient are assumed for a capsule-like vehicle, so the reference area should correspond to circular area at the bottom of a capsule.
+
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Vehicle Mass | {vehicle_mass} | {vehicle_mass.value} kg |
+    | Drag Coefficient | {drag_coefficient} | {drag_coefficient.value} |
+    | Vehicle Diameter | {vehicle_diameter} | {vehicle_diameter.value} m |
+    | Reference Area | - | {round(3.14159*vehicle_diameter.value**2/4, 1)} m^2 |
+    | Ballistic Parameter | - | {round(vehicle_mass.value * 9.81 / (drag_coefficient.value * 3.14159*vehicle_diameter.value**2/4), 1)} N/m^2 |
+    """
+    )
+    return
+
+
+@app.cell
 def _(
     ballistic_parameter,
     boundary_layer,
@@ -106,7 +124,7 @@ def _(
 ):
     mo.md(
         f"""
-    ### Ballistic Entry Variables
+    ## Ballistic Entry Variables
 
     | Variable | Adjustment | Value |
     |:---|:---:|:---|
@@ -267,6 +285,10 @@ def _(mo):
     scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
     nose_radius = mo.ui.slider(3, 10, 0.1, value=7)
 
+    vehicle_mass = mo.ui.slider(10e3, 50e3, 1e3, value=20e3)
+    drag_coefficient = mo.ui.slider(0.1, 2, 0.05, value=0.5)
+    vehicle_diameter = mo.ui.slider(3, 10, 0.1, value=7)
+
     # dropdowns
     boundary_layer = mo.ui.dropdown({
         "laminar": 0.2,
@@ -275,10 +297,13 @@ def _(mo):
     return (
         ballistic_parameter,
         boundary_layer,
+        drag_coefficient,
         entry_flight_path_angle,
         entry_speed,
         nose_radius,
         scale_height,
+        vehicle_diameter,
+        vehicle_mass,
     )
 
 
@@ -566,7 +591,7 @@ def _(np):
             entry_flight_path_angle=entry_flight_path_angle,
             scale_height=scale_height,
         )
-    
+
         # Calculate altitude at maximum heat flux
         max_heat_flux_altitude = max_ballistic_deceleration_altitude - (np.log(2 / 3 * (1 - n))) / beta
 
