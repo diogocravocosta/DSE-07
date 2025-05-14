@@ -56,6 +56,10 @@ def _(mo):
 
     $$ \bar{a}_{\text{max}} = - \left( \frac{dV}{dt} \right)_{\text{max}} = - \frac{\beta \sin \gamma_E}{2e} V_E^2 $$
 
+    The altitude at which maximum deceleration occurs is given by:
+
+    $$ h' = \frac{1}{\beta} \ln \left( - \frac{\rho_0 g}{K \beta \sin \gamma_E} \right) $$
+
     ### Thermal Loads
 
     The normalized heat flux is given by:
@@ -72,6 +76,12 @@ def _(mo):
     $$ q_{c,max} = c_1 V_E^3 \sqrt{-\frac{1}{3e} \frac{1}{R_N} \frac{K \beta}{g} \sin \gamma_E} $$
 
     where $c_1 = c^* \frac{1}{R_N^n} \left( \frac{\rho}{\rho_0} \right)^{1-n} \left( \frac{V}{V_c} \right)^m$ with $c^* = 1.1097\cdot 10^8 \sqrt{m}$ (constant), $R_N$ as the nose radius, $V_c$ as the critical velocity (assumed equivalent to the entry velocity $V_E$, and $m = 3$ as a costant specific to Earth.
+
+    The altitude, at which maximum heat flux occurs, is given by:
+
+    $$ h'' - h' = - \frac{\ln{\frac{2}{3} (1-n)}}{\beta} $$
+
+    where $h'$ is the altitude at which maximum deceleration occurs and $h''$ is the altitude at which maximum heat flux occurs at the stagnation point. Other arbitrary points on the vehicle are not considered in this analysis.
 
     ### Ballistic parameter
 
@@ -90,16 +100,15 @@ def _(
     boundary_layer,
     entry_flight_path_angle,
     entry_speed,
-    maximum_ballistic_heat_flux,
     mo,
     nose_radius,
     scale_height,
 ):
     mo.md(
         f"""
-    ### Ballistic Entry Parameters
+    ### Ballistic Entry Variables
 
-    | Parameter | Adjustment | Value |
+    | Variable | Adjustment | Value |
     |:---|:---:|:---|
     | Ballistic Parameter | {ballistic_parameter} | {ballistic_parameter.value} N/m^2 |
     | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
@@ -107,7 +116,6 @@ def _(
     | Scale Height | {scale_height} | {scale_height.value} m |
     | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
     | Nose radius | {nose_radius} | {nose_radius.value} m |
-    | Maximum heat flux | - | {round(maximum_ballistic_heat_flux*1e-3, 1)} kW/m^2 |
     """
     )
     return
@@ -171,7 +179,10 @@ def _(
     get_ballistic_deceleration,
     get_ballistic_normalised_heat_flux,
     get_ballistic_normalised_velocity,
-    get_maximum_ballistic_heat_flux,
+    get_max_ballistic_deceleration,
+    get_max_ballistic_deceleration_altitude,
+    get_max_ballistic_heat_flux,
+    get_max_ballistic_heat_flux_altitude,
     nose_radius,
     np,
     scale_height,
@@ -207,7 +218,7 @@ def _(
 
     # maximum heat flux calculations
     c1 = cstar * (1 / np.sqrt(rho_0)) * (1 / entry_speed.value**3)
-    maximum_ballistic_heat_flux = get_maximum_ballistic_heat_flux(
+    maximum_ballistic_heat_flux = get_max_ballistic_heat_flux(
         ballistic_parameter=ballistic_parameter.value,
         entry_speed=entry_speed.value,
         entry_flight_path_angle=entry_flight_path_angle.value,
@@ -215,10 +226,33 @@ def _(
         nose_radius=nose_radius.value,
         c1=c1
     )
+
+    maximum_ballistic_heat_flux_altitude = get_max_ballistic_heat_flux_altitude(
+        ballistic_parameter=ballistic_parameter.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+        n=boundary_layer.value,
+    )
+
+    # maximum deceleration calculations
+    maximum_ballistic_deceleration = get_max_ballistic_deceleration(
+        entry_speed=entry_speed.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+    )
+
+    maximum_ballistic_deceleration_altitude = get_max_ballistic_deceleration_altitude(
+        ballistic_parameter=ballistic_parameter.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+    )
     return (
         altitude,
         deceleration,
+        maximum_ballistic_deceleration,
+        maximum_ballistic_deceleration_altitude,
         maximum_ballistic_heat_flux,
+        maximum_ballistic_heat_flux_altitude,
         normalised_heat_flux,
         normalised_velocity,
     )
@@ -246,6 +280,35 @@ def _(mo):
         nose_radius,
         scale_height,
     )
+
+
+@app.cell
+def _(
+    maximum_ballistic_deceleration,
+    maximum_ballistic_deceleration_altitude,
+    maximum_ballistic_heat_flux,
+    maximum_ballistic_heat_flux_altitude,
+    mo,
+):
+    mo.md(
+        f"""
+    ## Results
+
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Maximum deceleration | - | {round(maximum_ballistic_deceleration/9.81, 1)} g |
+    | Maximum deceleration altitude | - | {round(maximum_ballistic_deceleration_altitude/1000, 1)} km |
+    | Maximum heat flux | - | {round(maximum_ballistic_heat_flux*1e-3, 1)} kW/m^2 |
+    | Maximum heat flux altitude | - | {round(maximum_ballistic_heat_flux_altitude/1000, 1)} km |
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# Functions""")
+    return
 
 
 @app.cell
@@ -363,7 +426,7 @@ def _(np):
 
         return normalised_heat_flux
 
-    def get_maximum_ballistic_heat_flux(
+    def get_max_ballistic_heat_flux(
         ballistic_parameter: float,
         entry_speed: float,
         entry_flight_path_angle: float,
@@ -405,11 +468,117 @@ def _(np):
 
         return max_heat_flux
 
+    def get_max_ballistic_deceleration(
+        entry_speed: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+    ) -> float:
+        """
+        Calculate the maximum deceleration for a ballistic entry.
+
+        Parameters:
+        ----------
+        entry_speed : float
+            Entry speed of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+
+        Returns:
+        -------
+        float
+            Maximum deceleration.
+        """
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate maximum deceleration
+        max_deceleration = - (beta * np.sin(np.radians(entry_flight_path_angle)) / (2 * np.e)) * (entry_speed**2)
+
+        return max_deceleration
+
+    def get_max_ballistic_deceleration_altitude(
+        ballistic_parameter: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+    ) -> float:
+        """
+        Calculate the altitude at which maximum deceleration occurs for a ballistic entry.
+
+        Parameters:
+        ----------
+        ballistic_parameter : float
+            Ballistic parameter of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+
+        Returns:
+        -------
+        float
+            Altitude at which maximum deceleration occurs.
+        """
+        # Constants
+        g = 9.81  # m/s^2
+        rho_0 = 1.225  # kg/m^3
+
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate altitude at maximum deceleration
+        max_deceleration_altitude = (1 / beta) * np.log(- (rho_0 * g) / (ballistic_parameter * beta * np.sin(np.radians(entry_flight_path_angle)) * g))
+
+        return max_deceleration_altitude
+
+    def get_max_ballistic_heat_flux_altitude(
+        ballistic_parameter: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+        n: float,
+    ) -> float:
+        """
+        Calculate the altitude at which maximum heat flux occurs for a ballistic entry.
+
+        Parameters:
+        ----------
+        ballistic_parameter : float
+            Ballistic parameter of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+        n : float
+            Parameter for laminar or turbulent boundary layer (0.2 for laminar, 0.5 for turbulent).
+
+        Returns:
+        -------
+        float
+            Altitude at which maximum heat flux occurs.
+        """
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate the maximum ballistic deceleration altitude
+        max_ballistic_deceleration_altitude = get_max_ballistic_deceleration_altitude(
+            ballistic_parameter=ballistic_parameter,
+            entry_flight_path_angle=entry_flight_path_angle,
+            scale_height=scale_height,
+        )
+    
+        # Calculate altitude at maximum heat flux
+        max_heat_flux_altitude = max_ballistic_deceleration_altitude - (np.log(2 / 3 * (1 - n))) / beta
+
+        return max_heat_flux_altitude
     return (
         get_ballistic_deceleration,
         get_ballistic_normalised_heat_flux,
         get_ballistic_normalised_velocity,
-        get_maximum_ballistic_heat_flux,
+        get_max_ballistic_deceleration,
+        get_max_ballistic_deceleration_altitude,
+        get_max_ballistic_heat_flux,
+        get_max_ballistic_heat_flux_altitude,
     )
 
 
