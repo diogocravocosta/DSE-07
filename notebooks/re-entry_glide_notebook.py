@@ -9,7 +9,7 @@ def _(mo):
     mo.md(
         r"""
     # Re-entry Gliding Entry Simulations Notebook
-    
+
     This notebook explores the re-entry of a spacecraft into the atmosphere for the gliding mode. It performs trajectory calculations and heating calculations. It 
     """
     )
@@ -40,21 +40,21 @@ def _(mo):
     $$ \frac{dR}{dt} = \frac{dh}{dt} = V \sin \gamma $$
 
     ## Equilibrium Flight-Path Angle
-    
+
     For a large part of the flight, altitude decreases at a constant rate with velocity, which corresponds with a constant flight-path angle.
-    
+
     The equilibrium flight-path angle is given by:
-    
+
     $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \cdot \frac{2}{L/D} \cdot \frac{V_c^2}{V^2} $$
-    
+
     ## Flight Range and Flight Duration
-    
+
     The flight range is given by:
-    
+
     $$ \frac{R_f}{R_e} = -\frac{1}{2} \frac{L}{D} \ln \left(1 - \frac{V_E^2}{V_c^2}\right) $$
-    
+
     Flight time is given by:
-    
+
     $$ t_{\text{flight}} = \frac{1}{2} \frac{V_c}{g} \frac{L}{D} \ln \left(\frac{1 + V_E/V_c}{1 - V_E/V_c}\right) $$
 
 
@@ -65,21 +65,21 @@ def _(mo):
 
 @app.cell
 def _(
-    ballistic_coefficient,
-    entry_flight_path_angle,
-    entry_speed,
-    mo,
-    scale_height,
+        lift_coefficient,
+        lift_drag_ratio,
+        entry_speed,
+        mo,
+        scale_height,
 ):
     mo.md(
         f"""
-    ### Ballistic Entry Parameters
+    ### Gliding Entry Parameters
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Ballistic Coefficient | {ballistic_coefficient} | {ballistic_coefficient.value} kg/ ... |
+    | Lift Coefficient | {lift_coefficient} | {lift_coefficient.value} |
     | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
-    | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} degrees |
+    | Lift-Drag Ration | {lift_drag_ratio} | {lift_drag_ratio.value} degrees |
     | Scale Height | {scale_height} | {scale_height.value} m |
     """
     )
@@ -112,13 +112,13 @@ def _(change_plot_style, convert_fig_to_svg, plot_svg, plt):
 @app.cell
 def _(mo):
     # sliders
-    ballistic_coefficient = mo.ui.slider(0, 10000, 100, value=2000)
+    lift_coefficient = mo.ui.slider(0, 10000, 100, value=2000)
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
-    entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
+    lift_drag_ratio = mo.ui.slider(-90, 0, -0.1, value=-10)
     scale_height = mo.ui.slider(0, 10000, 100, value=7200)
     return (
-        ballistic_coefficient,
-        entry_flight_path_angle,
+        lift_coefficient,
+        lift_drag_ratio,
         entry_speed,
         scale_height,
     )
@@ -127,10 +127,10 @@ def _(mo):
 @app.cell
 def _(np):
     def get_ballistic_normalised_velocity(
-        ballistic_coefficient: float,
-        entry_speed: float,
-        entry_flight_path_angle: float,
-        scale_height: float,
+            lift_coefficient: float,
+            entry_speed: float,
+            entry_flight_path_angle: float,
+            scale_height: float,
     ) -> float:
         """
         Calculate the normalised velocity for a ballistic entry.
@@ -157,10 +157,11 @@ def _(np):
 
         # Calculate normalised velocity
         normalised_velocity = np.exp(
-            (0.5 * g * rho * scale_height) / (ballistic_coefficient * np.sin(np.radians(entry_flight_path_angle)))
+            (0.5 * g * rho * scale_height) / (lift_coefficient * np.sin(np.radians(entry_flight_path_angle)))
         )
 
         return normalised_velocity
+
     return
 
 
