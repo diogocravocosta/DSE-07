@@ -24,15 +24,9 @@ def _(mo):
 
     Ballistic entry calculations are implemented per Section 5.3 of the Re-entry Systems book by Erwin Mooij.
 
-    The analytical solution for the normalised velocity of the ballistic re-entry problem is given by:
+    ### Equations of Motion
 
-    $$ \frac{V}{V_E} = \exp \left(\frac{1}{2} \frac{g \rho}{K \beta \sin \gamma_E}\right)$$
-
-    $K$ is the ballistic coefficient and $\beta$ represents the exponential atmosphere density model. It can also be written as $\beta = \frac{1}{H_s}$ where $H_s$ is the scale height. Therefore the above equation can be rewritten as:
-
-    $$ \frac{V}{V_E} = \exp \left(\frac{1}{2} \frac{g \rho H_s}{K \sin \gamma_E}\right)$$
-
-    Generally, the following three equations of motion are applicable:
+    The following three equations of motion are applicable to the ballistic re-entry problem:
 
     $$ m \frac{dV}{dt} = -D - mg \sin \gamma $$
 
@@ -42,6 +36,16 @@ def _(mo):
 
     The third equation is a kinematic relation.
 
+    It is assumed that $\frac{\text{d} \gamma}{\text{d} h} \approx 0$, flight path angle does not change with altitude.
+
+    ### Normalised Velocity
+
+    The analytical solution for the normalised velocity of the ballistic re-entry problem is given by:
+
+    $$ \frac{V}{V_E} = \exp \left(\frac{1}{2} \frac{g \rho}{K \beta \sin \gamma_E}\right)$$
+
+    $K$ is the weight referenced ballistic coefficient and $\beta$ represents the exponential atmosphere density model with constant temperature. It can also be written as $\beta = \frac{1}{H_s}$ where $H_s$ is the scale height. It follows from the exponential atmosphere model that $\rho = \rho_0 e^{-\beta h}$. This can be substituted into the equation to solve for normalised velocity as a function of altitude. The relationship is plotted below.
+
     ### Deceleration
 
     Maximum deceleration is given by:
@@ -50,7 +54,10 @@ def _(mo):
 
     ### Ballistic parameter
 
-    It can be defined as 
+    There are two different definitions of the ballistic parameter:
+
+    - $K = \frac{m g}{C_D S}$, _weight referenced_ ballistic parameter
+    - $K_m = \frac{m}{C_D S}$, _mass refererenced_ ballistic parameter
     """
     )
     return
@@ -70,9 +77,9 @@ def _(
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Ballistic Coefficient | {ballistic_coefficient} | {ballistic_coefficient.value} kg/ ... |
+    | Ballistic Coefficient | {ballistic_coefficient} | {ballistic_coefficient.value} N/m^2 |
     | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
-    | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} degrees |
+    | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} ° |
     | Scale Height | {scale_height} | {scale_height.value} m |
     """
     )
@@ -80,16 +87,23 @@ def _(
 
 
 @app.cell
-def _(change_plot_style, convert_fig_to_svg, plot_svg, plt):
+def _(
+    altitude,
+    change_plot_style,
+    convert_fig_to_svg,
+    normalised_velocity,
+    plot_svg,
+    plt,
+):
     # the tank is plotted as two vertical lines and two semicircles.
     fig, ax = plt.subplots()
-    # ax.plot()
+    ax.plot(normalised_velocity, altitude/1000, label="V/V_e", color="blue")
 
-    ax.set_xlim(-1, 11)
-    ax.set_ylim(-6, 60)
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
-    ax.set_title("V/V_e ...")
+    ax.set_xlim(0.001, 1)
+    ax.set_ylim(0, 80)
+    ax.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    ax.set_ylabel("h [km]")
+    ax.set_title("Normalized velocity during ballistic re-entry")
     ax.grid(True)
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
@@ -103,12 +117,33 @@ def _(change_plot_style, convert_fig_to_svg, plot_svg, plt):
 
 
 @app.cell
+def _(
+    ballistic_coefficient,
+    entry_flight_path_angle,
+    entry_speed,
+    get_ballistic_normalised_velocity,
+    np,
+    scale_height,
+):
+    altitude = np.linspace(0, 80e3, 100)  # altitude from 0 to 80 km
+
+    normalised_velocity = get_ballistic_normalised_velocity(
+        altitude,
+        ballistic_coefficient=ballistic_coefficient.value,
+        entry_speed=entry_speed.value,
+        entry_flight_path_angle=entry_flight_path_angle.value,
+        scale_height=scale_height.value,
+    )
+    return altitude, normalised_velocity
+
+
+@app.cell
 def _(mo):
     # sliders
     ballistic_coefficient = mo.ui.slider(0, 10000, 100, value=2000)
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
     entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
-    scale_height = mo.ui.slider(0, 10000, 100, value=7200)
+    scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
     return (
         ballistic_coefficient,
         entry_flight_path_angle,
@@ -120,6 +155,7 @@ def _(mo):
 @app.cell
 def _(np):
     def get_ballistic_normalised_velocity(
+        altitude: np.ndarray,
         ballistic_coefficient: float,
         entry_speed: float,
         entry_flight_path_angle: float,
@@ -146,15 +182,18 @@ def _(np):
         """
         # Constants
         g = 9.81  # m/s^2
-        rho = 1.225  # kg/m^3
+        rho_0 = 1.225  # kg/m^3
+
+        # Exponential atmosphere model
+        beta = 1 / scale_height
 
         # Calculate normalised velocity
         normalised_velocity = np.exp(
-            (0.5 * g * rho * scale_height) / (ballistic_coefficient * np.sin(np.radians(entry_flight_path_angle)))
+            (0.5 * g * rho_0 * np.exp(-beta*altitude)) / (ballistic_coefficient * beta * np.sin(np.radians(entry_flight_path_angle)))
         )
 
         return normalised_velocity
-    return
+    return (get_ballistic_normalised_velocity,)
 
 
 @app.cell
