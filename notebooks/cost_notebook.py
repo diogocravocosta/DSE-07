@@ -11,7 +11,7 @@ import numpy as np
 #L_d = development learning factor
 #HW = number of times a subsytem is re-used on the launch vehicle
 
-#FIXED VALUES
+#FIXED VALUES FOR DEV COSTS 
 L_d = 0.9 #as a default in Drenthe’s SOLSTICE cost estimating model
 s_BAU = 0.6 #scope of subcontracted work under Business As Usual
 s_COM = 0.2 #scope of subcontracted work under commercial development
@@ -105,12 +105,80 @@ def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
 
 
 
+def calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press):
+    #Direct Operations Cost (DOC)
+    C_ground = (W * 8 * (M_0**0.67) * (LpA**(-0.9)) * (N ** 0.7) * f_c * f_v * L_0 *f_8 * f_11)/1000 #ground operations in k€
+    C_prop = ((M_p/(r +1))*c_f + (M_p - (M_p/(r+1)))* c_ox + M_press * c_press)/1000 #propellant cost in k€
+    C_FM = (W * 20 * Q_N * (LpA ** 0.65) * L_0 * f_8)/1000 #flight and mission cost in k€
+    C_trans = T_s * M_0 #transportation cost in k€
+    C_FI = I + F + (c_payl * P)/1000 #fees & insurance costs in k€
+    C_DOC = C_ground + C_prop + C_FM + C_trans + C_FI + C_DOC
+    #Indirect Operations Cost (IOC)
+    C_IOC = (40 * S + 24)* (LpA ** (-0.379)) * W / 1000
+
+    C_ops = C_DOC + C_IOC
+    return C_ops
 
 
+#INPUTS FOR OPS COSTS
+LpA = 50 #launches per year
+W = 301200 #work-year costs in k€
+N = 2 #number of stages
+f_c = 0.85 #assembly and integration factor
+f_v = 1 #launch vehicle type factor, 0.8 for storable propellants, 1 for cryogenic propellants
+L_0 = 0.64 #average learning factor operations
+f_8 = 1 #country productivity factor 
+f_11 = 0.55 #commercial factor
+c_ox = 0.12 #according to https://www.sciencedirect.com/science/article/pii/S036031992400627X
+P = 12500 #payload mass in kg
+c_payl = 5.51 #payload charge site fee in eur per kg
+F = 1220 #launch site fee in k€
+T_s = 5.365 #specific transportation cost in eur per kg
+S = 0.2 #percentage of work subcontracted out 
+Q_N = 0.4 * N #vehicle complexity factor
+c_press = 35.62
+I = 100 #public damage insurance in M€
 
-
-
+if concept_number == "1":
+    M_p = 1 #mass of propellant and oxidiser in kg
+    M_0 = 0.5 #gross take-off-mass Mg
+    r = 0.3 #mass mixture ratio
+    c_f = 7.08 #cost of liquefied hydrogen per kg, from https://www.sciencedirect.com/science/article/pii/S2949908923002789
+    M_press = 0
+elif concept_number == "2":
+    M_p = 1
+    M_0 = 0.5
+    r = 0.3
+    c_f = 1.56 #cost of liquefied methane per kg, from https://www.sciencedirect.com/science/article/pii/S1875510021002845
+    M_press = 0
+elif concept_number == "3":
+    M_p = 1
+    M_0 = 0.5
+    r = 0.3
+    c_f = 7.08
+    M_press = 0
+elif concept_number == "4":
+    M_p = 1
+    M_0 = 0.5
+    r = 0.3
+    c_f = 1.56
+    M_press = 0
+elif concept_number == "5":
+    M_p = 1
+    M_0 = 0.5
+    r = 0.3
+    c_f = 7.08
+    M_press = 0
+elif concept_number == "6":
+    M_p = 1
+    M_0 = 0.5
+    r = 0.3
+    c_f = 1.56
+    M_press = 0
+else:
+    print ("Invalid concept number. Please enter a number between 1 and 6.")
 
 
 print ("Development cost (engineering cost) = ", calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p))
+print ("Operational cost per flight = ", calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S))
 
