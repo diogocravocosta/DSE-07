@@ -44,9 +44,8 @@ def _(mo):
     For a large part of the flight, altitude decreases at a constant rate with velocity, which corresponds with a constant flight-path angle.
     
     The equilibrium flight-path angle is given by:
-    $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \frac{2}{L/D} \frac{V_c^2}{V^2} $$
-
     
+    $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \cdot \frac{2}{L/D} \cdot \frac{V_c^2}{V^2} $$
 
     """
     )
