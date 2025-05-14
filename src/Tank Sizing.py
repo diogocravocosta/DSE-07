@@ -11,7 +11,6 @@ materials_properties = {
 #Constraints
 buckling_stress_safety_factor = 1.5
 tank_diameter = 7
-LH2_LOX_O_F_ratio = 6/1
 #LH2_volume_shrinkage_coefficient = 1.2/100 #%
 #LOX_volume_shrinkage_coefficient = 1.43/100 #%
 #CH4_volume_shrinkage_coefficient = 1.28/100 #%
@@ -31,15 +30,19 @@ CH4_density = 422.62 #kg/m3
 
 #HydroLOx Jarvis
 structural_mass_jarvis = 2.95 * 10**3 #2.03 tons
-propellant_mass_jarvis = 21.4 * 10**3 #14.7 tons
+propellant_mass_jarvis = 21390.62298
 wet_mass_jarvis = propellant_mass_jarvis + structural_mass_jarvis
 LH2_mass_jarvis = 1/7.03*propellant_mass_jarvis
+print("Mass LH2: " + str(LH2_mass_jarvis) + " kg")
 LOX_mass_jarvis = 6.03/7.03*propellant_mass_jarvis
+print("Mass LOX: " + str(LOX_mass_jarvis) + " kg")
 LH2_volume_jarvis = LH2_mass_jarvis/LH2_density*LH2_boiloff_margin
+print("Volume LH2: " + str(LH2_volume_jarvis) + " m3")
 LOX_volume_jarvis = LOX_mass_jarvis/ LOX_density*LOX_boiloff_margin
+print("Volume LOX: " + str(LOX_volume_jarvis) + " m3")
 
 #HydroLox Spaceshuttle
-propellant_mass_spaceshuttle = 21.2 * 10**3
+propellant_mass_spaceshuttle = 21182.68314
 structural_mass_spaceshuttle = 3.03 * 10**3
 wet_mass_spaceshuttle = propellant_mass_spaceshuttle + structural_mass_spaceshuttle
 LH2_mass_spaceshuttle = 1/7.03*propellant_mass_spaceshuttle
@@ -48,7 +51,7 @@ LH2_volume_spaceshuttle = LH2_mass_spaceshuttle/LH2_density*LH2_boiloff_margin
 LOX_volume_spaceshuttle = LOX_mass_spaceshuttle/ LOX_density*LOX_boiloff_margin
 
 #MethaLox Starship
-propellant_mass_starship = 27.16 * 10**3 #18.61 tons
+propellant_mass_starship = 27157.54779
 structural_mass_starship = 2 * 10**3 #1.37 tons
 wet_mass_starship = propellant_mass_starship + structural_mass_starship
 CH4_mass_starship = 1/4.6*propellant_mass_starship
@@ -64,6 +67,9 @@ def calculate_tank_length(volume, diameter):
     length = cylinder_volume / (np.pi * radius**2)
     return length
 
+#print((4/3) * np.pi * (tank_diameter/2)**3)
+print("Jarvis length tank: " + str(calculate_tank_length(LH2_volume_spaceshuttle, tank_diameter)))
+print(LH2_volume_jarvis - (np.pi * (tank_diameter/2)**2 * 4.34 + 8/3* np.pi * (tank_diameter/2)**3))
 # calculating tank thickness
 def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propellant_pressure, allowable_stress, wet_mass):
     # Assuming a thin-walled cylinder for simplicity
@@ -170,3 +176,28 @@ print("SM CH4 Starship: " + str(calculate_margin_of_safety(thickness_CH4_starshi
 SM_starship_LOX = calculate_margin_of_safety(thickness_LOX_starship, tank_diameter, wet_mass_starship, young_modulus, gamma=0.9, g_load=8.5)
 print("SM LOX Space Shuttle: " +str(calculate_margin_of_safety(thickness_LOX_starship, tank_diameter, wet_mass_starship, young_modulus, gamma=0.9, g_load=8.5)))
 print(0.603*(0.9*young_modulus*thickness_LH2_jarvis)/(tank_diameter))
+
+
+
+def size_tank_thickness(model, wet_mass, propellant_pressure, fuel_mass, oxidizer_mass, tank_length_LH2, tank_length_CH4, tank_length_LOX, tank_diameter, E, strength, gamma=0.9):
+    t = 0.001  # Start with 1 mm
+    while True:
+        sigma_axial = wet_mass* 8.5 * 9.81 * buckling_stress_safety_factor / (2 * np.pi * tank_diameter/2 * t)
+        #cg location
+        if model == "LH2":
+            cg_location = (fuel_mass * (tank_length_LH2 + tank_length_LOX) + oxidizer_mass * tank_length_LOX)/(fuel_mass + oxidizer_mass)
+            sigma_bend = (3*9.81* (fuel_mass + oxidizer_mass) * cg_location) / (2 * np.pi * (tank_diameter/2)**2 * t)
+        elif model == "CH4":
+            cg_location = (fuel_mass * (tank_length_CH4) + 12500 * (tank_length_CH4 + tank_length_LOX + tank_length_LH2) + oxidizer_mass * (tank_length_CH4 + tank_length_LOX)) / (fuel_mass + oxidizer_mass + 12500)
+            sigma_bend = (3 * 9.81 * (fuel_mass + oxidizer_mass) * cg_location) / (2 * np.pi * (tank_diameter / 2) ** 2 * t)
+
+        sigma_cr = gamma * 0.605 * E * t / (tank_diameter/2)
+        interaction = (sigma_axial + sigma_bend) / sigma_cr
+        if interaction <= 1.0:
+            break
+        t += 0.0001  # Increment 0.1 mm
+    #check hoop stress
+    thickness_pressure = (propellant_pressure * tank_diameter) / (2 * strength)
+    return t
+
+print(size_tank_thickness("LH2", wet_mass_jarvis, propellant_pressure, fuel_mass, oxidizer_mass, tank_length_LH2, tank_length_CH4, tank_length_LOX, tank_diameter, E, strength, gamma=0.9))
