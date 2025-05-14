@@ -82,20 +82,31 @@ def _(altitude, lift_drag_ratio, lift_parameter, mo, scale_height):
 def _(
         V_Vc_ratio,
         height,
+        flight_range_ratio,
+        entry_circular_ratio,
         change_plot_style,
         convert_fig_to_svg,
         plot_svg,
         plt):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
-    ax.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
-    ax.set_xlim(0.001, 1)
-    ax.set_ylim(0, 120)
-    ax.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
-    ax.set_ylabel(r"$h$ [km]")
-    ax.set_title("Velocity Ratio during gliding re-entry")
-    ax.grid(True)
+    ax1.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
+    ax1.set_xlim(0.001, 1)
+    ax1.set_ylim(0, 120)
+    ax1.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
+    ax1.set_ylabel(r"$h$ [km]")
+    ax1.set_title("Velocity Ratio during gliding re-entry")
+    ax1.grid(True)
+
+    ax2.plot(entry_circular_ratio, flight_range_ratio, label=r"$R/R_e$", color="blue")
+    ax2.set_xlim(0.001, 1)
+    ax2.set_ylim(0, 4)
+    ax2.set_xlabel(r"$\frac{V_E}{V_c}$" + "[-]")
+    ax2.set_ylabel(r"$\frac{R}{R_E}$" + "[-]")
+    ax2.set_title("Velocity Ratio during gliding re-entry")
+    ax2.grid(True)
+
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
     # Change plotting style
@@ -108,10 +119,29 @@ def _(
 
 
 @app.cell
-def _(get_velocity_ratio, lift_parameter, np, scale_height, altitude):
-    V_Vc_ratio, height = get_velocity_ratio(lift_parameter.value, scale_height.value, altitude.value)
+def _(get_velocity_ratio, get_flight_path_angle, get_flight_range,
+      lift_parameter, np, scale_height, altitude, lift_drag_ratio, entry_circular_ratio):
+    beta = 1 / scale_height.value
 
-    return V_Vc_ratio, height
+    # Constants
+    g = 9.81  # m/s^2
+    rho = 1.225  # kg/m^3
+    Re = 6378000
+
+    # Circular velocity
+    Vc = np.sqrt(g * Re)
+    entry_circular_ratio = np.linspace(0, 1, 100)
+
+    # velocity ratio
+
+    V_Vc_ratio, height = get_velocity_ratio(lift_parameter.value, beta, altitude.value, Vc, rho)
+
+    # equilibrium flight path
+    flight_path_eq = get_flight_path_angle(V_Vc_ratio, beta, lift_drag_ratio.value)
+
+    flight_range_ratio = get_flight_range(lift_drag_ratio.value, entry_circular_ratio)
+
+    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio
 
 
 @app.cell
@@ -128,8 +158,10 @@ def _(mo):
 def _(np):
     def get_velocity_ratio(
             lift_parameter: float,
-            scale_height: float,
-            altitude: float
+            beta: float,
+            altitude: float,
+            Vc: float,
+            rho: float
     ) -> float:
         """
         Calculate the velocity ratio for gliding re-entry
@@ -137,7 +169,7 @@ def _(np):
         Parameters:
         ----------
         lift_parameter : float
-            Ballistic coefficient of the spacecraft.
+            Lift parameter of the spacecraft.
         altitude : float
             Altitude of spacecraft.
         scale_height : float
@@ -148,24 +180,67 @@ def _(np):
         float
             Velocity ratio.
         """
-        # Constants
-        g = 9.81  # m/s^2
-        rho = 1.225  # kg/m^3
-        Re = 6378000
-
-        # Circular velocity
-        Vc = np.sqrt(g * Re)
 
         # Altitude
         h = np.linspace(0, altitude * 1000, 10000)
 
         # Calculate normalised velocity
-        beta = 1 / scale_height
         V_Vc_ratio = np.sqrt((lift_parameter) / (0.5 * rho * np.exp(-beta * h) * Vc ** 2 + lift_parameter))
 
         return V_Vc_ratio, h
 
-    return (get_velocity_ratio,)
+    def get_flight_path_angle(
+            V_Vc_ratio: float,
+            beta: float,
+            lift_drag_ratio: float
+    ) -> float:
+        """
+        Calculate the velocity ratio for gliding re-entry
+
+        Parameters:
+        ----------
+        V_Vc_ratio : float
+            Contribution of circular velocity
+        beta : float
+            1 / height scale
+        lift_drag_ratio : float
+            The L/D ratio of the spacecraft
+
+        Returns:
+        -------
+        float
+             Equivalent flight path angle.
+        """
+        # Constants
+        Re = 6378000
+
+        flight_path_angle = -(1 / (beta * Re)) * (2 / lift_drag_ratio) * V_Vc_ratio ** (-2)
+
+        return flight_path_angle
+
+    def get_flight_range(lift_drag_ratio,
+                         entry_circular_velocity_ratio):
+        """
+        Calculate the ratio between flight range and earth radius.
+
+        Parameters:
+        ----------
+        lift_drag_ratio : float
+            The L/D ratio of the spacecraft
+
+        entry_circular_velocity_ratio : float
+            The ratio between entry velocity and circular
+
+        Returns:
+        -------
+        float
+             Equivalent flight path angle.
+        """
+        Rf_Re = -0.5 * lift_drag_ratio * np.log(1 - (entry_circular_velocity_ratio ** 2))
+
+        return Rf_Re
+
+    return (get_velocity_ratio, get_flight_path_angle, get_flight_range)
 
 
 @app.cell
