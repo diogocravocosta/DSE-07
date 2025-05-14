@@ -18,7 +18,7 @@ LH2_LOX_O_F_ratio = 6/1
 
 LH2_pressure = 1035 #kPa (10 bar)
 LOX_pressure = 2330.47 #kPa (23 bar)
-Ch4_pressure = 400 #kPa
+Ch4_pressure = 400 #kPa (4bar)
 
 LH2_boiloff_margin = 1.012 * 1.02 #(3.2% extra)
 LOX_boiloff_margin = 1.0143 * 1.02 #(3.46% extra)
@@ -66,8 +66,7 @@ def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propella
     # Buckling stress with knockdown factor:
     # sigma_cr = γ * (0.605 * E * t) / R
     gamma_knockdown_factor = 0.9
-    critical_buckling_stress = (structural_mass * 8.5)/(np.pi * (tank_diameter/2)**2)
-    thickness_load = (critical_buckling_stress*buckling_stress_safety_factor*tank_diameter/2)/(0.605*gamma_knockdown_factor*young_modulus)
+    thickness_load = np.sqrt((structural_mass * 8.5 * 9.81)/(2*np.pi)*1/(0.605*gamma_knockdown_factor*young_modulus))
     if thickness_pressure > thickness_load:
         return thickness_pressure
     else:
@@ -101,3 +100,4 @@ print("Thickness LH2 Tank Jarvis:" + str(thickness_LH2_jarvis))
 thickness_LOX_jarvis = calculate_tank_thickness(tank_diameter, tank_length_jarvis, young_modulus, LOX_pressure, strength, structural_mass_jarvis)
 print("Thickness LOX Tank Jarvis:" + str(thickness_LOX_jarvis))
 
+print((structural_mass_jarvis * 8.5 * 9.81)/(np.pi * (tank_diameter/2)**2))
