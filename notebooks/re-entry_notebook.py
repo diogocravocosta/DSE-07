@@ -75,7 +75,7 @@ def _(mo):
 
     $$ q_{c,max} = c_1 V_E^3 \sqrt{-\frac{1}{3e} \frac{1}{R_N} \frac{K \beta}{g} \sin \gamma_E} $$
 
-    where $c_1 = c^* \frac{1}{R_N^n} \left( \frac{\rho}{\rho_0} \right)^{1-n} \left( \frac{V}{V_c} \right)^m$ with $c^* = 1.1097\cdot 10^8 \sqrt{m}$ (constant), $R_N$ as the nose radius, $V_c$ as the critical velocity (assumed equivalent to the entry velocity $V_E$, and $m = 3$ as a costant specific to Earth.
+    where $c_1 = c^* \frac{1}{R_N^n} \left( \frac{\rho}{\rho_0} \right)^{1-n} \left( \frac{V}{V_c} \right)^m$ with $c^* = 1.1097\cdot 10^8 \sqrt{m}$ (constant), $R_N$ as the nose radius, $V_c$ as the circular velocity ($V_c = \sqrt{g R} \approx 7920$), and $m = 3$ as a costant specific to Earth.
 
     The altitude, at which maximum heat flux occurs, is given by:
 
@@ -107,6 +107,29 @@ def _(drag_coefficient, mo, vehicle_diameter, vehicle_mass):
     | Vehicle Diameter | {vehicle_diameter} | {vehicle_diameter.value} m |
     | Reference Area | - | {round(3.14159*vehicle_diameter.value**2/4, 1)} m^2 |
     | Ballistic Parameter | - | {round(vehicle_mass.value * 9.81 / (drag_coefficient.value * 3.14159*vehicle_diameter.value**2/4), 1)} N/m^2 |
+    """
+    )
+    return
+
+
+@app.cell
+def _(
+    maximum_ballistic_deceleration,
+    maximum_ballistic_deceleration_altitude,
+    maximum_ballistic_heat_flux,
+    maximum_ballistic_heat_flux_altitude,
+    mo,
+):
+    mo.md(
+        f"""
+    ## Results
+
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Maximum deceleration | - | {round(maximum_ballistic_deceleration/9.81, 1)} g |
+    | Maximum deceleration altitude | - | {round(maximum_ballistic_deceleration_altitude/1000, 1)} km |
+    | Maximum heat flux | - | {round(maximum_ballistic_heat_flux*1e-3, 1)} kW/m^2 |
+    | Maximum heat flux altitude | - | {round(maximum_ballistic_heat_flux_altitude/1000, 1)} km |
     """
     )
     return
@@ -235,7 +258,8 @@ def _(
     rho_0 = 1.225
 
     # maximum heat flux calculations
-    c1 = cstar * (1 / np.sqrt(rho_0)) * (1 / entry_speed.value**3)
+    V_c = 7920  # m/s, usual value taken for Earth, can be calculated as sqrt(g*R)
+    c1 = cstar * (1 / np.sqrt(rho_0)) * (1 / V_c**3)
     maximum_ballistic_heat_flux = get_max_ballistic_heat_flux(
         ballistic_parameter=ballistic_parameter.value,
         entry_speed=entry_speed.value,
@@ -279,7 +303,7 @@ def _(
 @app.cell
 def _(mo):
     # sliders
-    ballistic_parameter = mo.ui.slider(0, 10000, 100, value=2000)
+    ballistic_parameter = mo.ui.slider(0, 20000, 100, value=5000)
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
     entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
     scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
@@ -305,29 +329,6 @@ def _(mo):
         vehicle_diameter,
         vehicle_mass,
     )
-
-
-@app.cell
-def _(
-    maximum_ballistic_deceleration,
-    maximum_ballistic_deceleration_altitude,
-    maximum_ballistic_heat_flux,
-    maximum_ballistic_heat_flux_altitude,
-    mo,
-):
-    mo.md(
-        f"""
-    ## Results
-
-    | Variable | Adjustment | Value |
-    |:---|:---:|:---|
-    | Maximum deceleration | - | {round(maximum_ballistic_deceleration/9.81, 1)} g |
-    | Maximum deceleration altitude | - | {round(maximum_ballistic_deceleration_altitude/1000, 1)} km |
-    | Maximum heat flux | - | {round(maximum_ballistic_heat_flux*1e-3, 1)} kW/m^2 |
-    | Maximum heat flux altitude | - | {round(maximum_ballistic_heat_flux_altitude/1000, 1)} km |
-    """
-    )
-    return
 
 
 @app.cell
