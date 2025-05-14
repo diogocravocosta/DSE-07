@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.8"
-app = marimo.App(width="medium")
+app = marimo.App(width="full")
 
 
 @app.cell
@@ -56,6 +56,17 @@ def _(mo):
 
     $$ \bar{a}_{\text{max}} = - \left( \frac{dV}{dt} \right)_{\text{max}} = - \frac{\beta \sin \gamma_E}{2e} V_E^2 $$
 
+    ### Thermal Loads
+
+    The normalized heat flux is given by:
+
+    $$ \frac{q_c}{q_{c,max}} = \left(\frac{3e}{1-n}\right)^{1-n} \left|\ln{\frac{V}{V_E}}\right|^{1-n} \left(\frac{V}{V_E}\right)^3 $$
+
+    where $n$ is a parameter for either:
+
+    - laminar boundary layer, $n=0.2$
+    - turbulent boundary layer, $n=0.5$
+
     ### Ballistic parameter
 
     There are two different definitions of the ballistic parameter:
@@ -70,6 +81,7 @@ def _(mo):
 @app.cell
 def _(
     ballistic_parameter,
+    boundary_layer,
     entry_flight_path_angle,
     entry_speed,
     mo,
@@ -85,6 +97,7 @@ def _(
     | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
     | Entry Flight Path Angle | {entry_flight_path_angle} | {entry_flight_path_angle.value} ° |
     | Scale Height | {scale_height} | {scale_height.value} m |
+    | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
     """
     )
     return
@@ -93,31 +106,44 @@ def _(
 @app.cell
 def _(
     altitude,
+    boundary_layer,
     change_plot_style,
     convert_fig_to_svg,
     deceleration,
+    entry_flight_path_angle,
+    entry_speed,
+    get_ballistic_normalised_heat_flux,
     normalised_velocity,
     plot_svg,
     plt,
+    scale_height,
 ):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
 
-    ax1.plot(normalised_velocity, altitude/1000, label="V/V_e", color="blue")
+    ax1.plot(normalised_velocity, altitude/1000, label=r"$V/V_E$", color="blue")
     ax1.set_xlim(0.001, 1)
     ax1.set_ylim(0, 80)
     ax1.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
-    ax1.set_ylabel("h [km]")
+    ax1.set_ylabel(r"$h$ [km]")
     ax1.set_title("Normalized velocity during ballistic re-entry")
     ax1.grid(True)
 
-    ax2.plot(normalised_velocity, deceleration, label="a", color="red")
+    ax2.plot(normalised_velocity, deceleration, label=r"$a$", color="red")
     ax2.set_xlim(0.001, 1)
     ax2.set_ylim(0)
     ax2.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
-    ax2.set_ylabel("a [m/s^2]")
+    ax2.set_ylabel(r"$a$ [m/s$^2$]")
     ax2.set_title("Deceleration during ballistic re-entry")
     ax2.grid(True)
+
+    ax3.plot(normalised_velocity, get_ballistic_normalised_heat_flux(normalised_velocity, entry_speed.value, entry_flight_path_angle.value, scale_height.value, boundary_layer.value), label="$q_c/q_{c,\text{max}}$", color="green")
+    ax3.set_xlim(0.001, 1)
+    ax3.set_ylim(0)
+    ax3.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    ax3.set_ylabel(r"$\frac{q_c}{q_{c,\text{max}}}$ [-]")
+    ax3.set_title("Normalized heat flux during ballistic re-entry")
+    ax3.grid(True)
 
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
@@ -156,6 +182,8 @@ def _(
         entry_flight_path_angle=entry_flight_path_angle.value,
         scale_height=scale_height.value,
     )
+
+
     return altitude, deceleration, normalised_velocity
 
 
@@ -166,8 +194,15 @@ def _(mo):
     entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
     entry_flight_path_angle = mo.ui.slider(-90, 0, -0.1, value=-10)
     scale_height = mo.ui.slider(6000, 8000, 10, value=7200)
+
+    # dropdowns
+    boundary_layer = mo.ui.dropdown({
+        "laminar": 0.2,
+        "turbulent": 0.5
+    }, value="laminar")
     return (
         ballistic_parameter,
+        boundary_layer,
         entry_flight_path_angle,
         entry_speed,
         scale_height,
@@ -252,7 +287,47 @@ def _(np):
         deceleration = beta * np.sin(np.radians(entry_flight_path_angle)) * (entry_speed**2) * (normalised_velocity**2) * np.log(normalised_velocity)
 
         return deceleration
-    return get_ballistic_deceleration, get_ballistic_normalised_velocity
+
+    def get_ballistic_normalised_heat_flux(
+        normalised_velocity: np.ndarray,
+        entry_speed: float,
+        entry_flight_path_angle: float,
+        scale_height: float,
+        n: float,
+    ) -> float:
+        """
+        Calculate the normalised heat flux for a ballistic entry.
+
+        Parameters:
+        ----------
+        normalised_velocity : np.ndarray
+            Normalised velocity of the spacecraft.
+        entry_speed : float
+            Entry speed of the spacecraft.
+        entry_flight_path_angle : float
+            Entry flight path angle of the spacecraft.
+        scale_height : float
+            Scale height of the atmosphere.
+        n : float
+            Parameter for laminar or turbulent boundary layer (0.2 for laminar, 0.5 for turbulent).
+
+        Returns:
+        -------
+        float
+            Normalised heat flux.
+        """
+        # Exponential atmosphere model
+        beta = 1 / scale_height
+
+        # Calculate normalised heat flux
+        normalised_heat_flux = ((3 * np.e) / (1 - n))**(1 - n) * np.abs(np.log(normalised_velocity))**(1 - n) * (normalised_velocity**3)
+
+        return normalised_heat_flux
+    return (
+        get_ballistic_deceleration,
+        get_ballistic_normalised_heat_flux,
+        get_ballistic_normalised_velocity,
+    )
 
 
 @app.cell
