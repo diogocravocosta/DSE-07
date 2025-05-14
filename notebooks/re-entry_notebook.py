@@ -174,12 +174,12 @@ def _(
     plt,
 ):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 10))
 
     ax1.plot(normalised_velocity, altitude/1000, label=r"$V/V_E$", color="blue")
     ax1.set_xlim(0.001, 1)
     ax1.set_ylim(0, 80)
-    ax1.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    #ax1.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
     ax1.set_ylabel(r"$h$ [km]")
     ax1.set_title("Normalized velocity during ballistic re-entry")
     ax1.grid(True)
@@ -187,7 +187,7 @@ def _(
     ax2.plot(normalised_velocity, deceleration, label=r"$a$", color="red")
     ax2.set_xlim(0.001, 1)
     ax2.set_ylim(0)
-    ax2.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
+    #ax2.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
     ax2.set_ylabel(r"$a$ [m/s$^2$]")
     ax2.set_title("Deceleration during ballistic re-entry")
     ax2.grid(True)
