@@ -11,32 +11,54 @@ materials_properties = {
 #Constraints
 tank_diameter = 7
 LH2_LOX_O_F_ratio = 6/1
-LH2_volume_shrinkage_coefficient = 1.2 #%
-LOX_volume_shrinkage_coefficient = 1.43 #%
-CH4_volume_shrinkage_coefficient = 1.28 #%
+LH2_volume_shrinkage_coefficient = 1.2/100 #%
+LOX_volume_shrinkage_coefficient = 1.43/100 #%
+CH4_volume_shrinkage_coefficient = 1.28/100 #%
 
 LH2_pressure = 1035 #kPa (10 bar)
-LH2_density = 0.07085 * 10^3 #kg/m3
 LOX_pressure = 2330,47 #kPa (23 bar)
-Ch4_pressure = 0
+Ch4_pressure = 400 #kPa
+
+LH2_boiloff_margin = 1.012 * 1.02 #(3.2% extra)
+LOX_boiloff_margin = 1.0143 * 1.02 #(3.46% extra)
+CH4_boiloff_margin = 1.0128 * 1.02
+
+LH2_density = 70.85 #kg/m3
+LOX_density = 1141 #kg/m3
+CH4_density = 422.62 #kg/m3
+
 
 #HydroLOx Jarvis
-propellant_mass_jarvis = 14.7 *10^3 #14.7 tons
 structural_mass_jarvis = 2.03 *10^3 #2.03 tons
-oxydizer_mass_jarvis = 6*propellant_mass_jarvis
+propellant_mass_jarvis = 14.7 *10^3 #14.7 tons
+propellant_volume_jarvis = propellant_mass_jarvis/LH2_density*LH2_boiloff_margin
+oxydizer_volume_jarvis = 6*propellant_mass_jarvis / LOX_density*LOX_boiloff_margin
 
 #HydroLox Spaceshuttle
 propellant_mass_spaceshuttle = 19.1 * 10^3
 structural_mass_spaceshuttle = 2.7 * 10^3
+propellant_volume_spaceshuttle = propellant_mass_spaceshuttle/LH2_density*LH2_boiloff_margin
+oxydizer_volume_spaceshuttle = 6*propellant_mass_spaceshuttle / LOX_density*LOX_boiloff_margin
 
 #MethaLox Starship
 propellant_mass_starship = 18.61 *10^3 #18.61 tons
 structural_mass_starship = 1.37 * 10^3 #1.37 tons
+propellant_volume_starship = propellant_mass_starship/LH2_density
+oxydizer_volume_starship = 6*propellant_mass_starship / LOX_density
+
+def calculate_tank_volume(mass, density, shrinkage_coeff):
+    return (mass / density) * (1 + shrinkage_coeff)
 
 
-def tank_volume():
-    ##
-    return volume
+def calculate_tank_length(volume, diameter):
+    # V_total = V_cylinder + V_hemispheres = π * r^2 * h + (4/3) * π * r^3
+    radius = diameter / 2
+    hemisphere_volume = (4/3) * np.pi * radius**3
+    cylinder_volume = volume - hemisphere_volume
+    length = cylinder_volume / (np.pi * radius**2)
+    return length
+
+
 # calculating tank thickness
 def calculate_tank_thickness(tank_diameter, tank_length, propellant_pressure, allowable_stress):
     # Assuming a thin-walled cylinder for simplicity
