@@ -65,7 +65,7 @@ def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propella
     #Axial loading
     # Buckling stress with knockdown factor:
     # sigma_cr = γ * (0.605 * E * t) / R
-    gamma_knockdown_factor = 0.9
+    gamma_knockdown_factor = 0.75
     thickness_load = np.sqrt((structural_mass * 8.5 * 9.81)/(2*np.pi)*1/(0.605*gamma_knockdown_factor*young_modulus))
     if thickness_pressure > thickness_load:
         return thickness_pressure
@@ -93,11 +93,44 @@ tank_length_starship = calculate_tank_length(propellant_volume_starship, tank_di
 
 #Jarvis tanks
 print("Jarvis Tanks:")
-print("Jarvis LH2 Tanks Volume:" + str(propellant_volume_jarvis))
-print("Jarvis LOX Tanks Volume:" + str(oxydizer_volume_jarvis))
+print("Jarvis LH2 Tanks Volume: " + str(propellant_volume_jarvis))
+print("Jarvis LOX Tanks Volume: " + str(oxydizer_volume_jarvis))
 thickness_LH2_jarvis = calculate_tank_thickness(tank_diameter, tank_length_jarvis, young_modulus, LH2_pressure, strength, structural_mass_jarvis)
-print("Thickness LH2 Tank Jarvis:" + str(thickness_LH2_jarvis))
+print("Thickness LH2 Tank Jarvis: " + str(thickness_LH2_jarvis))
 thickness_LOX_jarvis = calculate_tank_thickness(tank_diameter, tank_length_jarvis, young_modulus, LOX_pressure, strength, structural_mass_jarvis)
-print("Thickness LOX Tank Jarvis:" + str(thickness_LOX_jarvis))
+print("Thickness LOX Tank Jarvis: " + str(thickness_LOX_jarvis))
+mass_LH2_tank_jarvis = calculate_tank_mass(tank_diameter, tank_length_jarvis, thickness_LH2_jarvis, density)
+print("Mass LH2 Tank Jarvis: " + str(mass_LH2_tank_jarvis))
+mass_LOX_tank_jarvis = calculate_tank_mass(tank_diameter, tank_length_jarvis, thickness_LOX_jarvis, density)
+print("Mass LOX Tank Jarvis: " + str(mass_LOX_tank_jarvis))
 
-print((structural_mass_jarvis * 8.5 * 9.81)/(np.pi * (tank_diameter/2)**2))
+print("=============================================================================")
+#Space Shuttle tanks
+print("Space Shuttle Tanks:")
+print("Space Shuttle LH2 Tanks Volume: " + str(propellant_volume_spaceshuttle))
+print("Space Shuttle LOX Tanks Volume: " + str(oxydizer_volume_spaceshuttle))
+thickness_LH2_spaceshuttle = calculate_tank_thickness(tank_diameter, tank_length_spaceshuttle, young_modulus, LH2_pressure, strength, structural_mass_spaceshuttle)
+print("Thickness LH2 Tank Space Shuttle: " + str(thickness_LH2_spaceshuttle))
+thickness_LOX_spaceshuttle = calculate_tank_thickness(tank_diameter, tank_length_spaceshuttle, young_modulus, LOX_pressure, strength, structural_mass_spaceshuttle)
+print("Thickness LOX Tank Space Shuttle: " + str(thickness_LOX_spaceshuttle))
+mass_LH2_tank_spaceshuttle = calculate_tank_mass(tank_diameter, tank_length_spaceshuttle, thickness_LH2_spaceshuttle, density)
+print("Mass LH2 Tank Space Shuttle: " + str(mass_LH2_tank_spaceshuttle))
+mass_LOX_tank_spaceshuttle = calculate_tank_mass(tank_diameter, tank_length_spaceshuttle, thickness_LOX_spaceshuttle, density)
+print("Mass LOX Tank Space Shuttle: " + str(mass_LOX_tank_spaceshuttle))
+
+print("=============================================================================")
+#Starship tanks
+print("Starship Tanks:")
+print("Starship CH4 Tanks Volume: " + str(propellant_volume_starship))
+print("Starship LOX Tanks Volume: " + str(oxydizer_volume_starship))
+thickness_CH4_starship = calculate_tank_thickness(tank_diameter, tank_length_starship, young_modulus, Ch4_pressure, strength, structural_mass_starship)
+print("Thickness LH2 Tank Starship: " + str(thickness_CH4_starship))
+thickness_LOX_starship = calculate_tank_thickness(tank_diameter, tank_length_starship, young_modulus, LOX_pressure, strength, structural_mass_starship)
+print("Thickness LOX Tank Starship: " + str(thickness_LOX_starship))
+mass_CH4_tank_starship = calculate_tank_mass(tank_diameter, tank_length_starship, thickness_CH4_starship, density)
+print("Mass CH4 Tank Starship: " + str(mass_CH4_tank_starship))
+mass_LOX_tank_starship = calculate_tank_mass(tank_diameter, tank_length_starship, thickness_LOX_starship, density)
+print("Mass LOX Tank Starship: " + str(mass_LOX_tank_starship))
+
+
+print(0.603*(0.9*young_modulus*thickness_LH2_jarvis)/(tank_diameter))
