@@ -10,7 +10,7 @@ def _(mo):
         r"""
     # Re-entry Gliding Entry Simulations Notebook
 
-    This notebook explores the re-entry of a spacecraft into the atmosphere for the gliding mode. It performs trajectory calculations and heating calculations. It 
+    This notebook explores the re-entry of a spacecraft into the atmosphere for the gliding mode. It performs trajectory calculations and heating calculations. It
     """
     )
     return
@@ -56,8 +56,23 @@ def _(mo):
     Flight time is given by:
 
     $$ t_{\text{flight}} = \frac{1}{2} \frac{V_c}{g} \frac{L}{D} \ln \left(\frac{1 + V_E/V_c}{1 - V_E/V_c}\right) $$
+    """
+    )
+    return
 
 
+@app.cell
+def _(altitude, lift_drag_ratio, lift_parameter, mo, scale_height):
+    mo.md(
+        f"""
+    ### Gliding Entry Parameters
+
+    | Parameter | Adjustment | Value |
+    |:---|:---:|:---|
+    | Lift parameter | {lift_parameter} | {lift_parameter.value} [-]|
+    | Lift-Drag Ratio | {lift_drag_ratio} | {lift_drag_ratio.value} [-] |
+    | Scale Height | {scale_height} | {scale_height.value} m |
+    | Altitude | {altitude} | {altitude.value} km |
     """
     )
     return
@@ -65,38 +80,22 @@ def _(mo):
 
 @app.cell
 def _(
-        lift_coefficient,
-        lift_drag_ratio,
-        entry_speed,
-        mo,
-        scale_height,
-):
-    mo.md(
-        f"""
-    ### Gliding Entry Parameters
-
-    | Parameter | Adjustment | Value |
-    |:---|:---:|:---|
-    | Lift Coefficient | {lift_coefficient} | {lift_coefficient.value} |
-    | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
-    | Lift-Drag Ration | {lift_drag_ratio} | {lift_drag_ratio.value} degrees |
-    | Scale Height | {scale_height} | {scale_height.value} m |
-    """
-    )
-    return
-
-
-@app.cell
-def _(change_plot_style, convert_fig_to_svg, plot_svg, plt):
+        V_Vc_ratio,
+        height,
+        change_plot_style,
+        convert_fig_to_svg,
+        plot_svg,
+        plt):
     # the tank is plotted as two vertical lines and two semicircles.
-    fig, ax = plt.subplots()
-    # ax.plot()
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    ax.plot(V_Vc_ratio, height, label=r"$V/V_c$", color="blue")
 
-    ax.set_xlim(-1, 11)
-    ax.set_ylim(-6, 60)
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
-    ax.set_title("V/V_e ...")
+    ax.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
+    ax.set_xlim(0.001, 1)
+    ax.set_ylim(0, 120)
+    ax.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
+    ax.set_ylabel(r"$h$ [km]")
+    ax.set_title("Velocity Ratio during gliding re-entry")
     ax.grid(True)
     plt.close(fig)  # Close the plot to prevent default PNG rendering
 
@@ -110,59 +109,64 @@ def _(change_plot_style, convert_fig_to_svg, plot_svg, plt):
 
 
 @app.cell
+def _(get_velocity_ratio, lift_parameter, np, scale_height, altitude):
+    V_Vc_ratio, height = get_velocity_ratio(lift_parameter.value, scale_height.value, altitude.value)
+
+    return V_Vc_ratio, height
+
+
+@app.cell
 def _(mo):
     # sliders
-    lift_coefficient = mo.ui.slider(0, 10000, 100, value=2000)
-    entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
-    lift_drag_ratio = mo.ui.slider(-90, 0, -0.1, value=-10)
+    lift_parameter = mo.ui.slider(0, 20000, 100, value=2000)
+    lift_drag_ratio = mo.ui.slider(0, 10, 1, value=2)
     scale_height = mo.ui.slider(0, 10000, 100, value=7200)
-    return (
-        lift_coefficient,
-        lift_drag_ratio,
-        entry_speed,
-        scale_height,
-    )
+    altitude = mo.ui.slider(0, 120, 10, value=90)
+    return altitude, lift_drag_ratio, lift_parameter, scale_height
 
 
 @app.cell
 def _(np):
-    def get_ballistic_normalised_velocity(
-            lift_coefficient: float,
-            entry_speed: float,
-            entry_flight_path_angle: float,
+    def get_velocity_ratio(
+            lift_parameter: float,
             scale_height: float,
+            altitude: float
     ) -> float:
         """
-        Calculate the normalised velocity for a ballistic entry.
+        Calculate the velocity ratio for gliding re-entry
 
         Parameters:
         ----------
-        ballistic_coefficient : float
+        lift_parameter : float
             Ballistic coefficient of the spacecraft.
-        entry_speed : float
-            Entry speed of the spacecraft.
-        entry_flight_path_angle : float
-            Entry flight path angle of the spacecraft.
+        altitude : float
+            Altitude of spacecraft.
         scale_height : float
             Scale height of the atmosphere.
 
         Returns:
         -------
         float
-            Normalised velocity.
+            Velocity ratio.
         """
         # Constants
         g = 9.81  # m/s^2
         rho = 1.225  # kg/m^3
+        Re = 6378000
+
+        # Circular velocity
+        Vc = np.sqrt(g * Re)
+
+        # Altitude
+        h = np.linspace(0, altitude * 1000, 10000)
 
         # Calculate normalised velocity
-        normalised_velocity = np.exp(
-            (0.5 * g * rho * scale_height) / (lift_coefficient * np.sin(np.radians(entry_flight_path_angle)))
-        )
+        beta = 1 / scale_height
+        V_Vc_ratio = np.sqrt((lift_parameter) / (0.5 * rho * np.exp(-beta * h) * Vc ** 2 + lift_parameter))
 
-        return normalised_velocity
+        return V_Vc_ratio, h
 
-    return
+    return (get_velocity_ratio,)
 
 
 @app.cell
