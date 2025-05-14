@@ -46,6 +46,17 @@ def _(mo):
     The equilibrium flight-path angle is given by:
     
     $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \cdot \frac{2}{L/D} \cdot \frac{V_c^2}{V^2} $$
+    
+    ## Flight Range and Flight Duration
+    
+    The flight range is given by:
+    
+    $$ \frac{R_f}{R_e} = -\frac{1}{2} \frac{L}{D} \ln \left(1 - \frac{V_E^2}{V_c^2}\right) $$
+    
+    Flight time is given by:
+    
+    $$ t_{\text{flight}} = \frac{1}{2} \frac{V_c}{g} \frac{L}{D} \ln \left(\frac{1 + V_E/V_c}{1 - V_E/V_c}\right) $$
+
 
     """
     )
