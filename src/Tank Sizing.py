@@ -3,10 +3,10 @@ import numpy as np
 #material density [kg/m3]
 #material strength in cryogenic conditions [MPa]
 materials_properties = {
-    "Al-Li": {"density": 3000, "strength": 560},
-    "Annealed 304L Stainless Steel": {"density": 7800, "strength": 190},
-    "Annealed Ti-6Al-4V": {"density": 4400, "strength": 910},
-    "Inconel 718": {"density": 8300, "strength": 1190}
+    "Al-Li": {"density": 3000, "strength": 560*10**6, "young modulus": 69*10**9},
+    "Annealed 304L Stainless Steel": {"density": 7800, "strength": 190*10**6, "young modulus": 200*10**9},
+    "Annealed Ti-6Al-4V": {"density": 4400, "strength": 910*10**6, "young modulus": 110*10**9},
+    "Inconel 718": {"density": 8300, "strength": 1190*10**6, "young modulus": 190*10**9}
 }
 #Constraints
 buckling_stress_safety_factor = 1.5
@@ -17,7 +17,7 @@ LH2_LOX_O_F_ratio = 6/1
 #CH4_volume_shrinkage_coefficient = 1.28/100 #%
 
 LH2_pressure = 1035 #kPa (10 bar)
-LOX_pressure = 2330,47 #kPa (23 bar)
+LOX_pressure = 2330.47 #kPa (23 bar)
 Ch4_pressure = 400 #kPa
 
 LH2_boiloff_margin = 1.012 * 1.02 #(3.2% extra)
@@ -54,24 +54,50 @@ def calculate_tank_length(volume, diameter):
     cylinder_volume = volume - hemisphere_volume
     length = cylinder_volume / (np.pi * radius**2)
     return length
-print(propellant_volume_spaceshuttle)
-print(calculate_tank_length(propellant_volume_spaceshuttle, tank_diameter))
 
 # calculating tank thickness
-def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propellant_pressure, allowable_stress):
+def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propellant_pressure, allowable_stress, structural_mass):
     # Assuming a thin-walled cylinder for simplicity
     # Using the formula: t = (P * D) / (2 * σ)
     # where P is the internal pressure, D is the diameter, and σ is the allowable stress
     thickness_pressure = (propellant_pressure * tank_diameter) / (2 * allowable_stress)
+
+    #Axial loading
+    # Buckling stress with knockdown factor:
+    # sigma_cr = γ * (0.605 * E * t) / R
     gamma_knockdown_factor = 0.9
-    thickness_load = (allowable_stress*buckling_stress_safety_factor*tank_diameter/2)/(0.605*0.9*young_modulus)
+    critical_buckling_stress = (structural_mass * 8.5)/(np.pi * (tank_diameter/2)**2)
+    thickness_load = (critical_buckling_stress*buckling_stress_safety_factor*tank_diameter/2)/(0.605*gamma_knockdown_factor*young_modulus)
     if thickness_pressure > thickness_load:
         return thickness_pressure
     else:
         return thickness_load
 
 def calculate_tank_mass(tank_diameter, tank_length, thickness, material_density):
-    volume_shell = 2*np.pi *tank_diameter/2*thickness*(tank_length + 2* tank_diameter/2)
+    volume_shell = 2*np.pi*tank_diameter/2*thickness*(tank_length + 2*tank_diameter/2)
     mass = volume_shell * material_density
     return mass
+
+########################################### Results ################################################################
+# Choose a material
+material = "Al-Li"
+
+# Access density and strength
+density = materials_properties[material]["density"]       # kg/m^3
+strength = materials_properties[material]["strength"]     # Pa
+young_modulus = materials_properties[material]["young modulus"]   # Pa
+
+tank_length_jarvis = calculate_tank_length(propellant_volume_jarvis, tank_diameter)
+tank_length_spaceshuttle = calculate_tank_length(propellant_volume_spaceshuttle, tank_diameter)
+print(calculate_tank_length(propellant_volume_spaceshuttle, tank_diameter))
+tank_length_starship = calculate_tank_length(propellant_volume_starship, tank_diameter)
+
+#Jarvis tanks
+print("Jarvis Tanks:")
+print("Jarvis LH2 Tanks Volume:" + str(propellant_volume_jarvis))
+print("Jarvis LOX Tanks Volume:" + str(oxydizer_volume_jarvis))
+thickness_LH2_jarvis = calculate_tank_thickness(tank_diameter, tank_length_jarvis, young_modulus, LH2_pressure, strength, structural_mass_jarvis)
+print("Thickness LH2 Tank Jarvis:" + str(thickness_LH2_jarvis))
+thickness_LOX_jarvis = calculate_tank_thickness(tank_diameter, tank_length_jarvis, young_modulus, LOX_pressure, strength, structural_mass_jarvis)
+print("Thickness LOX Tank Jarvis:" + str(thickness_LOX_jarvis))
 
