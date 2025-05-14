@@ -13,7 +13,7 @@ import BO_tool_main_body
 cooler_power = [0.] 
 
 dt = 4.
-months = 1.
+months = 0.25
 
 MLI_layers = [ 45.] #[ 10., 20., 25., 35., 45., 65.]
 layer_densities = [ 16.] #[16., 40.]
