@@ -59,17 +59,42 @@ LOX_mass_starship = 3.6/4.6*propellant_mass_starship
 CH4_volume_starship = CH4_mass_starship/CH4_density*CH4_boiloff_margin
 LOX_volume_starship = LOX_mass_starship/LOX_density*LOX_boiloff_margin
 
-def calculate_tank_length(volume, diameter):
-    # V_total = V_cylinder + V_hemispheres = π * r^2 * h + (4/3) * π * r^3
-    radius = diameter / 2
-    hemisphere_volume = (4/3) * np.pi * radius**3
-    cylinder_volume = volume - hemisphere_volume
-    length = cylinder_volume / (np.pi * radius**2)
+def calculate_tank_length(model, tank_model, volume, tank_diameter):
+    # V_total = V_cylinder + V_ellipsoidal_caps = π * r^2 * h + 2 * (π/24) * D^3
+    if model == "LH2_LOX":
+        if tank_model == "LOX":
+            radius = tank_diameter / 2
+            cap_volume = (np.pi / 24) * tank_diameter ** 3
+            ellipsoidal_caps_volume = 2 * cap_volume
+            cylinder_volume = volume - ellipsoidal_caps_volume
+            length = cylinder_volume / (np.pi * radius**2)
+        elif tank_model == "LH2":
+            radius = tank_diameter / 2
+            cap_volume = (np.pi / 24) * tank_diameter ** 3
+            cylinder_volume = volume - cap_volume + cap_volume
+            length = cylinder_volume / (np.pi * radius ** 2)
+    elif model == "CH4_LOX":
+        if tank_model == "CH4":
+            radius = tank_diameter / 2
+            cap_volume = (np.pi / 24) * tank_diameter ** 3
+            ellipsoidal_caps_volume = 2 * cap_volume
+            cylinder_volume = volume - ellipsoidal_caps_volume
+            length = cylinder_volume / (np.pi * radius**2)
+        elif tank_model == "LOX":
+            radius = tank_diameter / 2
+            cap_volume = (np.pi / 24) * tank_diameter ** 3
+            cylinder_volume = volume - cap_volume + cap_volume
+            length = cylinder_volume / (np.pi * radius ** 2)
+        elif tank_model == "LH2":
+            radius = tank_diameter / 2
+            cap_volume = (np.pi / 24) * tank_diameter ** 3
+            cylinder_volume = volume - cap_volume + cap_volume
+            length = cylinder_volume / (np.pi * radius ** 2)
     return length
 
-#print((4/3) * np.pi * (tank_diameter/2)**3)
-print("Jarvis length tank: " + str(calculate_tank_length(LH2_volume_spaceshuttle, tank_diameter)))
-print(LH2_volume_jarvis - (np.pi * (tank_diameter/2)**2 * 4.34 + 8/3* np.pi * (tank_diameter/2)**3))
+print("Jarvis length tank: " + str(calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)))
+print("Jarvis volume tank: " + str(np.pi * (tank_diameter/2)**2 * calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)))
+print("Jarvis volume LH2: " + str(LH2_volume_jarvis))
 def calculate_tank_thickness(wet_mass, propellant_pressure, fuel_mass, tank_length, tank_diameter, E, strength, gamma=0.65):
     t = 0.001  # Start with 1 mm
     while True:
@@ -120,12 +145,12 @@ density = materials_properties[material]["density"]       # kg/m^3
 strength = materials_properties[material]["strength"]     # Pa
 young_modulus = materials_properties[material]["young modulus"]   # Pa
 
-tank_length_jarvis_LH2 = calculate_tank_length(LH2_volume_jarvis, tank_diameter)
-tank_length_jarvis_LOX = calculate_tank_length(LOX_volume_jarvis, tank_diameter)
-tank_length_spaceshuttle_LH2 = calculate_tank_length(LH2_volume_spaceshuttle, tank_diameter)
-tank_length_spaceshuttle_LOX = calculate_tank_length(LOX_volume_spaceshuttle, tank_diameter)
-tank_length_starship_CH4 = calculate_tank_length(CH4_volume_starship, tank_diameter)
-tank_length_starship_LOX = calculate_tank_length(LOX_volume_starship, tank_diameter)
+tank_length_jarvis_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)
+tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis, tank_diameter)
+tank_length_spaceshuttle_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_spaceshuttle, tank_diameter)
+tank_length_spaceshuttle_LOX = calculate_tank_length("LH2_LOX", "LOX",LOX_volume_spaceshuttle, tank_diameter)
+tank_length_starship_CH4 = calculate_tank_length("CH4_LOX", "LH2", CH4_volume_starship, tank_diameter)
+tank_length_starship_LOX = calculate_tank_length("CH4_LOX", "LOX",LOX_volume_starship, tank_diameter)
 
 #Jarvis tanks
 print("Jarvis Tanks:")
