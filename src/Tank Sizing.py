@@ -127,9 +127,9 @@ def calculate_tank_length(model, tank_model, volume, tank_diameter):
             length = cylinder_volume / (np.pi * radius ** 2)
     return length
 
-print("Jarvis length tank: " + str(calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)))
-print("Jarvis volume tank: " + str(np.pi * (tank_diameter/2)**2 * calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)))
-print("Jarvis volume LH2: " + str(LH2_volume_jarvis))
+print("Jarvis length tank: " + str(calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_LH2, tank_diameter)))
+print("Jarvis volume tank: " + str(np.pi * (tank_diameter/2)**2 * calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_LH2, tank_diameter)))
+print("Jarvis volume LH2: " + str(LH2_volume_jarvis_LH2))
 def calculate_tank_thickness(wet_mass, propellant_pressure, fuel_mass, tank_length, tank_diameter, E, strength, gamma=0.65):
     t = 0.001  # Start with 1 mm
     while True:
@@ -183,19 +183,19 @@ young_modulus = materials_properties[material]["young modulus"]   # Pa
 tank_length_jarvis_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_LH2, tank_diameter)
 tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis_LH2, tank_diameter)
 
-tank_length_jarvis_CH4 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_CH4, tank_diameter)
-tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis_CH4, tank_diameter)
+tank_length_jarvis_CH4 = calculate_tank_length("CH4_LOX", "LH2", LH2_volume_jarvis_CH4, tank_diameter)
+tank_length_jarvis_LOX = calculate_tank_length("CH4_LOX", "LOX", LOX_volume_jarvis_CH4, tank_diameter)
 
 tank_length_starship_CH4 = calculate_tank_length("CH4_LOX", "LH2", CH4_volume_starship, tank_diameter)
 tank_length_starship_LOX = calculate_tank_length("CH4_LOX", "LOX",LOX_volume_starship, tank_diameter)
 
 #Jarvis tanks
 print("Jarvis Tanks:")
-print("Jarvis LH2 Tanks Volume: " + str(LH2_volume_jarvis))
-print("Jarvis LOX Tanks Volume: " + str(LOX_volume_jarvis))
-thickness_LH2_jarvis = calculate_tank_thickness(wet_mass_jarvis, LH2_pressure, LH2_mass_jarvis, tank_length_jarvis_LH2, tank_diameter, young_modulus, strength, gamma=0.65)
+print("Jarvis LH2 Tanks Volume: " + str(LH2_volume_jarvis_LH2))
+print("Jarvis LOX Tanks Volume: " + str(LOX_volume_jarvis_LH2))
+thickness_LH2_jarvis = calculate_tank_thickness(wet_mass_jarvis_LH2, LH2_pressure, LH2_mass_jarvis_LH2, tank_length_jarvis_LH2, tank_diameter, young_modulus, strength, gamma=0.65)
 print("Thickness LH2 Tank Jarvis: " + str(thickness_LH2_jarvis))
-thickness_LOX_jarvis = calculate_tank_thickness(wet_mass_jarvis, LOX_pressure, LOX_mass_jarvis, tank_length_jarvis_LOX, tank_diameter, young_modulus, strength, gamma=0.65)
+thickness_LOX_jarvis = calculate_tank_thickness(wet_mass_jarvis_LH2, LOX_pressure, LOX_mass_jarvis_LH2, tank_length_jarvis_LOX, tank_diameter, young_modulus, strength, gamma=0.65)
 print("Thickness LOX Tank Jarvis: " + str(thickness_LOX_jarvis))
 mass_LH2_tank_jarvis = calculate_tank_mass(tank_diameter, tank_length_jarvis_LH2, thickness_LH2_jarvis, density)
 print("Mass LH2 Tank Jarvis: " + str(mass_LH2_tank_jarvis))
@@ -207,9 +207,9 @@ print("=========================================================================
 print("Starship Tanks:")
 print("Starship CH4 Tanks Volume: " + str(CH4_volume_starship))
 print("Starship LOX Tanks Volume: " + str(LOX_volume_starship))
-thickness_CH4_starship = calculate_tank_thickness(wet_mass_starship, Ch4_pressure, CH4_mass_starship, tank_length_starship_CH4, tank_diameter, young_modulus, strength, gamma=0.65)
+thickness_CH4_starship = calculate_tank_thickness(wet_mass_starship_CH4, Ch4_pressure, CH4_mass_starship, tank_length_starship_CH4, tank_diameter, young_modulus, strength, gamma=0.65)
 print("Thickness LH2 Tank Starship: " + str(thickness_CH4_starship))
-thickness_LOX_starship = calculate_tank_thickness(wet_mass_starship, LOX_pressure, LOX_mass_starship, tank_length_starship_LOX, tank_diameter, young_modulus, strength, gamma=0.65)
+thickness_LOX_starship = calculate_tank_thickness(wet_mass_starship_CH4, LOX_pressure, LOX_mass_starship_CH4, tank_length_starship_LOX, tank_diameter, young_modulus, strength, gamma=0.65)
 print("Thickness LOX Tank Starship: " + str(thickness_LOX_starship))
 mass_CH4_tank_starship = calculate_tank_mass(tank_diameter, tank_length_starship_CH4, thickness_CH4_starship, density)
 print("Mass CH4 Tank Starship: " + str(mass_CH4_tank_starship))
@@ -217,7 +217,7 @@ mass_LOX_tank_starship = calculate_tank_mass(tank_diameter, tank_length_starship
 print("Mass LOX Tank Starship: " + str(mass_LOX_tank_starship))
 
 print("=============================================================================")
-SM_jarvis_LH2 = calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)
+SM_jarvis_LH2 = calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis_CH4, young_modulus, gamma=0.9, g_load=8.5)
 print("SM LH2 Jarvis: " + str(calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)))
 SM_jarvis_LOX = calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)
 print("SM LOX Jarvis: " +str(calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)))
