@@ -142,7 +142,7 @@ def _(FluidsList, mo):
     coolant_pressure = mo.ui.slider(1e5, 10e5, 0.1e5, value=1.0e5)
     entry_speed = mo.ui.slider(6000, 8000, 10, value=7000)
     heat_soak_fraction = mo.ui.slider(0.0, 1.0, 0.01, value=0.02)
-    target_temperature = mo.ui.slider(500, 2000, 100, value=1500)
+    target_temperature = mo.ui.slider(300, 2000, 100, value=1500)
     coolant = mo.ui.dropdown({
         "Hydrogen": FluidsList.Hydrogen,
         "Methane": FluidsList.Methane,
@@ -311,6 +311,109 @@ def _(
     # Display the SVG in Marimo using mo.Html
     _svg_data = convert_fig_to_svg(_fig)
     plot_svg(_svg_data)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        rf"""
+    Heating energies assuming
+
+    - Target temperature: 1400 K
+    - Initial temperature: subcooled to freezing point
+
+    are:
+
+    - Hydrogen: 14,627,289.8 J/kg
+    - Methane: 4,648,808.6 J/kg
+    - Oxygen: 1,256,278.5 J/kg
+    - Water: 4,315,890.9 J/kg
+
+    **Hydrogen needs {round(14627289.8 / 4648808.6, 2)} times more energy to reach the heatshield temperature.**
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ### Vehicle dry mass as heat sink
+
+    For this analysis, the entire vehicle shall be assumed to be made up of one metallic material with constant specific heat capacity and heated up to the heat shield temperature. This amount of energy shall be compared to the internal energy increase of the coolant.
+    """
+    )
+    return
+
+
+@app.cell
+def _(coolant_initial_temperature, target_temperature, vehicle_dry_mass):
+    _material = "Aluminium"
+    _material_specific_heat = 600  # J/kg*K
+    _material_mass = vehicle_dry_mass.value * 0.8  # correction to remove engine mass etc.
+    _temperature_difference = target_temperature.value - coolant_initial_temperature.value
+
+    _energy_needed = round(_material_mass * _material_specific_heat * _temperature_difference, 3)
+    _energy_needed
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        rf"""
+    Aluminum Al 2195 (Space Shuttle), assuming constant $c_p = 0.9$ kJ/kg*K, vehicle dry mass 60,000 kg, heat shield temperature 300 K: 12,363,840,000.0 J, this is roughly 12.4 GJ.
+
+    Stainless steel (304L), assuming constant $c_p = 0.6$ kJ/kg*K, vehicle dry mass 60,000 kg, heat shield temperature 1400 K: 39,922,560,000.0 J, this is roughly 39.9 GJ
+
+    For both materials, only 80% of the vehicle dry mass is assumed to be the heated mass.
+
+    Note that hydrogen has 14,627,289.8 J/kg of heating energy, so roughly 14.6 MJ/kg. Therefore for stainless steel, the steel is equivalent to roughly 3000 kg of liquid hydrogen!
+
+    Moreover, for stainless steel, one can consider the heat being radiated out.
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    The Stefan-Boltzmann law is:
+
+    $$ \frac{P}{A} = \sigma T^4 $$
+
+    Based on the assumptions in the code, the energy radiated out is roughly 67.5 GJ.
+    """
+    )
+    return
+
+
+@app.cell
+def _(entry_speed, np, vehicle_dry_mass):
+    _sigma = 5.6703e-8  # Stefan-Boltzmann constant
+    _radiation_temperature = 1400  # K
+
+    # to calculate surface area, assume a cylinder
+    _height = 20  # m
+    _diameter = 7  # m
+    _area = np.pi * _diameter * _height + 2 * np.pi * _diameter**2 / 4  # m^2
+
+    # re-entry time
+    _time = 600  # s
+
+    _energy = _sigma * _radiation_temperature**4 * _area * _time
+
+    round(_energy*1e-9, 1), round(1/2*vehicle_dry_mass.value*entry_speed.value**2*1e-9, 1)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""So in conclusion, if the vehicle made out of stainless steel and it is allowed to operate at 1400 K, approximately 100 GJ of heat shall be handled by the structure itself.""")
     return
 
 
