@@ -14,11 +14,152 @@ def _(mo):
 
     - the kinetic energy of a re-entering second stage
     - the thermal energy the liquid hydrogen can contain
+    - the mass-stepping simulation of the energy exchange between the vehicle and the liquid hydrogen
+    - amount of heat soaked by the vehicle during re-entry
+    """
+    )
+    return
 
-    Then the two numbers will be compared to estimate the effectiveness of an active cooling re-entry system.
 
-    Kinetic energy: $E_k = \frac{1}{2} m V^2$
+@app.cell
+def _(
+    entry_speed,
+    heat_soak_fraction,
+    hydrogen_mass,
+    mo,
+    target_temperature,
+    vehicle_dry_mass,
+):
+    mo.md(
+        rf"""
+    ## Simulation Description
 
+    The simulation is stepping in mass. If the vehicle starts with 60 tonnes of dry mass and 40 tonnes of propellant mass, it first calculates the kinetic energy at entry speed of the two masses combined. Then, at each step, it is assumed that a small amount of hydrogen is heated to a target temperature that corresponds to the steady state heat shield temperature (the heat shield is assumed regeneratively cooled) and that this heating energy is taken from the kinetic energy. In practice, only a small portion of the lost kinetic energy is soaked as heat into the vehicle, so a parameter is defined that account for this.
+
+    Next, the heated hydrogen is vented from the vehicle. Effectively, the vehicle loses even more kinetic energy because it reduced in total mass. Then, another step is started.
+
+    In summary, these are the steps of the simulation
+
+    1. Calculate the initial total kinetic energy of the vehicle and the propellant using its entry speed
+    2. Calculate the heating energy of the hydrogen
+
+    At the end of the simulation, the two energies are combined answering the question: how much energy is used to heat up the hydrogen and how much kinetic energy is lost.
+
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Vehicle Dry Mass | {vehicle_dry_mass} | {vehicle_dry_mass.value} |
+    | Hydrogen Mass | {hydrogen_mass} | {hydrogen_mass.value} |
+    | Entry Speed | {entry_speed} | {entry_speed.value} |
+    | Heat Soak Fraction | {heat_soak_fraction} | {heat_soak_fraction.value} |
+    | Maximum Heat Shield Temperature | {target_temperature} | {target_temperature.value} |
+    """
+    )
+    return
+
+
+@app.cell
+def _(
+    Fluid,
+    FluidsList,
+    Input,
+    hydrogen_initial_temperature,
+    hydrogen_pressure,
+    target_temperature,
+):
+    # Calculate the specific heating energy of the hydrogen
+    hydrogen = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(hydrogen_pressure.value), Input.temperature(hydrogen_initial_temperature.value))
+
+    initial_internal_energy = hydrogen.internal_energy
+    final_internal_energy = hydrogen.heating_to_temperature(temperature=target_temperature.value).internal_energy
+    specific_heating_energy = final_internal_energy - initial_internal_energy
+    return (specific_heating_energy,)
+
+
+@app.cell
+def _(
+    change_plot_style,
+    convert_fig_to_svg,
+    entry_speed,
+    heat_soak_fraction,
+    hydrogen_mass,
+    np,
+    plot_svg,
+    plt,
+    specific_heating_energy,
+    vehicle_dry_mass,
+):
+    # Mass-stepping simulation
+    dm = 1  # mass step
+    masses = np.linspace(vehicle_dry_mass.value + hydrogen_mass.value, vehicle_dry_mass.value, int(hydrogen_mass.value / dm) + 1)
+    kinetic_energies = np.empty(masses.shape)
+    velocities = np.empty(masses.shape)
+
+    velocities[0] = entry_speed.value
+
+    for _i, _m in enumerate(masses[:-1]):
+        # Calculate the kinetic energy of the vehicle at the current mass step
+        kinetic_energies[_i] = 0.5 * _m * velocities[_i]**2
+
+        # Calculate the energy lost by the vehicle due to the heating of the hydrogen
+        _heating_energy = specific_heating_energy * dm
+
+        # Correct for the heat soak fraction, more kinetic energy is actually lost than the heat soaked by the hydrogen
+        _heating_energy = _heating_energy / heat_soak_fraction.value
+
+        # Calculate the change in velocity as a result of the heating energy
+        velocities[_i+1]  = np.sqrt(2 * (kinetic_energies[_i] - _heating_energy) / _m)
+
+    _fig, _ax1 = plt.subplots(1, 1, figsize=(10, 5))
+
+    _ax1.plot(masses, velocities)  # Convert J/kg to kJ/kg
+    _ax1.set_xlabel("Masses (kg)")
+    _ax1.set_ylabel("Velocities (m/s)")
+    _ax1.set_title("Mass vs Velocity")
+    _ax1.grid()
+
+    plt.close(_fig)  # Close the plot to prevent default PNG rendering
+
+    # Change plotting style
+    change_plot_style()
+
+    # Display the SVG in Marimo using mo.Html
+    _svg_data = convert_fig_to_svg(_fig)
+    plot_svg(_svg_data)
+    return
+
+
+@app.cell
+def _(mo):
+    # sliders
+    vehicle_dry_mass = mo.ui.slider(10e3, 100e3, 1e3, value=60e3)
+    hydrogen_mass = mo.ui.slider(1e3, 50e3, 1e3, value=40e3)
+    hydrogen_initial_temperature = mo.ui.slider(13.8, 20, 0.1, value=13.8)
+    hydrogen_pressure = mo.ui.slider(1e5, 10e5, 0.1e5, value=1.0e5)
+    entry_speed = mo.ui.slider(6000, 8000, 10, value=7000)
+    heat_soak_fraction = mo.ui.slider(0.0, 1.0, 0.01, value=0.05)
+    target_temperature = mo.ui.slider(500, 2000, 100, value=1500)
+
+    return (
+        entry_speed,
+        heat_soak_fraction,
+        hydrogen_initial_temperature,
+        hydrogen_mass,
+        hydrogen_pressure,
+        target_temperature,
+        vehicle_dry_mass,
+    )
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Theory""")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
     ### Fluid properties of liquid hydrogen
 
     Assuming liquid hydrogen at 20 K and at 1 bar:
@@ -41,155 +182,154 @@ def _(mo):
 
     - https://www.reddit.com/r/spacex/comments/a9y9r0/an_energy_budget_for_starship_reentry/
     - https://tfaws.nasa.gov/TFAWS12/Proceedings/Aerothermodynamics%20Course.pdf
+    - https://physics.stackexchange.com/questions/689218/how-can-hydrogen-have-negative-enthalpy
 
     ### Videos
 
     - https://www.youtube.com/watch?v=7BA7iVTRyO4
     - https://www.youtube.com/watch?v=LZX8mlNRx2c
+
+    ### Tasks
+
+    - [ ] Implement a vaporization-stepping simulation where the energy exchange between liquid hydrogen and vehicle kinetic energy happens in small steps
+    - [ ] Implement CoolProp to evaluate energy needed to heat, vaporize and heat again to heat sink temperature
+    - [ ] Implement the vehicle mass as a heat sink
     """
     )
     return
 
 
 @app.cell
-def _():
-    def calculate_kinetic_energy(mass: float, velocity: float) -> float:
-        return 0.5 * mass * velocity**2
+def _(mo):
+    mo.md(
+        r"""
+    ### Liquid Hydrogen Properties
 
-    def calculate_heating_energy(mass: float, specific_heat: float, temperature_change: float) -> float:
-        return mass * specific_heat * temperature_change
-
-    def calculate_vaporization_energy(mass: float, latent_heat: float) -> float:
-        return mass * latent_heat
-    return (
-        calculate_heating_energy,
-        calculate_kinetic_energy,
-        calculate_vaporization_energy,
+    The below plots provide some information derived from CoolProp.
+    """
     )
+    return
 
 
 @app.cell
 def _(
-    calculate_heating_energy,
-    calculate_kinetic_energy,
-    calculate_vaporization_energy,
+    Fluid,
+    FluidsList,
+    Input,
+    change_plot_style,
+    convert_fig_to_svg,
     np,
+    plot_svg,
+    plt,
 ):
-    # --- Initial parameters from your example ---
-    initial_system_mass = 60000.0  # kg (this is the mass contributing to KE)
-    velocity = 6000.0  # m/s
+    # assume subcooled hydrogen stored at 1 bar
+    _hydrogen_temperature = 13.8
+    _hydrogen_pressure = 1e5
+    subcooled_hydrogen = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(_hydrogen_pressure), Input.temperature(_hydrogen_temperature))
 
-    # This is the total amount of mass that will be targeted for vaporization
-    # from the initial_system_mass.
-    target_total_mass_to_vaporize = 40000.0 # kg
+    # target heating to 1000 K
+    _target_temperature = 1000
 
-    # Material/process properties from your example
-    # (used for calculate_heating_energy and calculate_vaporization_energy)
-    specific_heat_capacity = 9.56e3  # J/(kg*K) or J/(kg*°C)
-    delta_T_for_heating = 5.0  # K or °C (temperature change for the heating phase)
-    latent_heat_of_vaporization = 223.2e3  # J/kg
+    # energy needed to heat subcooled hydrogen to target temperature
+    _initial_internal_energy = subcooled_hydrogen.internal_energy
+    _final_internal_energy = subcooled_hydrogen.heating_to_temperature(_target_temperature).internal_energy
+    _heating_energy = _final_internal_energy - _initial_internal_energy
 
-    # --- Simulation control parameters ---
-    # Define how much mass is processed (heated and vaporized) in each simulation step.
-    # This determines the granularity and number of steps in the simulation.
-    # Let's choose a value, e.g., 1000 kg per step.
-    mass_chunk_to_process_per_step = 1000.0  # kg
+    print("The density of subcooled hydrogen is:", round(subcooled_hydrogen.density, 3), "kg/m^3")
+    print("The internal energy of subcooled hydrogen is:", round(subcooled_hydrogen.internal_energy, 3), "kJ/kg")
+    print("The energy needed to bring subcooled hydrogen to target temperature is:", round(_heating_energy, 3), "kJ/kg")
 
-    # --- Simulation variables ---
-    current_system_mass = initial_system_mass
-    total_mass_vaporized_in_simulation = 0.0
-    step_count = 0
+    # plot hydrogen properties as a function of temperature
+    temperatures = np.linspace(13.8, 1000, 1000)
+    internal_energies = np.empty(temperatures.shape)  # internal energy [kJ/kg]
+    specific_heats = np.empty(temperatures.shape)  # mass specific constant pressure specific heat [J/kg/K].
+    conductivities = np.empty(temperatures.shape)  # thermal conductivity [W/m/K]
 
-    # --- Initial State Output ---
-    print(f"--- Initial Conditions ---")
-    print(f"Initial System Mass: {current_system_mass:,.2f} kg".replace('.', ','))
-    initial_kinetic_energy = calculate_kinetic_energy(current_system_mass, velocity)
-    print(f"Initial Kinetic Energy: {initial_kinetic_energy:,.2e} J".replace('.', ','))
-    print(f"Target Total Mass to Vaporize: {target_total_mass_to_vaporize:,.2f} kg".replace('.', ','))
-    print(f"Mass Chunk per Step: {mass_chunk_to_process_per_step:,.2f} kg".replace('.', ','))
-    print(f"--- Starting Time-Stepping Simulation ---")
-    print("| Step | Mass Vaporized   | Remaining Mass   | Kinetic Energy   | Total Vaporized  | Heating Energy  | Vaporization Energy |")
-    print("|------|------------------|------------------|------------------|------------------|-----------------|---------------------|")
-    print("|      | this Step (kg)   | (kg)             | (J)              | (kg)             | this Step (J)   | this Step (J)       |")
-    print("|------|------------------|------------------|------------------|------------------|-----------------|---------------------|")
+    for _i, _T in enumerate(temperatures):
+        # Create a new fluid object for each temperature
+        fluid = Fluid(FluidsList.Hydrogen).with_state(Input.temperature(_T), Input.pressure(_hydrogen_pressure))
+        # Calculate internal energy and specific heat
+        internal_energies[_i] = fluid.internal_energy
+        specific_heats[_i] = fluid.specific_heat
+        conductivities[_i] = fluid.conductivity
 
-    # --- Simulation Loop ---
-    while total_mass_vaporized_in_simulation < target_total_mass_to_vaporize and current_system_mass > 0:
-        step_count += 1
+    _fig, (_ax1, _ax2, _ax3) = plt.subplots(3, 1, figsize=(10, 9))
 
-        # Determine the actual amount of mass to vaporize in this step
-        mass_to_vaporize_this_step = mass_chunk_to_process_per_step
+    # fig.suptitle("Hydrogen Properties vs Temperature", fontsize=16)
 
-        # Adjust if it exceeds the remaining target amount
-        if total_mass_vaporized_in_simulation + mass_to_vaporize_this_step > target_total_mass_to_vaporize:
-            mass_to_vaporize_this_step = target_total_mass_to_vaporize - total_mass_vaporized_in_simulation
+    _ax1.plot(temperatures, internal_energies*1e-3)  # Convert J/kg to kJ/kg
+    # _ax1.set_xlabel("Temperature (K)")
+    _ax1.set_ylabel("Internal Energy (kJ/kg)")
+    # _ax1.set_title("Internal Energy of Hydrogen vs Temperature")
+    _ax1.grid()
 
-        # Adjust if it exceeds the current available system mass
-        if mass_to_vaporize_this_step > current_system_mass:
-            mass_to_vaporize_this_step = current_system_mass
+    _ax2.plot(temperatures, specific_heats*1e-3)  # Convert J/kg/K to kJ/kg/K
+    # _ax2.set_xlabel("Temperature (K)")
+    _ax2.set_ylabel("Specific Heat (kJ/kg*K)")
+    # _ax2.set_title("Specific Heat of Hydrogen vs Temperature")
+    _ax2.grid()
 
-        # If no mass can be vaporized (e.g., target met, or system empty), break the loop
-        if mass_to_vaporize_this_step <= 1e-9: # Using a small epsilon to handle potential float issues
-            break
+    _ax3.plot(temperatures, conductivities)  # W/m/K
+    # _ax3.set_xlabel("Temperature (K)")
+    _ax3.set_ylabel("Thermal Conductivity (W/m*K)")
+    # _ax3.set_title("Thermal Conductivity of Hydrogen vs Temperature")
+    _ax3.grid()
 
-        # Calculate energies required for processing this mass chunk
-        heating_energy_this_step = calculate_heating_energy(mass_to_vaporize_this_step, specific_heat_capacity, delta_T_for_heating)
-        vaporization_energy_this_step = calculate_vaporization_energy(mass_to_vaporize_this_step, latent_heat_of_vaporization)
+    plt.close(_fig)  # Close the plot to prevent default PNG rendering
 
-        # Update system state: reduce mass and track total vaporized
-        current_system_mass -= mass_to_vaporize_this_step
-        total_mass_vaporized_in_simulation += mass_to_vaporize_this_step
+    # Change plotting style
+    change_plot_style()
 
-        # Calculate the new kinetic energy with the reduced mass
-        current_kinetic_energy = calculate_kinetic_energy(current_system_mass, velocity)
+    # Display the SVG in Marimo using mo.Html
+    _svg_data = convert_fig_to_svg(_fig)
+    plot_svg(_svg_data)
+    return
 
-        # Derive the new velocity
-        velocity = np.sqrt(2 * current_kinetic_energy / current_system_mass) if current_system_mass > 0 else 0
 
-        # Print step details (using standard Python float formatting with '.', then replacing for display)
-        # For J values, scientific notation might be more readable for large numbers.
-        print(f"| {step_count:<4} | {mass_to_vaporize_this_step:>16,.2f} | {current_system_mass:>16,.2f} | {current_kinetic_energy:>16,.2e} | {total_mass_vaporized_in_simulation:>16,.2f} | {heating_energy_this_step:>15,.2e} | {vaporization_energy_this_step:>19,.2e} |".replace('.', ','))
-
-        # Safety break: if system mass is depleted but target not fully met (should be covered by logic above)
-        if current_system_mass <= 1e-9 and total_mass_vaporized_in_simulation < target_total_mass_to_vaporize - 1e-9:
-            print("Warning: System mass depleted before achieving the full target vaporization amount.".replace('.', ','))
-            break
-
-    print("|------|------------------|------------------|------------------|------------------|-----------------|---------------------|")
-    print(f"--- Simulation Ended ---")
-    print(f"Total steps: {step_count}".replace('.', ','))
-    print(f"Total mass vaporized: {total_mass_vaporized_in_simulation:,.2f} kg".replace('.', ','))
-    print(f"Final system mass: {current_system_mass:,.2f} kg".replace('.', ','))
-
-    final_kinetic_energy = calculate_kinetic_energy(current_system_mass, velocity) # Should be same as last current_kinetic_energy
-    print(f"Final Kinetic Energy: {final_kinetic_energy:,.2e} J".replace('.', ','))
-
-    if initial_kinetic_energy > 1e-9: # Avoid division by zero
-        percentage_ke_reduction = (initial_kinetic_energy - final_kinetic_energy) / initial_kinetic_energy
-        print(f"Total Kinetic Energy Reduction: {percentage_ke_reduction:.2%}".replace('.', ','))
-    else:
-        print("Initial kinetic energy was zero or negligible; percentage reduction cannot be calculated.".replace('.', ','))
-
-    # --- Comparison with original single calculations (for context) ---
-    # Original calculation for total energy to heat 40000 kg
-    # total_heating_energy_original = calculate_heating_energy(40000.0, specific_heat_capacity, delta_T_for_heating)
-    # Original calculation for total energy to vaporize 40000 kg
-    # total_vaporization_energy_original = calculate_vaporization_energy(40000.0, latent_heat_of_vaporization)
-
-    # print(f"\\n--- For Reference: Original Single Calculations (for 40,000 kg mass chunk) ---")
-    # print(f"Total energy to heat 40,000 kg: {total_heating_energy_original:,.2e} J".replace('.', ','))
-    # print(f"Total energy to vaporize 40,000 kg: {total_vaporization_energy_original:,.2e} J".replace('.', ','))
-    # if initial_kinetic_energy > 1e-9:
-    #     print(f"Original calculation's heating energy as % of initial KE: {total_heating_energy_original / initial_kinetic_energy:.2%}".replace('.', ','))
-    #     print(f"Original calculation's vaporization energy as % of initial KE: {total_vaporization_energy_original / initial_kinetic_energy:.2%}".replace('.', ','))
+@app.cell
+def _(mo):
+    mo.md(r"""# Helpers""")
     return
 
 
 @app.cell
 def _():
+    import io
+    import matplotlib.pyplot as plt
     import marimo as mo
     import numpy as np
-    return mo, np
+    from pyfluids import Fluid, FluidsList, Input
+    return Fluid, FluidsList, Input, io, mo, np, plt
+
+
+@app.cell
+def _(io, mo):
+    def change_plot_style():
+        """ this breaks the web version
+        plt.rcParams.update({
+            "text.usetex": True,
+            "font.family": "Computer Modern Roman"
+        })
+        """
+        pass
+
+    def convert_fig_to_svg(fig):
+        # Save the plot to an in-memory SVG buffer
+        svg_buffer = io.StringIO()
+        fig.savefig(svg_buffer, format="svg")
+        svg_buffer.seek(0)
+        svg_data = svg_buffer.getvalue()
+        return svg_data
+
+    def plot_svg(svg_data):
+        # Display the SVG in Marimo using mo.Html
+        return mo.Html(f"""
+            <div>
+                {svg_data}
+            </div>
+        """)
+
+    return change_plot_style, convert_fig_to_svg, plot_svg
 
 
 if __name__ == "__main__":
