@@ -23,9 +23,12 @@ def _(mo):
 
 @app.cell
 def _(
+    coolant,
+    coolant_initial_temperature,
+    coolant_mass,
+    coolant_pressure,
     entry_speed,
     heat_soak_fraction,
-    hydrogen_mass,
     mo,
     target_temperature,
     vehicle_dry_mass,
@@ -47,11 +50,14 @@ def _(
 
     | Variable | Adjustment | Value |
     |:---|:---:|:---|
-    | Vehicle Dry Mass | {vehicle_dry_mass} | {vehicle_dry_mass.value} |
-    | Hydrogen Mass | {hydrogen_mass} | {hydrogen_mass.value} |
-    | Entry Speed | {entry_speed} | {entry_speed.value} |
-    | Heat Soak Fraction | {heat_soak_fraction} | {heat_soak_fraction.value} |
-    | Maximum Heat Shield Temperature | {target_temperature} | {target_temperature.value} |
+    | Vehicle Dry Mass | {vehicle_dry_mass} | {vehicle_dry_mass.value} kg |
+    | Coolant Mass | {coolant_mass} | {coolant_mass.value} kg |
+    | Coolant Initial Temperature | {coolant_initial_temperature} | {coolant_initial_temperature.value} K |
+    | Coolant Pressure | {coolant_pressure} | {round(coolant_pressure.value*1e-5, 1)} bar |
+    | Entry Speed | {entry_speed} | {entry_speed.value} m/s |
+    | Heat Soak Fraction | {heat_soak_fraction} | {heat_soak_fraction.value} - |
+    | Maximum Heat Shield Temperature | {target_temperature} | {target_temperature.value} K |
+    | Coolant Type | {coolant} | - |
     """
     )
     return
@@ -60,17 +66,17 @@ def _(
 @app.cell
 def _(
     Fluid,
-    FluidsList,
     Input,
-    hydrogen_initial_temperature,
-    hydrogen_pressure,
+    coolant,
+    coolant_initial_temperature,
+    coolant_pressure,
     target_temperature,
 ):
-    # Calculate the specific heating energy of the hydrogen
-    hydrogen = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(hydrogen_pressure.value), Input.temperature(hydrogen_initial_temperature.value))
+    # Calculate the specific heating energy of the coolant
+    _coolant = Fluid(coolant.value).with_state(Input.pressure(coolant_pressure.value), Input.temperature(coolant_initial_temperature.value))
 
-    initial_internal_energy = hydrogen.internal_energy
-    final_internal_energy = hydrogen.heating_to_temperature(temperature=target_temperature.value).internal_energy
+    initial_internal_energy = _coolant.internal_energy
+    final_internal_energy = _coolant.heating_to_temperature(temperature=target_temperature.value).internal_energy
     specific_heating_energy = final_internal_energy - initial_internal_energy
     return (specific_heating_energy,)
 
@@ -79,9 +85,9 @@ def _(
 def _(
     change_plot_style,
     convert_fig_to_svg,
+    coolant_mass,
     entry_speed,
     heat_soak_fraction,
-    hydrogen_mass,
     np,
     plot_svg,
     plt,
@@ -90,7 +96,7 @@ def _(
 ):
     # Mass-stepping simulation
     dm = 1  # mass step
-    masses = np.linspace(vehicle_dry_mass.value + hydrogen_mass.value, vehicle_dry_mass.value, int(hydrogen_mass.value / dm) + 1)
+    masses = np.linspace(vehicle_dry_mass.value + coolant_mass.value, vehicle_dry_mass.value, int(coolant_mass.value / dm) + 1)
     kinetic_energies = np.empty(masses.shape)
     velocities = np.empty(masses.shape)
 
@@ -109,7 +115,7 @@ def _(
         # Calculate the change in velocity as a result of the heating energy
         velocities[_i+1]  = np.sqrt(2 * (kinetic_energies[_i] - _heating_energy) / _m)
 
-    _fig, _ax1 = plt.subplots(1, 1, figsize=(10, 5))
+    _fig, _ax1 = plt.subplots(1, 1, figsize=(10, 4))
 
     _ax1.plot(masses, velocities)  # Convert J/kg to kJ/kg
     _ax1.set_xlabel("Masses (kg)")
@@ -129,25 +135,44 @@ def _(
 
 
 @app.cell
-def _(mo):
+def _(FluidsList, mo):
     # sliders
-    vehicle_dry_mass = mo.ui.slider(10e3, 100e3, 1e3, value=60e3)
-    hydrogen_mass = mo.ui.slider(1e3, 50e3, 1e3, value=40e3)
-    hydrogen_initial_temperature = mo.ui.slider(13.8, 20, 0.1, value=13.8)
-    hydrogen_pressure = mo.ui.slider(1e5, 10e5, 0.1e5, value=1.0e5)
+    vehicle_dry_mass = mo.ui.slider(10e3, 150e3, 1e3, value=60e3)
+    coolant_mass = mo.ui.slider(1e3, 10e3, 1e2, value=5e3)
+    coolant_pressure = mo.ui.slider(1e5, 10e5, 0.1e5, value=1.0e5)
     entry_speed = mo.ui.slider(6000, 8000, 10, value=7000)
-    heat_soak_fraction = mo.ui.slider(0.0, 1.0, 0.01, value=0.05)
+    heat_soak_fraction = mo.ui.slider(0.0, 1.0, 0.01, value=0.02)
     target_temperature = mo.ui.slider(500, 2000, 100, value=1500)
-
+    coolant = mo.ui.dropdown({
+        "Hydrogen": FluidsList.Hydrogen,
+        "Methane": FluidsList.Methane,
+        "Water": FluidsList.Water,
+        "Liquid Oxygen": FluidsList.Oxygen,
+    }, value="Hydrogen")
     return (
+        coolant,
+        coolant_mass,
+        coolant_pressure,
         entry_speed,
         heat_soak_fraction,
-        hydrogen_initial_temperature,
-        hydrogen_mass,
-        hydrogen_pressure,
         target_temperature,
         vehicle_dry_mass,
     )
+
+
+@app.cell
+def _(FluidsList, coolant, mo):
+    if coolant.value == FluidsList.Hydrogen:
+        coolant_initial_temperature = mo.ui.slider(13.8, 30, 0.1, value=13.8)
+    elif coolant.value == FluidsList.Methane:
+        coolant_initial_temperature = mo.ui.slider(90.7168, 111.7, 0.1, value=91.7)
+    elif coolant.value == FluidsList.Water:
+        coolant_initial_temperature = mo.ui.slider(273.153, 293.15, 1, value=273.153)
+    elif coolant.value == FluidsList.Oxygen:
+        coolant_initial_temperature = mo.ui.slider(54.3705, 111.7, 0.1, value=54.3705)
+    else:
+        raise ValueError(f"Coolant {coolant.value} not supported")
+    return (coolant_initial_temperature,)
 
 
 @app.cell
@@ -203,7 +228,7 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-    ### Liquid Hydrogen Properties
+    ### Coolant Fluid Properties
 
     The below plots provide some information derived from CoolProp.
     """
@@ -214,62 +239,65 @@ def _(mo):
 @app.cell
 def _(
     Fluid,
-    FluidsList,
     Input,
     change_plot_style,
     convert_fig_to_svg,
+    coolant,
+    coolant_initial_temperature,
+    coolant_pressure,
     np,
     plot_svg,
     plt,
+    target_temperature,
 ):
-    # assume subcooled hydrogen stored at 1 bar
-    _hydrogen_temperature = 13.8
-    _hydrogen_pressure = 1e5
-    subcooled_hydrogen = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(_hydrogen_pressure), Input.temperature(_hydrogen_temperature))
+    # assume a nice low
+    _coolant_temperature = coolant_initial_temperature.value
+    _coolant_pressure = coolant_pressure.value
+    _coolant = Fluid(coolant.value).with_state(Input.pressure(coolant_pressure.value), Input.temperature(coolant_initial_temperature.value))
 
-    # target heating to 1000 K
-    _target_temperature = 1000
+    # target heating to 1400 K
+    _target_temperature = target_temperature.value
 
     # energy needed to heat subcooled hydrogen to target temperature
-    _initial_internal_energy = subcooled_hydrogen.internal_energy
-    _final_internal_energy = subcooled_hydrogen.heating_to_temperature(_target_temperature).internal_energy
+    _initial_internal_energy = _coolant.internal_energy
+    _final_internal_energy = _coolant.heating_to_temperature(_target_temperature).internal_energy
     _heating_energy = _final_internal_energy - _initial_internal_energy
 
-    print("The density of subcooled hydrogen is:", round(subcooled_hydrogen.density, 3), "kg/m^3")
-    print("The internal energy of subcooled hydrogen is:", round(subcooled_hydrogen.internal_energy, 3), "kJ/kg")
-    print("The energy needed to bring subcooled hydrogen to target temperature is:", round(_heating_energy, 3), "kJ/kg")
+    print("The density of subcooled coolant is:", round(_coolant.density, 3), "kg/m^3")
+    print("The internal energy of coolant hydrogen is:", round(_coolant.internal_energy, 3), "kJ/kg")
+    print("The energy needed to bring subcooled coolant to target temperature is:", round(_heating_energy, 3), "kJ/kg")
 
     # plot hydrogen properties as a function of temperature
-    temperatures = np.linspace(13.8, 1000, 1000)
-    internal_energies = np.empty(temperatures.shape)  # internal energy [kJ/kg]
-    specific_heats = np.empty(temperatures.shape)  # mass specific constant pressure specific heat [J/kg/K].
-    conductivities = np.empty(temperatures.shape)  # thermal conductivity [W/m/K]
+    _temperatures = np.linspace(_coolant_temperature, _target_temperature, int(_target_temperature - _coolant_temperature + 1))
+    _internal_energies = np.empty(_temperatures.shape)  # internal energy [kJ/kg]
+    _specific_heats = np.empty(_temperatures.shape)  # mass specific constant pressure specific heat [J/kg/K].
+    _conductivities = np.empty(_temperatures.shape)  # thermal conductivity [W/m/K]
 
-    for _i, _T in enumerate(temperatures):
+    for _i, _T in enumerate(_temperatures):
         # Create a new fluid object for each temperature
-        fluid = Fluid(FluidsList.Hydrogen).with_state(Input.temperature(_T), Input.pressure(_hydrogen_pressure))
+        _fluid = _coolant.with_state(Input.temperature(_T), Input.pressure(_coolant_pressure))
         # Calculate internal energy and specific heat
-        internal_energies[_i] = fluid.internal_energy
-        specific_heats[_i] = fluid.specific_heat
-        conductivities[_i] = fluid.conductivity
+        _internal_energies[_i] = _fluid.internal_energy
+        _specific_heats[_i] = _fluid.specific_heat
+        _conductivities[_i] = _fluid.conductivity
 
     _fig, (_ax1, _ax2, _ax3) = plt.subplots(3, 1, figsize=(10, 9))
 
     # fig.suptitle("Hydrogen Properties vs Temperature", fontsize=16)
 
-    _ax1.plot(temperatures, internal_energies*1e-3)  # Convert J/kg to kJ/kg
+    _ax1.plot(_temperatures, _internal_energies*1e-3)  # Convert J/kg to kJ/kg
     # _ax1.set_xlabel("Temperature (K)")
     _ax1.set_ylabel("Internal Energy (kJ/kg)")
     # _ax1.set_title("Internal Energy of Hydrogen vs Temperature")
     _ax1.grid()
 
-    _ax2.plot(temperatures, specific_heats*1e-3)  # Convert J/kg/K to kJ/kg/K
+    _ax2.plot(_temperatures, _specific_heats*1e-3)  # Convert J/kg/K to kJ/kg/K
     # _ax2.set_xlabel("Temperature (K)")
     _ax2.set_ylabel("Specific Heat (kJ/kg*K)")
     # _ax2.set_title("Specific Heat of Hydrogen vs Temperature")
     _ax2.grid()
 
-    _ax3.plot(temperatures, conductivities)  # W/m/K
+    _ax3.plot(_temperatures, _conductivities)  # W/m/K
     # _ax3.set_xlabel("Temperature (K)")
     _ax3.set_ylabel("Thermal Conductivity (W/m*K)")
     # _ax3.set_title("Thermal Conductivity of Hydrogen vs Temperature")
