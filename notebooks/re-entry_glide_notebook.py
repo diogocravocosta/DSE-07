@@ -15,83 +15,77 @@ def _(mo):
     )
     return
 
+# @app.cell
+# def _(mo):
+#     mo.md(
+#         r"""
+#     ## Gliding Entry
+#
+#     Ballistic entry calculations are implemented per Section 5.4 of the Re-entry Systems book by Erwin Mooij.
+#
+#     The analytical solution for the normalised velocity of the gliding re-entry problem is given by:
+#
+#     $$ \frac{V}{V_{c,0}} = \sqrt{\frac{\frac{W/S}{C_L}}{\frac{1}{2} \rho_0 e^{-\beta h} V_{c,0}^2 + \frac{W/S}{C_L}}} $$
+#
+#
+#     $\frac{W/S}{C_L}$ is the lift parameter and $\beta$ represents the exponential atmosphere density model. It can also be written as $\beta = \frac{1}{H_s}$ where $H_s$ is the scale height. Therefore the above equation can be rewritten as:
+#
+#     Generally, the following three equations of motion are applicable:
+#
+#     $$ m \frac{dV}{dt} = -D - mg \sin \gamma $$
+#
+#     $$ mV \frac{d\gamma}{dt} = L - mg \cos \gamma \left(1 - \frac{V^2}{V_c^2}\right) $$
+#
+#     $$ \frac{dR}{dt} = \frac{dh}{dt} = V \sin \gamma $$
+#
+#     ## Equilibrium Flight-Path Angle
+#
+#     For a large part of the flight, altitude decreases at a constant rate with velocity, which corresponds with a constant flight-path angle.
+#
+#     The equilibrium flight-path angle is given by:
+#
+#     $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \cdot \frac{2}{L/D} \cdot \frac{V_c^2}{V^2} $$
+#
+#     ## Flight Range and Flight Duration
+#
+#     The flight range is given by:
+#
+#     $$ \frac{R_f}{R_e} = -\frac{1}{2} \frac{L}{D} \ln \left(1 - \frac{V_E^2}{V_c^2}\right) $$
+#
+#     Flight time is given by:
+#
+#     $$ t_{\text{flight}} = \frac{1}{2} \frac{V_c}{g} \frac{L}{D} \ln \left(\frac{1 + V_E/V_c}{1 - V_E/V_c}\right) $$
+#     """
+#     )
+#     return
 
 @app.cell
-def _(mo):
-    mo.md(
-        r"""
-    ## Gliding Entry
-
-    Ballistic entry calculations are implemented per Section 5.4 of the Re-entry Systems book by Erwin Mooij.
-
-    The analytical solution for the normalised velocity of the gliding re-entry problem is given by:
-
-    $$ \frac{V}{V_{c,0}} = \sqrt{\frac{\frac{W/S}{C_L}}{\frac{1}{2} \rho_0 e^{-\beta h} V_{c,0}^2 + \frac{W/S}{C_L}}} $$
-
-
-    $\frac{W/S}{C_L}$ is the lift parameter and $\beta$ represents the exponential atmosphere density model. It can also be written as $\beta = \frac{1}{H_s}$ where $H_s$ is the scale height. Therefore the above equation can be rewritten as:
-
-    Generally, the following three equations of motion are applicable:
-
-    $$ m \frac{dV}{dt} = -D - mg \sin \gamma $$
-
-    $$ mV \frac{d\gamma}{dt} = L - mg \cos \gamma \left(1 - \frac{V^2}{V_c^2}\right) $$
-
-    $$ \frac{dR}{dt} = \frac{dh}{dt} = V \sin \gamma $$
-
-    ## Equilibrium Flight-Path Angle
-
-    For a large part of the flight, altitude decreases at a constant rate with velocity, which corresponds with a constant flight-path angle.
-
-    The equilibrium flight-path angle is given by:
-
-    $$ \bar{\gamma} \approx \sin \bar{\gamma} = -\frac{1}{\beta R_e} \cdot \frac{2}{L/D} \cdot \frac{V_c^2}{V^2} $$
-
-    ## Flight Range and Flight Duration
-
-    The flight range is given by:
-
-    $$ \frac{R_f}{R_e} = -\frac{1}{2} \frac{L}{D} \ln \left(1 - \frac{V_E^2}{V_c^2}\right) $$
-
-    Flight time is given by:
-
-    $$ t_{\text{flight}} = \frac{1}{2} \frac{V_c}{g} \frac{L}{D} \ln \left(\frac{1 + V_E/V_c}{1 - V_E/V_c}\right) $$
-    """
-    )
-    return
-
-
-@app.cell
-def _(altitude, lift_drag_ratio, lift_parameter, mo, scale_height):
+def _(mo,
+      lift_parameter,
+      scale_height,
+      ):
     mo.md(
         f"""
-    ### Gliding Entry Parameters
+    ### Velocity Ratio Parameters
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
     | Lift parameter | {lift_parameter} | {lift_parameter.value} [-]|
-    | Lift-Drag Ratio | {lift_drag_ratio} | {lift_drag_ratio.value} [-] |
     | Scale Height | {scale_height} | {scale_height.value} m |
-    | Altitude | {altitude} | {altitude.value} km |
     """
     )
     return
 
-
 @app.cell
-def _(
-        V_Vc_ratio,
-        height,
-        flight_range_ratio,
-        entry_circular_ratio,
-        a_weight_amax_ratio,
-        a_no_weight_amax_ratio,
-        change_plot_style,
-        convert_fig_to_svg,
-        plot_svg,
-        plt):
-    # the tank is plotted as two vertical lines and two semicircles.
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 15))
+def _(plt,
+      plot_svg,
+      convert_fig_to_svg,
+      change_plot_style,
+      V_Vc_ratio,
+      height,
+      ):
+
+    fig1, ax1 = plt.subplots(1, 1, figsize=(5, 5))
 
     ax1.plot(V_Vc_ratio, height / 1000, label=r"$V/V_c$", color="blue")
     ax1.set_xlim(0.001, 1)
@@ -100,6 +94,50 @@ def _(
     ax1.set_ylabel(r"$h$ [km]")
     ax1.set_title("Velocity Ratio during gliding re-entry")
     ax1.grid(True)
+
+    plt.close(fig1)  # Close the plot to prevent default PNG rendering
+
+    # Change plotting style
+    change_plot_style()
+
+    # Display the SVG in Marimo using mo.Html
+    svg_data1 = convert_fig_to_svg(fig1)
+    plot_svg(svg_data1)
+    return
+
+@app.cell
+def _(mo,
+      altitude,
+      lift_drag_ratio,
+      scale_height,
+      lift_parameter
+      ):
+    mo.md(
+        f"""
+    ### Gliding Entry Parameters
+
+    | Parameter | Adjustment | Value |
+    |:---|:---:|:---|
+    | Lift-Drag Ratio | {lift_drag_ratio} | {lift_drag_ratio.value} [-] |
+    | Lift parameter| {lift_parameter} | {lift_parameter.value} [-] |
+    | Scale Height | {scale_height} | {scale_height.value} m |
+    | Altitude | {altitude} | {altitude.value} km |
+    """
+    )
+    return
+
+@app.cell
+def _(
+        V_Vc_ratio,
+        flight_range_ratio,
+        entry_circular_ratio,
+        a_weight_amax_ratio,
+        a_no_weight_amax_ratio,
+        change_plot_style,
+        convert_fig_to_svg,
+        plot_svg,
+        plt):
+    fig2, (ax2, ax3) = plt.subplots(1,2, figsize=(10, 5))
 
     ax2.plot(entry_circular_ratio, flight_range_ratio, label=r"$R/R_e$", color="blue")
     ax2.set_xlim(0.001, 1)
@@ -118,30 +156,121 @@ def _(
     ax3.set_title("Acceleration ratio during gliding re-entry")
     ax3.grid(True)
 
-    plt.close(fig)  # Close the plot to prevent default PNG rendering
+    plt.close(fig2)  # Close the plot to prevent default PNG rendering
 
     # Change plotting style
     change_plot_style()
 
     # Display the SVG in Marimo using mo.Html
-    svg_data = convert_fig_to_svg(fig)
-    plot_svg(svg_data)
+    svg_data2 = convert_fig_to_svg(fig2)
+    plot_svg(svg_data2)
+    return
+
+@app.cell
+def _(mo,
+      altitude,
+      scale_height,
+      lift_parameter,
+      boundary_layer,
+      nose_radius
+      ):
+    mo.md(
+        f"""
+    ### Heat Flux Parameters
+
+    | Parameter | Adjustment | Value |
+    |:---|:---:|:---|
+    | Entry Speed| {lift_parameter} | {lift_parameter.value} [-] |
+    | Scale Height | {scale_height} | {scale_height.value} m |
+    | Altitude | {altitude} | {altitude.value} km |
+    | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
+    | Nose radius | {nose_radius} | {nose_radius.value} m |
+    """
+    )
+    return
+
+@app.cell
+def _(plt,
+      plot_svg,
+      convert_fig_to_svg,
+      change_plot_style,
+      V_Vc_ratio,
+      qc_qc_max,
+      ):
+
+    fig3, ax4 = plt.subplots(1, 1, figsize=(5, 5))
+
+    ax4.plot(V_Vc_ratio, qc_qc_max, label=r"$V/V_c$", color="blue")
+    ax4.set_xlim(0.001, 1)
+    ax4.set_ylim(0.001, 1)
+    ax4.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
+    ax4.set_ylabel(r"$\frac{q_c}{q_max}$" + "[-]")
+    ax4.set_title("Heat flux profiles")
+    ax4.grid(True)
+
+    plt.close(fig3)  # Close the plot to prevent default PNG rendering
+
+    # Change plotting style
+    change_plot_style()
+
+    # Display the SVG in Marimo using mo.Html
+    svg_data3 = convert_fig_to_svg(fig3)
+    plot_svg(svg_data3)
+    return
+
+@app.cell
+def _(mo,
+      altitude,
+      scale_height,
+      lift_parameter,
+      boundary_layer,
+      nose_radius
+      ):
+    mo.md(
+        f"""
+    ### Gliding Entry Parameters
+
+    | Parameter | Adjustment | Value |
+    |:---|:---:|:---|
+    | Lift parameter| {lift_parameter} | {lift_parameter.value} [-] |
+    | Scale Height | {scale_height} | {scale_height.value} m |
+    | Altitude | {altitude} | {altitude.value} km |
+    | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
+    | Nose radius | {nose_radius} | {nose_radius.value} m |
+    """
+    )
     return
 
 
 @app.cell
-def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time, get_max_decelaration,
-      lift_parameter, np, scale_height, altitude, lift_drag_ratio, entry_circular_ratio):
+def _(get_velocity_ratio,
+      get_flight_path_angle,
+      get_flight_range,
+      get_flight_time,
+      get_max_decelaration,
+      get_stagnation_heatflux,
+      get_heat,
+      lift_parameter,
+      np,
+      scale_height,
+      altitude,
+      lift_drag_ratio,
+      boundary_layer,
+      nose_radius):
     beta = 1 / scale_height.value
 
     # Constants
     g = 9.81  # m/s^2
     rho = 1.225  # kg/m^3
     Re = 6378000
+    cstar = 1.1097e8
+    m = 3
+    n = boundary_layer.value
 
     # Circular velocity
     Vc = np.sqrt(g * Re)
     entry_circular_ratio = np.linspace(0, 1, 100)
+    Ve = V
 
     # velocity ratio
 
@@ -159,17 +288,42 @@ def _(get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_ti
     a_weight_amax_ratio = decelaration_weight / max_deceleration_weight
     a_no_weight_amax_ratio = decelaration_no_weight / max_deceleration_no_weight
 
-    return V_Vc_ratio, height, flight_path_eq, flight_range_ratio, entry_circular_ratio, flight_duration, a_weight_amax_ratio, a_no_weight_amax_ratio
+    qc, qc_max, qc_qc_max = get_stagnation_heatflux(nose_radius.value, lift_parameter.value, Vc, V_Vc_ratio, n, m, cstar, rho)
+
+    Q, e_kinetic, Q_e_ratio = get_heat(CF, W, Sw, CD, Sg,Vf,
+                 Ve,
+                 g)
+    return (V_Vc_ratio,
+            height,
+            flight_path_eq,
+            flight_range_ratio,
+            entry_circular_ratio,
+            flight_duration,
+            a_weight_amax_ratio,
+            a_no_weight_amax_ratio,
+            qc,
+            qc_qc_max,
+            Q,
+            e_kinetic,
+            Q_e_ratio)
 
 
 @app.cell
 def _(mo):
     # sliders
     lift_parameter = mo.ui.slider(0, 20000, 100, value=2000)
-    lift_drag_ratio = mo.ui.slider(0, 10, 1, value=2)
-    scale_height = mo.ui.slider(0, 10000, 100, value=7200)
+    lift_drag_ratio = mo.ui.number(value = 1.4)
+    scale_height = mo.ui.number(value=7200)
     altitude = mo.ui.slider(0, 120, 10, value=90)
-    return altitude, lift_drag_ratio, lift_parameter, scale_height
+    nose_radius = mo.ui.number(value = 7)
+    entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
+
+    # dropdowns
+    boundary_layer = mo.ui.dropdown({
+        "laminar": 0.5,
+        "turbulent": 0.2
+    }, value="laminar")
+    return altitude, lift_drag_ratio, lift_parameter, scale_height, boundary_layer, nose_radius, entry_speed
 
 
 @app.cell
@@ -180,7 +334,7 @@ def _(np):
             altitude: float,
             Vc: float,
             rho: float
-    ) -> float:
+    ) -> tuple:
         """
         Calculate the velocity ratio for gliding re-entry
 
@@ -195,7 +349,7 @@ def _(np):
 
         Returns:
         -------
-        float
+        tuple
             Velocity ratio.
         """
 
@@ -203,7 +357,7 @@ def _(np):
         h = np.linspace(0, altitude * 1000, 10000)
 
         # Calculate normalised velocity
-        V_Vc_ratio = np.sqrt((lift_parameter) / (0.5 * rho * np.exp(-beta * h) * Vc ** 2 + lift_parameter))
+        V_Vc_ratio = np.sqrt(lift_parameter / (0.5 * rho * np.exp(-beta * h) * Vc ** 2 + lift_parameter))
 
         return V_Vc_ratio, h
 
@@ -284,15 +438,49 @@ def _(np):
                                 V_Vc_ratio,
                                 n,
                                 m,
+                                cstar,
                                 rho):
-        cstar = 1.1097e8
         c1 = cstar * (1 / np.sqrt(rho)) * (1 / Vc ** 3)
         c2 = c1 * (1 / nose_radius ** n) * (2 * lift_parameter / Vc ** 2) ** (1 - n) * Vc ** m
 
         qc = c2 * (((1 / V_Vc_ratio ** 2) - 1) ** (1 - n)) * V_Vc_ratio ** m
-        return qc
+        a1 = (3/(1+2*n))**1.5
+        a2 = V_Vc_ratio**(1+2*n)
+        b1 = 1 - V_Vc_ratio**2
+        b2 = (1+2*n)/(2*(1-n))
+        a3 = (b1 * b2)**(1-n)
+        qc_qcmax = a1 * a2 * a3
+        qc_max = qc / qc_qcmax
+        return qc, qc_max, qc_qcmax
 
-    return (get_velocity_ratio, get_flight_path_angle, get_flight_range, get_flight_time, get_max_decelaration)
+    def get_heat(CF,
+                 W,
+                 Sw,
+                 CD,
+                 Sg,
+                 Vf,
+                 Ve,
+                 g):
+        f1 = (-CF/4)
+        f2 = (W * Sw/(CD*Sg))
+        f3 = (Vf**2 - Ve**2)
+        Q = f1 * f2 * f3
+
+        e_k = 0.5 * (W/g) * Ve**2
+
+        Q_e_ratio = Q/e_k
+
+        return Q, e_k, Q_e_ratio
+
+    return (get_velocity_ratio,
+            get_flight_path_angle,
+            get_flight_range,
+            get_flight_time,
+            get_max_decelaration,
+            get_stagnation_heatflux,
+            get_heat)
+
+
 
 
 @app.cell
