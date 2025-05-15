@@ -136,42 +136,42 @@ F = 1220 #launch site fee in k€
 T_s = 5.365 #specific transportation cost in eur per kg
 S = 0.2 #percentage of work subcontracted out 
 Q_N = 0.4 * N #vehicle complexity factor
-c_press = 35.62
+c_press = 35.62 #cost per kg of helium
 I = 100 #public damage insurance in M€
 
 if concept_number == "1":
-    M_p = 1 #mass of propellant and oxidiser in kg
-    M_0 = 0.5 #gross take-off-mass Mg
+    M_p = 932945.4 #mass of propellant and oxidiser in kg
+    M_0 = 986.836 #gross take-off-mass Mg
     r = 0.3 #mass mixture ratio
     c_f = 7.08 #cost of liquefied hydrogen per kg, from https://www.sciencedirect.com/science/article/pii/S2949908923002789
-    M_press = 0
+    M_press = 0 #in kg
 elif concept_number == "2":
-    M_p = 1
-    M_0 = 0.5
+    M_p = 932000.6
+    M_0 = 991.66
     r = 0.3
     c_f = 1.56 #cost of liquefied methane per kg, from https://www.sciencedirect.com/science/article/pii/S1875510021002845
     M_press = 0
 elif concept_number == "3":
-    M_p = 1
-    M_0 = 0.5
+    M_p = 933942.9
+    M_0 = 995.08
     r = 0.3
     c_f = 7.08
     M_press = 0
 elif concept_number == "4":
-    M_p = 1
-    M_0 = 0.5
+    M_p = 932000.6
+    M_0 = 991.66
     r = 0.3
     c_f = 1.56
     M_press = 0
 elif concept_number == "5":
-    M_p = 1
-    M_0 = 0.5
+    M_p = 933033.3
+    M_0 = 982.72
     r = 0.3
     c_f = 7.08
     M_press = 0
 elif concept_number == "6":
-    M_p = 1
-    M_0 = 0.5
+    M_p = 931570
+    M_0 = 984.61
     r = 0.3
     c_f = 1.56
     M_press = 0
