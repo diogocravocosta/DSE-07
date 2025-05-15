@@ -3,9 +3,9 @@ import numpy as np
 #material density [kg/m3]
 #material strength in cryogenic conditions [MPa]
 materials_properties = {
-    "Al-Li": {"density": 3000, "strength": 560*10**6, "young modulus": 69*10**9},
-    "Annealed 304L Stainless Steel": {"density": 7800, "strength": 190*10**6, "young modulus": 200*10**9},
-    "Annealed Ti-6Al-4V": {"density": 4400, "strength": 910*10**6, "young modulus": 110*10**9},
+    "Al-Li": {"density": 3000, "strength": 730*10**6, "young modulus": 75*10**9},
+    "Annealed 304L Stainless Steel": {"density": 7800, "strength": 1060*10**6, "young modulus": 200*10**9},
+    "Annealed Ti-6Al-4V": {"density": 4400, "strength": 1100*10**6, "young modulus": 115*10**9},
     "Inconel 718": {"density": 8300, "strength": 1190*10**6, "young modulus": 190*10**9}
 }
 #Constraints
@@ -27,38 +27,73 @@ LH2_density = 70.85 #kg/m3
 LOX_density = 1141 #kg/m3
 CH4_density = 422.62 #kg/m3
 
-
+print("HydroLox Jarvis")
 #HydroLOx Jarvis
-structural_mass_jarvis = 2.95 * 10**3 #2.03 tons
-propellant_mass_jarvis = 162561.2482
-wet_mass_jarvis = propellant_mass_jarvis + structural_mass_jarvis
-LH2_mass_jarvis = 1/7.03*propellant_mass_jarvis
-print("Mass LH2: " + str(LH2_mass_jarvis) + " kg")
-LOX_mass_jarvis = 6.03/7.03*propellant_mass_jarvis
-print("Mass LOX: " + str(LOX_mass_jarvis) + " kg")
-LH2_volume_jarvis = LH2_mass_jarvis/LH2_density*LH2_boiloff_margin
-print("Volume LH2: " + str(LH2_volume_jarvis) + " m3")
-LOX_volume_jarvis = LOX_mass_jarvis/ LOX_density*LOX_boiloff_margin
-print("Volume LOX: " + str(LOX_volume_jarvis) + " m3")
+structural_mass_jarvis_LH2 = 2.95 * 10**3 #2.03 tons
+propellant_mass_jarvis_LH2 = 162561.2482
+wet_mass_jarvis_LH2 = propellant_mass_jarvis_LH2 + structural_mass_jarvis_LH2
+LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2
+print("Mass LH2: " + str(LH2_mass_jarvis_LH2) + " kg")
+LOX_mass_jarvis_LH2 = 6.03/7.03*propellant_mass_jarvis_LH2
+print("Mass LOX: " + str(LOX_mass_jarvis_LH2) + " kg")
+LH2_volume_jarvis_LH2 = LH2_mass_jarvis_LH2/LH2_density*LH2_boiloff_margin
+print("Volume LH2: " + str(LH2_volume_jarvis_LH2) + " m3")
+LOX_volume_jarvis_LH2 = LOX_mass_jarvis_LH2/ LOX_density*LOX_boiloff_margin
+print("Volume LOX: " + str(LOX_volume_jarvis_LH2) + " m3")
+print("-----------------------------------------------------------------------------------------------------------------")
 
-#HydroLox Spaceshuttle
-propellant_mass_spaceshuttle = 89149.69373
-structural_mass_spaceshuttle = 3.03 * 10**3
-wet_mass_spaceshuttle = propellant_mass_spaceshuttle + structural_mass_spaceshuttle
-LH2_mass_spaceshuttle = 1/7.03*propellant_mass_spaceshuttle
-LOX_mass_spaceshuttle = 6.03/7.03*propellant_mass_spaceshuttle
-LH2_volume_spaceshuttle = LH2_mass_spaceshuttle/LH2_density*LH2_boiloff_margin
-LOX_volume_spaceshuttle = LOX_mass_spaceshuttle/ LOX_density*LOX_boiloff_margin
+print("MethaLOX Jarvis")
+#MethaLOx Jarvis
+structural_mass_jarvis_CH4 = 2.95 * 10**3 #2.03 tons
+propellant_mass_jarvis_CH4 = 162561.2482
+payload_mass_jarvis_CH4 = 12500
+wet_mass_jarvis_CH4 = propellant_mass_jarvis_CH4 + structural_mass_jarvis_CH4
+CH4_mass_jarvis = 1/7.03*propellant_mass_jarvis_CH4
+print("Mass CH4: " + str(CH4_mass_jarvis) + " kg")
+LOX_mass_jarvis_CH4 = 6.03/7.03*propellant_mass_jarvis_CH4
+print("Mass LOX: " + str(LOX_mass_jarvis_CH4) + " kg")
+CH4_volume_jarvis = CH4_mass_jarvis/CH4_density*CH4_boiloff_margin
+print("Volume CH4: " + str(CH4_volume_jarvis) + " m3")
+LOX_volume_jarvis_CH4 = LOX_mass_jarvis_CH4/LOX_density*LOX_boiloff_margin
+print("Volume LOX: " + str(LOX_volume_jarvis_CH4) + " m3")
+LH2_volume_jarvis_CH4 = payload_mass_jarvis_CH4/LH2_density*LH2_boiloff_margin
+print("Volume LH2: " + str(LH2_volume_jarvis_CH4) + " m3")
+print("-----------------------------------------------------------------------------------------------------------------")
 
+print("MethaLOX Starship")
 #MethaLox Starship
-propellant_mass_starship = 192315.5584
-structural_mass_starship = 2 * 10**3 #1.37 tons
-wet_mass_starship = propellant_mass_starship + structural_mass_starship
-CH4_mass_starship = 1/4.6*propellant_mass_starship
-LOX_mass_starship = 3.6/4.6*propellant_mass_starship
+propellant_mass_starship_CH4 = 192315.5584
+payload_mass_starship_CH4 = 12500
+structural_mass_starship_CH4 = 2 * 10**3 #1.37 tons
+wet_mass_starship_CH4 = propellant_mass_starship_CH4 + structural_mass_starship_CH4
+CH4_mass_starship = 1/4.6*propellant_mass_starship_CH4
+print("Mass CH4: " + str(CH4_mass_starship) + " kg")
+LOX_mass_starship_CH4 = 3.6/4.6*propellant_mass_starship_CH4
+print("Mass LOX: " + str(LOX_mass_starship_CH4) + " kg")
 CH4_volume_starship = CH4_mass_starship/CH4_density*CH4_boiloff_margin
-LOX_volume_starship = LOX_mass_starship/LOX_density*LOX_boiloff_margin
+print("Volume CH4: " + str(CH4_volume_starship) + " m3")
+LOX_volume_starship_CH4 = LOX_mass_starship_CH4/LOX_density*LOX_boiloff_margin
+print("Volume LOX: " + str(LOX_volume_starship_CH4) + " m3")
+LH2_volume_starship_CH4 = payload_mass_starship_CH4/LH2_density*LH2_boiloff_margin
+print("Volume LH2: " + str(LH2_volume_starship_CH4) + " m3")
+print("-----------------------------------------------------------------------------------------------------------------")
 
+print("HydroLOX Starship")
+#HydroLOX Starship
+propellant_mass_starship_LH2 = 192315.5584
+structural_mass_starship_LH2 = 2 * 10**3 #1.37 tons
+wet_mass_starship_LH2 = propellant_mass_starship_LH2 + structural_mass_starship_LH2
+LH2_mass_starship = 1/4.6*propellant_mass_starship_LH2
+print("Mass LH2: " + str(LH2_mass_starship) + " kg")
+LOX_mass_starship_LH2 = 3.6/4.6*propellant_mass_starship_LH2
+print("Mass LOX: " + str(LOX_mass_starship_LH2) + " kg")
+LH2_volume_starship = LH2_mass_starship/CH4_density*CH4_boiloff_margin
+print("Mass LH2: " + str(LH2_volume_starship) + " m3")
+LOX_volume_starship = LOX_mass_starship_LH2/LOX_density*LOX_boiloff_margin
+print("Mass LOX: " + str(LOX_volume_starship) + " m3")
+print("-----------------------------------------------------------------------------------------------------------------")
+print("-----------------------------------------------------------------------------------------------------------------")
+print("-----------------------------------------------------------------------------------------------------------------")
 def calculate_tank_length(model, tank_model, volume, tank_diameter):
     # V_total = V_cylinder + V_ellipsoidal_caps = π * r^2 * h + 2 * (π/24) * D^3
     if model == "LH2_LOX":
@@ -145,10 +180,12 @@ density = materials_properties[material]["density"]       # kg/m^3
 strength = materials_properties[material]["strength"]     # Pa
 young_modulus = materials_properties[material]["young modulus"]   # Pa
 
-tank_length_jarvis_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis, tank_diameter)
-tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis, tank_diameter)
-tank_length_spaceshuttle_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_spaceshuttle, tank_diameter)
-tank_length_spaceshuttle_LOX = calculate_tank_length("LH2_LOX", "LOX",LOX_volume_spaceshuttle, tank_diameter)
+tank_length_jarvis_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_LH2, tank_diameter)
+tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis_LH2, tank_diameter)
+
+tank_length_jarvis_CH4 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_jarvis_CH4, tank_diameter)
+tank_length_jarvis_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_jarvis_CH4, tank_diameter)
+
 tank_length_starship_CH4 = calculate_tank_length("CH4_LOX", "LH2", CH4_volume_starship, tank_diameter)
 tank_length_starship_LOX = calculate_tank_length("CH4_LOX", "LOX",LOX_volume_starship, tank_diameter)
 
@@ -164,20 +201,6 @@ mass_LH2_tank_jarvis = calculate_tank_mass(tank_diameter, tank_length_jarvis_LH2
 print("Mass LH2 Tank Jarvis: " + str(mass_LH2_tank_jarvis))
 mass_LOX_tank_jarvis = calculate_tank_mass(tank_diameter, tank_length_jarvis_LOX, thickness_LOX_jarvis, density)
 print("Mass LOX Tank Jarvis: " + str(mass_LOX_tank_jarvis))
-
-print("=============================================================================")
-#Space Shuttle tanks
-print("Space Shuttle Tanks:")
-print("Space Shuttle LH2 Tanks Volume: " + str(LH2_volume_spaceshuttle))
-print("Space Shuttle LOX Tanks Volume: " + str(LOX_volume_spaceshuttle))
-thickness_LH2_spaceshuttle = calculate_tank_thickness(wet_mass_spaceshuttle, LH2_pressure, LH2_mass_spaceshuttle, tank_length_spaceshuttle_LH2, tank_diameter, young_modulus, strength, gamma=0.65)
-print("Thickness LH2 Tank Space Shuttle: " + str(thickness_LH2_spaceshuttle))
-thickness_LOX_spaceshuttle = calculate_tank_thickness(wet_mass_spaceshuttle, LOX_pressure, LOX_mass_spaceshuttle, tank_length_spaceshuttle_LOX, tank_diameter, young_modulus, strength, gamma=0.65)
-print("Thickness LOX Tank Space Shuttle: " + str(thickness_LOX_spaceshuttle))
-mass_LH2_tank_spaceshuttle = calculate_tank_mass(tank_diameter, tank_length_spaceshuttle_LH2, thickness_LH2_spaceshuttle, density)
-print("Mass LH2 Tank Space Shuttle: " + str(mass_LH2_tank_spaceshuttle))
-mass_LOX_tank_spaceshuttle = calculate_tank_mass(tank_diameter, tank_length_spaceshuttle_LOX, thickness_LOX_spaceshuttle, density)
-print("Mass LOX Tank Space Shuttle: " + str(mass_LOX_tank_spaceshuttle))
 
 print("=============================================================================")
 #Starship tanks
@@ -198,10 +221,6 @@ SM_jarvis_LH2 = calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, 
 print("SM LH2 Jarvis: " + str(calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)))
 SM_jarvis_LOX = calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)
 print("SM LOX Jarvis: " +str(calculate_margin_of_safety(thickness_LH2_jarvis, tank_diameter, wet_mass_jarvis, young_modulus, gamma=0.9, g_load=8.5)))
-SM_spaceshuttle_LH2 = calculate_margin_of_safety(thickness_LH2_spaceshuttle, tank_diameter, wet_mass_spaceshuttle, young_modulus, gamma=0.9, g_load=8.5)
-print("SM LH2 Space Shuttle: " + str(calculate_margin_of_safety(thickness_LH2_spaceshuttle, tank_diameter, wet_mass_spaceshuttle, young_modulus, gamma=0.9, g_load=8.5)))
-SM_spaceshuttle_LOX = calculate_margin_of_safety(thickness_LOX_spaceshuttle, tank_diameter, wet_mass_spaceshuttle, young_modulus, gamma=0.9, g_load=8.5)
-print("SM LOX Space Shuttle: " +str(calculate_margin_of_safety(thickness_LOX_spaceshuttle, tank_diameter, wet_mass_spaceshuttle, young_modulus, gamma=0.9, g_load=8.5)))
 SM_starship_CH4 = calculate_margin_of_safety(thickness_CH4_starship, tank_diameter, wet_mass_starship, young_modulus, gamma=0.9, g_load=8.5)
 print("SM CH4 Starship: " + str(calculate_margin_of_safety(thickness_CH4_starship, tank_diameter, wet_mass_starship, young_modulus, gamma=0.9, g_load=8.5)))
 SM_starship_LOX = calculate_margin_of_safety(thickness_LOX_starship, tank_diameter, wet_mass_starship, young_modulus, gamma=0.9, g_load=8.5)
