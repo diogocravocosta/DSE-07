@@ -193,8 +193,9 @@ tank_length_starship_CH4_LOX = calculate_tank_length("CH4_LOX", "LOX", LOX_volum
 tank_length_starship_CH4_LH2 = calculate_tank_length("CH4_LOX", "LH2", LH2_volume_starship_CH4, tank_diameter)
 
 tank_length_starship_LH2 = calculate_tank_length("LH2_LOX", "LH2", LH2_volume_starship_LH2, tank_diameter)
+print("############### Tank LH2 length: " + str(tank_length_starship_LH2))
 tank_length_starship_LH2_LOX = calculate_tank_length("LH2_LOX", "LOX", LOX_volume_starship_LH2, tank_diameter)
-
+print("############### Tank LOX length: " + str(tank_length_starship_LH2_LOX))
 #Jarvis HydroLOX tanks
 print("Jarvis HydroLox Tanks:")
 print("Jarvis LH2 Tanks Volume: " + str(LH2_volume_jarvis_LH2))
@@ -288,6 +289,23 @@ SM_starship_LOX_LH2 = calculate_margin_of_safety(thickness_LOX_starship_LH2, tan
 print("SM LOX Starship (HydroLOX): " + str(SM_starship_LOX_LH2))
 
 
+def calculate_outer_area(tank_length, tank_diameter):
+    radius = tank_diameter / 2
+    area_cylinder = 2 * np.pi * radius * tank_length
+    area_caps = 2 * np.pi * radius**2  # two ellipsoidal caps
+    total_area = area_cylinder + area_caps
+    return total_area
+
+def calculate_double_ellipse_area(tank_length, tank_diameter):
+    radius = tank_diameter / 2
+    area_caps = 4 * np.pi * radius ** 2  # two ellipsoidal caps
+    total_area = area_caps
+    return total_area
+print("Outer Area" + str(calculate_outer_area(tank_length_starship_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_LH2_LOX, tank_diameter)))
+print("Outer Area" + str(calculate_outer_area(tank_length_starship_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_CH4, tank_diameter) + calculate_outer_area(tank_length_starship_CH4_LOX, tank_diameter) - calculate_double_ellipse_area(tank_length_starship_CH4_LOX, tank_diameter)))
+
+print("Outer Area" + str(calculate_outer_area(tank_length_jarvis_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_LH2_LOX, tank_diameter)))
+print("Outer Area" + str(calculate_outer_area(tank_length_jarvis_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4_LOX, tank_diameter) - calculate_double_ellipse_area(tank_length_jarvis_CH4_LOX, tank_diameter)))
 ######################################################### OLD CODE ########################################################################
 
 #def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propellant_pressure, allowable_stress, wet_mass):
