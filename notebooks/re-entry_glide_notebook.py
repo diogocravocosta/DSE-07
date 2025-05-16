@@ -60,6 +60,21 @@ def _(mo):
 #     return
 
 @app.cell
+def _(flight_path_eq, flight_duration, qc_max, mo):
+    mo.md(
+        rf"""
+    The below table provides a rapid way to estimate the ballistic parameter. The reference area and drag coefficient are assumed for a capsule-like vehicle, so the reference area should correspond to circular area at the bottom of a capsule.
+
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Flight Path Angle | - | {flight_path_eq} deg |
+    | Flight Duration | - | {flight_duration} s |
+    | Maximum heat flux | - | {qc_max} |
+    """
+    )
+    return
+
+@app.cell
 def _(mo,
       lift_parameter,
       scale_height,
@@ -118,7 +133,7 @@ def _(mo,
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Lift-Drag Ratio | {lift_drag_ratio} | {lift_drag_ratio.value} [-] |
+    | Flight Path Equibilibrium | {lift_drag_ratio} | {lift_drag_ratio.value} [-] |
     | Lift parameter| {lift_parameter} | {lift_parameter.value} [-] |
     | Scale Height | {scale_height} | {scale_height.value} m |
     | Altitude | {altitude} | {altitude.value} km |
@@ -180,7 +195,7 @@ def _(mo,
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Entry Speed| {lift_parameter} | {lift_parameter.value} [-] |
+    | Lift parameter| {lift_parameter} | {lift_parameter.value} [-] |
     | Scale Height | {scale_height} | {scale_height.value} m |
     | Altitude | {altitude} | {altitude.value} km |
     | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
@@ -220,9 +235,9 @@ def _(plt,
 
 @app.cell
 def _(mo,
-      altitude,
-      scale_height,
-      lift_parameter,
+      c_friction,
+      mass,
+      entry_speed,
       boundary_layer,
       nose_radius
       ):
@@ -232,11 +247,10 @@ def _(mo,
 
     | Parameter | Adjustment | Value |
     |:---|:---:|:---|
-    | Lift parameter| {lift_parameter} | {lift_parameter.value} [-] |
-    | Scale Height | {scale_height} | {scale_height.value} m |
-    | Altitude | {altitude} | {altitude.value} km |
+    | Mass | {mass} | {mass.value} kg |
     | Boundary Layer | {boundary_layer} | {boundary_layer.value} |
     | Nose radius | {nose_radius} | {nose_radius.value} m |
+    | Entry speed | {entry_speed} | {entry_speed.value} m |
     """
     )
     return
@@ -249,14 +263,14 @@ def _(get_velocity_ratio,
       get_flight_time,
       get_max_decelaration,
       get_stagnation_heatflux,
-      get_heat,
       lift_parameter,
       np,
       scale_height,
       altitude,
       lift_drag_ratio,
       boundary_layer,
-      nose_radius):
+      nose_radius,
+      entry_speed):
     beta = 1 / scale_height.value
 
     # Constants
@@ -269,8 +283,9 @@ def _(get_velocity_ratio,
 
     # Circular velocity
     Vc = np.sqrt(g * Re)
-    entry_circular_ratio = np.linspace(0, 1, 100)
-    Ve = V
+    entry_circular_ratio = np.linspace(0.0001, 1, 100)
+    Ve = entry_speed.value
+
 
     # velocity ratio
 
@@ -281,7 +296,7 @@ def _(get_velocity_ratio,
 
     flight_range_ratio = get_flight_range(lift_drag_ratio.value, entry_circular_ratio)
 
-    flight_duration = get_flight_time(Vc, lift_drag_ratio.value, entry_circular_ratio, g)  # TODO: add to table
+    flight_duration = get_flight_time(Vc, lift_drag_ratio.value, g, Ve)  # TODO: add to table
 
     decelaration_weight, decelaration_no_weight, max_deceleration_weight, max_deceleration_no_weight = get_max_decelaration(
         g, lift_drag_ratio.value, beta, Re, V_Vc_ratio)
@@ -290,9 +305,14 @@ def _(get_velocity_ratio,
 
     qc, qc_max, qc_qc_max = get_stagnation_heatflux(nose_radius.value, lift_parameter.value, Vc, V_Vc_ratio, n, m, cstar, rho)
 
-    Q, e_kinetic, Q_e_ratio = get_heat(CF, W, Sw, CD, Sg,Vf,
-                 Ve,
-                 g)
+    max_index_qc = np.argmax(qc_qc_max)
+
+    V_qc_max = V_Vc_ratio[max_index_qc]
+
+    max_index_g = np.argmax(a_weight_amax_ratio)
+
+    V_g_max = V_Vc_ratio[max_index_g]
+
     return (V_Vc_ratio,
             height,
             flight_path_eq,
@@ -303,9 +323,7 @@ def _(get_velocity_ratio,
             a_no_weight_amax_ratio,
             qc,
             qc_qc_max,
-            Q,
-            e_kinetic,
-            Q_e_ratio)
+            qc_max)
 
 
 @app.cell
@@ -316,14 +334,15 @@ def _(mo):
     scale_height = mo.ui.number(value=7200)
     altitude = mo.ui.slider(0, 120, 10, value=90)
     nose_radius = mo.ui.number(value = 7)
-    entry_speed = mo.ui.slider(6e3, 10e3, 100, value=8e3)
+    entry_speed = mo.ui.number(value=8e3)
+    mass = mo.ui.number(value=20000)
 
     # dropdowns
     boundary_layer = mo.ui.dropdown({
         "laminar": 0.5,
         "turbulent": 0.2
     }, value="laminar")
-    return altitude, lift_drag_ratio, lift_parameter, scale_height, boundary_layer, nose_radius, entry_speed
+    return altitude, lift_drag_ratio, lift_parameter, scale_height, boundary_layer, nose_radius, entry_speed, mass
 
 
 @app.cell
@@ -414,8 +433,9 @@ def _(np):
 
     def get_flight_time(Vc,
                         lift_drag_ratio,
-                        entry_circular_ratio,
-                        g):
+                        g,
+                        Ve):
+        entry_circular_ratio = Ve / Vc
         t_flight = ((0.5 * Vc * lift_drag_ratio) / (2 * g)) * np.log(
             (1 + entry_circular_ratio) / (1 - entry_circular_ratio))
 
@@ -426,10 +446,10 @@ def _(np):
                              beta,
                              Re,
                              v_vc_ratio):
-        a_weight = g * lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2) - (2 / (beta * Re * v_vc_ratio ** 2)))
-        a_no_weight = g * lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2))
-        a_max_weight = g * lift_drag_ratio ** (-1) * (1 - 2 * np.sqrt(2 / (beta * Re)))
-        a_max_no_weight = g * lift_drag_ratio ** (-1)
+        a_weight =  lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2) - (2 / (beta * Re * v_vc_ratio ** 2)))
+        a_no_weight =  lift_drag_ratio ** (-1) * (1 - (v_vc_ratio ** 2))
+        a_max_weight =  lift_drag_ratio ** (-1) * (1 - 2 * np.sqrt(2 / (beta * Re)))
+        a_max_no_weight =  lift_drag_ratio ** (-1)
         return a_weight, a_no_weight, a_max_weight, a_max_no_weight
 
     def get_stagnation_heatflux(nose_radius,
@@ -453,24 +473,35 @@ def _(np):
         qc_max = qc / qc_qcmax
         return qc, qc_max, qc_qcmax
 
-    def get_heat(CF,
-                 W,
-                 Sw,
-                 CD,
-                 Sg,
-                 Vf,
-                 Ve,
-                 g):
-        f1 = (-CF/4)
-        f2 = (W * Sw/(CD*Sg))
-        f3 = (Vf**2 - Ve**2)
-        Q = f1 * f2 * f3
+    def get_flight_envelope(lift_parameter,
+                            V_eq,
+                            Vc,
+                            rho,
+                            scale_height,
+                            nose_radius,
+                            n,
+                            q_c_max,
+                            c_star,
+                            Vqc,
+                            m,
+                            n_g_max,
+                            g,
+                            V_g,
+                            S,
+                            CD,
+                            CL):
+        rho_eq = 2 * lift_parameter * ((1/V_eq**2)-(1/Vc**2))
+        h_eq = - scale_height * np.log(rho_eq/rho)
 
-        e_k = 0.5 * (W/g) * Ve**2
+        rho_qc_max = rho * (nose_radius**n * (q_c_max / c_star) * (Vc / Vqc)**m )**(1/(1-n))
 
-        Q_e_ratio = Q/e_k
+        h_qc_max = - scale_height * np.log(rho_qc_max/rho)
 
-        return Q, e_k, Q_e_ratio
+        rho_g_max = 2 * n_g_max * ((m* g)/(V_g**2*S*np.sqrt(CD**2+CL**2)))
+
+        h_g_max = - scale_height * np.log(rho_g_max / rho)
+
+        return h_eq, h_qc_max, h_g_max
 
     return (get_velocity_ratio,
             get_flight_path_angle,
@@ -478,7 +509,7 @@ def _(np):
             get_flight_time,
             get_max_decelaration,
             get_stagnation_heatflux,
-            get_heat)
+            get_flight_envelope)
 
 
 
@@ -487,7 +518,6 @@ def _(np):
 def _(mo):
     mo.md(r"""# Helpers""")
     return
-
 
 @app.cell
 def _(io, mo):
