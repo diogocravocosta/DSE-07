@@ -315,8 +315,8 @@ def _(mo):
 
     # dropdowns
     boundary_layer = mo.ui.dropdown({
-        "laminar": 0.2,
-        "turbulent": 0.5
+        "laminar": 0.5,
+        "turbulent": 0.2
     }, value="laminar")
     return (
         ballistic_parameter,
