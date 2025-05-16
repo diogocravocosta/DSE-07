@@ -29,8 +29,8 @@ CH4_density = 422.62 #kg/m3
 
 print("HydroLox Jarvis")
 #HydroLOx Jarvis
-structural_mass_jarvis_LH2 = 2.95 * 10**3 #2.03 tons
-propellant_mass_jarvis_LH2 = 162561.2482
+structural_mass_jarvis_LH2 = 21497.77258
+propellant_mass_jarvis_LH2 = 156126.6518
 wet_mass_jarvis_LH2 = propellant_mass_jarvis_LH2 + structural_mass_jarvis_LH2
 LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2
 print("Mass LH2: " + str(LH2_mass_jarvis_LH2) + " kg")
@@ -44,8 +44,8 @@ print("-------------------------------------------------------------------------
 
 print("MethaLOX Jarvis")
 #MethaLOx Jarvis
-structural_mass_jarvis_CH4 = 2.95 * 10**3 #2.03 tons
-propellant_mass_jarvis_CH4 = 162561.2482
+structural_mass_jarvis_CH4 = 43897.69359
+propellant_mass_jarvis_CH4 = 405209.4793
 payload_mass_jarvis_CH4 = 12500
 wet_mass_jarvis_CH4 = propellant_mass_jarvis_CH4 + structural_mass_jarvis_CH4 + payload_mass_jarvis_CH4
 CH4_mass_jarvis = 1/7.03*propellant_mass_jarvis_CH4
@@ -62,9 +62,9 @@ print("-------------------------------------------------------------------------
 
 print("MethaLOX Starship")
 #MethaLox Starship
-propellant_mass_starship_CH4 = 192315.5584
+propellant_mass_starship_CH4 = 258683.6771
 payload_mass_starship_CH4 = 12500
-structural_mass_starship_CH4 = 2 * 10**3 #1.37 tons
+structural_mass_starship_CH4 = 28024.06502
 wet_mass_starship_CH4 = propellant_mass_starship_CH4 + structural_mass_starship_CH4 + payload_mass_starship_CH4
 CH4_mass_starship = 1/4.6*propellant_mass_starship_CH4
 print("Mass CH4: " + str(CH4_mass_starship) + " kg")
@@ -80,8 +80,8 @@ print("-------------------------------------------------------------------------
 
 print("HydroLOX Starship")
 #HydroLOX Starship
-propellant_mass_starship_LH2 = 192315.5584
-structural_mass_starship_LH2 = 2 * 10**3 #1.37 tons
+propellant_mass_starship_LH2 = 114933.4459
+structural_mass_starship_LH2 = 15825.69698
 wet_mass_starship_LH2 = propellant_mass_starship_LH2 + structural_mass_starship_LH2
 LH2_mass_starship_LH2 = 1/4.6*propellant_mass_starship_LH2
 print("Mass LH2: " + str(LH2_mass_starship_LH2) + " kg")
