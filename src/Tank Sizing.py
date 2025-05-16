@@ -6,7 +6,8 @@ materials_properties = {
     "Al-Li": {"density": 3000, "strength": 730*10**6, "young modulus": 75*10**9},
     "Annealed 304L Stainless Steel": {"density": 7800, "strength": 1060*10**6, "young modulus": 200*10**9},
     "Annealed Ti-6Al-4V": {"density": 4400, "strength": 1100*10**6, "young modulus": 115*10**9},
-    "Inconel 718": {"density": 8300, "strength": 1190*10**6, "young modulus": 190*10**9}
+    "Inconel 718": {"density": 8300, "strength": 1190*10**6, "young modulus": 190*10**9},
+    "CFRP": {"density": 1500, "strength": 1500*10**6, "young modulus": 140*10**9}
 }
 #Constraints
 safety_factor = 1.5
