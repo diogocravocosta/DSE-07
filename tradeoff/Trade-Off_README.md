@@ -7,6 +7,7 @@ The trade-off code can be used, mainly to perform the sensitivity analysis.
 - Pandas
 - Openpyxl
 - Numpy
+- Matplotlib
 
 ## Use
 
