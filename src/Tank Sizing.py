@@ -174,7 +174,7 @@ def calculate_margin_of_safety(thickness, tank_diameter, wet_mass, E, gamma=0.9,
 
 ########################################### Results ################################################################
 # Choose a material
-material = "CFRP"
+material = "Annealed 304L Stainless Steel"
 
 # Access density and strength
 density = materials_properties[material]["density"]       # kg/m^3
@@ -223,8 +223,8 @@ thickness_LOX_jarvis_CH4 = calculate_tank_thickness(wet_mass_jarvis_CH4, LOX_pre
 print("Thickness LOX Tank Jarvis: " + str(thickness_LOX_jarvis_CH4))
 mass_LH2_tank_jarvis_CH4 = calculate_tank_mass(tank_diameter, tank_length_jarvis_CH4_LH2, thickness_LH2_jarvis_CH4, density)
 print("Mass LH2 Tank Jarvis: " + str(mass_LH2_tank_jarvis_CH4))
-mass_LH2_tank_jarvis_CH4 = calculate_tank_mass(tank_diameter, tank_length_jarvis_CH4, thickness_LH2_jarvis_LH2, density)
-print("Mass LH2 Tank Jarvis: " + str(mass_LH2_tank_jarvis_CH4))
+mass_CH4_tank_jarvis_CH4 = calculate_tank_mass(tank_diameter, tank_length_jarvis_CH4, thickness_CH4_jarvis_CH4, density)
+print("Mass CH4 Tank Jarvis: " + str(mass_CH4_tank_jarvis_CH4))
 mass_LOX_tank_jarvis_CH4 = calculate_tank_mass(tank_diameter, tank_length_jarvis_CH4_LOX, thickness_LOX_jarvis_CH4, density)
 print("Mass LOX Tank Jarvis: " + str(mass_LOX_tank_jarvis_CH4))
 
@@ -246,7 +246,7 @@ print("Mass CH4 Tank Starship: " + str(mass_CH4_tank_starship_CH4))
 mass_LOX_tank_starship_CH4 = calculate_tank_mass(tank_diameter, tank_length_starship_CH4_LOX, thickness_LOX_starship_CH4, density)
 print("Mass LOX Tank Starship: " + str(mass_LOX_tank_starship_CH4))
 mass_LH2_tank_starship_CH4 = calculate_tank_mass(tank_diameter, tank_length_starship_CH4_LH2, thickness_LH2_starship_CH4, density)
-print("Mass CH4 Tank Starship: " + str(mass_LH2_tank_starship_CH4))
+print("Mass LH2 Tank Starship: " + str(mass_LH2_tank_starship_CH4))
 
 print("=============================================================================")
 
