@@ -30,10 +30,10 @@ CH4_density = 422.62 #kg/m3
 
 print("HydroLox Jarvis")
 #HydroLOx Jarvis
-structural_mass_jarvis_LH2 = 28040.57
-propellant_mass_jarvis_LH2 = 203643.4588
+structural_mass_jarvis_LH2 = 33648.68751
+propellant_mass_jarvis_LH2 = 244372.1506
 wet_mass_jarvis_LH2 = propellant_mass_jarvis_LH2 + structural_mass_jarvis_LH2
-LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2 +15000
+LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2 +18000
 print("Mass LH2: " + str(LH2_mass_jarvis_LH2) + " kg")
 LOX_mass_jarvis_LH2 = 6.03/7.03*propellant_mass_jarvis_LH2
 print("Mass LOX: " + str(LOX_mass_jarvis_LH2) + " kg")
@@ -47,7 +47,7 @@ print("MethaLOX Jarvis")
 #MethaLOx Jarvis
 structural_mass_jarvis_CH4 = 57257.86121
 propellant_mass_jarvis_CH4 = 528534.1034
-payload_mass_jarvis_CH4 = 15000
+payload_mass_jarvis_CH4 = 18000
 wet_mass_jarvis_CH4 = propellant_mass_jarvis_CH4 + structural_mass_jarvis_CH4 + payload_mass_jarvis_CH4
 CH4_mass_jarvis = 1/4.6*propellant_mass_jarvis_CH4
 print("Mass CH4: " + str(CH4_mass_jarvis) + " kg")
@@ -64,8 +64,8 @@ print("-------------------------------------------------------------------------
 print("MethaLOX Starship")
 #MethaLox Starship
 propellant_mass_starship_CH4 = 337413.4919
-payload_mass_starship_CH4 = 15000
-structural_mass_starship_CH4 = 36553.12829
+payload_mass_starship_CH4 = 18000
+structural_mass_starship_CH4 =  36553.12829
 wet_mass_starship_CH4 = propellant_mass_starship_CH4 + structural_mass_starship_CH4 + payload_mass_starship_CH4
 CH4_mass_starship = 1/4.6*propellant_mass_starship_CH4
 print("Mass CH4: " + str(CH4_mass_starship) + " kg")
@@ -81,10 +81,10 @@ print("-------------------------------------------------------------------------
 
 print("HydroLOX Starship")
 #HydroLOX Starship
-propellant_mass_starship_LH2 = 149913.1903
-structural_mass_starship_LH2 = 20642.21346
+propellant_mass_starship_LH2 = 179895.8284
+structural_mass_starship_LH2 = 24770.65615
 wet_mass_starship_LH2 = propellant_mass_starship_LH2 + structural_mass_starship_LH2
-LH2_mass_starship_LH2 = 1/7.03*propellant_mass_starship_LH2 + 15000
+LH2_mass_starship_LH2 = 1/7.03*propellant_mass_starship_LH2 + 18000
 print("Mass LH2: " + str(LH2_mass_starship_LH2) + " kg")
 LOX_mass_starship_LH2 = 6.03/7.03*propellant_mass_starship_LH2
 print("Mass LOX: " + str(LOX_mass_starship_LH2) + " kg")
@@ -304,11 +304,11 @@ def calculate_double_ellipse_area(tank_length, tank_diameter):
     area_caps = 4 * np.pi * radius ** 2  # two ellipsoidal caps
     total_area = area_caps
     return total_area
-print("Outer Area" + str(calculate_outer_area(tank_length_starship_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_LH2_LOX, tank_diameter)- 0.5*calculate_double_ellipse_area(tank_length_starship_LH2_LOX, tank_diameter)))
-print("Outer Area" + str(calculate_outer_area(tank_length_starship_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_CH4, tank_diameter) + calculate_outer_area(tank_length_starship_CH4_LOX, tank_diameter) - 2*calculate_double_ellipse_area(tank_length_starship_CH4_LOX, tank_diameter)))
+print("Outer Area Starship LH2" + str(calculate_outer_area(tank_length_starship_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_LH2_LOX, tank_diameter)- 0.5*calculate_double_ellipse_area(tank_length_starship_LH2_LOX, tank_diameter)))
+print("Outer Area Starship CH4" + str(calculate_outer_area(tank_length_starship_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_starship_CH4, tank_diameter) + calculate_outer_area(tank_length_starship_CH4_LOX, tank_diameter) - 2*calculate_double_ellipse_area(tank_length_starship_CH4_LOX, tank_diameter)))
 
-print("Outer Area" + str(calculate_outer_area(tank_length_jarvis_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_LH2_LOX, tank_diameter)- 0.5*calculate_double_ellipse_area(tank_length_jarvis_LH2_LOX, tank_diameter)))
-print("Outer Area" + str(calculate_outer_area(tank_length_jarvis_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4_LOX, tank_diameter) - 2*calculate_double_ellipse_area(tank_length_jarvis_CH4_LOX, tank_diameter)))
+print("Outer Area Jarvis LH2" + str(calculate_outer_area(tank_length_jarvis_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_LH2_LOX, tank_diameter)- 0.5*calculate_double_ellipse_area(tank_length_jarvis_LH2_LOX, tank_diameter)))
+print("Outer Area Jarvis CH4" + str(calculate_outer_area(tank_length_jarvis_CH4_LH2, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4, tank_diameter) + calculate_outer_area(tank_length_jarvis_CH4_LOX, tank_diameter) - 2*calculate_double_ellipse_area(tank_length_jarvis_CH4_LOX, tank_diameter)))
 ######################################################### OLD CODE ########################################################################
 
 #def calculate_tank_thickness(tank_diameter, tank_length, young_modulus, propellant_pressure, allowable_stress, wet_mass):
