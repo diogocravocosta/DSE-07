@@ -16,12 +16,12 @@ def timer(func):
 def main():
     file_path = 'tradeOffInput.xlsx'
 
-    to = TradeOff(file_path, n_runs=10_000, sens_mode='uniform', std_frac=1/2)
+    to = TradeOff(file_path, n_runs=500_000, sens_mode='uniform', std_frac=1)
     to.run()
-    to.print_results()
+    to.print_all_results()
     to.create_weight_boxplots()
     to.create_winner_barchart(type='perc')
-
+    to.save_figures()
 
 if __name__ == '__main__':
     main()

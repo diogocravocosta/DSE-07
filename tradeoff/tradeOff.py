@@ -152,39 +152,54 @@ class TradeOff:
         print(f'Original Winner (using original criteria weights): {self.concepts[self.initial_winner]}\n'
               f'Sensitivity analysis result: {self.concepts[self.real_winner]} at {self.winner_matrix_perc[self.real_winner]}% winrate')
 
+    def print_all_results(self):
+        print(f'Range of criteria weights:')
+        for crit in self.criteria.keys():
+            print(f'{crit} weight range: [{min(self.sensitivity_weights_lists[crit])}-{max(self.sensitivity_weights_lists[crit])}]')
+
+        print(f'\nNumber of wins per concept:')
+        for concept in self.concepts.keys():
+            print(f'{self.concepts[concept]}: {self.winner_matrix[concept]} wins ({self.winner_matrix_perc[concept]}%)')
+
+
+
     def create_weight_boxplots(self):
-        fig, ax = plt.subplots()
+        self.weight_fig, self.weight_ax = plt.subplots()
 
         labels = list(self.sensitivity_weights_lists.keys())
         data = [self.sensitivity_weights_lists[key] for key in labels]
 
-        ax.boxplot(data, labels=labels)
+        self.weight_ax.boxplot(data, labels=labels)
 
-        ax.set_ylabel('Weight')
-        ax.set_ylim([-0.1, 1.1])
+        self.weight_ax.set_ylabel('Weight')
+        self.weight_ax.set_ylim([-0.1, 1.1])
 
-        fig.tight_layout()
+        self.weight_fig.tight_layout()
 
-        fig.show()
+        self.weight_fig.show()
 
     def create_winner_barchart(self, type='perc'):
-        fig, ax = plt.subplots(figsize=(8, 8))
+        self.win_fig, self.win_ax = plt.subplots(figsize=(8, 8))
 
         if type == 'abs':
             data = self.winner_matrix.values()
-            ax.set_ylabel('Number of wins (-)')
-            ax.set_ylim([0, self.n_runs])
+            self.win_ax.set_ylabel('Number of wins (-)')
+            self.win_ax.set_ylim([0, self.n_runs])
         elif type == 'perc':
             data = self.winner_matrix_perc.values()
-            ax.set_ylabel('Winrate (%)')
-            ax.set_ylim([0, 100])
+            self.win_ax.set_ylabel('Winrate (%)')
+            self.win_ax.set_ylim([0, 100])
 
-        ax.bar(self.concepts.values(), data)
+        self.win_ax.bar(self.concepts.values(), data)
 
 
-        ax.set_xticklabels(self.concepts.values(), rotation=80, ha='right')
-        fig.tight_layout()
-        fig.show()
+        self.win_ax.set_xticklabels(self.concepts.values(), rotation=80, ha='right')
+        self.win_fig.tight_layout()
+        self.win_fig.show()
+
+    def save_figures(self):
+        self.win_fig.savefig('H2GO_SensAnalysis_Winrate.eps', format='eps')
+        self.weight_fig.savefig('H2GO_SensAnalysis_Weights.eps', format='eps')
 
 
 if __name__ == '__main__':
