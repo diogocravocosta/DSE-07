@@ -16,9 +16,9 @@ tank_diameter = 7
 #LOX_volume_shrinkage_coefficient = 1.43/100 #%
 #CH4_volume_shrinkage_coefficient = 1.28/100 #%
 
-LH2_pressure = 500 #kPa (5 bar)
-LOX_pressure = 270 #kPa (2.7 bar)
-Ch4_pressure = 400 #kPa (4bar)
+LH2_pressure = 1800*2 #kPa (7 + safety factor of 2 bar)
+LOX_pressure = 270*2 #kPa (2.7 bar)
+Ch4_pressure = 400*2 #kPa (4bar)
 
 LH2_boiloff_margin = 1.1 #1.012 * 1.02 #(3.2% extra)
 LOX_boiloff_margin = 1.0143 * 1.02 #(3.46% extra)
@@ -30,10 +30,10 @@ CH4_density = 422.62 #kg/m3
 
 print("HydroLox Jarvis")
 #HydroLOx Jarvis
-structural_mass_jarvis_LH2 = 33648.68751
-propellant_mass_jarvis_LH2 = 244372.1506
+structural_mass_jarvis_LH2 = 28040.57293
+propellant_mass_jarvis_LH2 = 203643.4588
 wet_mass_jarvis_LH2 = propellant_mass_jarvis_LH2 + structural_mass_jarvis_LH2
-LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2 +18000
+LH2_mass_jarvis_LH2 = 1/7.03*propellant_mass_jarvis_LH2 +15000
 print("Mass LH2: " + str(LH2_mass_jarvis_LH2) + " kg")
 LOX_mass_jarvis_LH2 = 6.03/7.03*propellant_mass_jarvis_LH2
 print("Mass LOX: " + str(LOX_mass_jarvis_LH2) + " kg")
@@ -47,7 +47,7 @@ print("MethaLOX Jarvis")
 #MethaLOx Jarvis
 structural_mass_jarvis_CH4 = 57257.86121
 propellant_mass_jarvis_CH4 = 528534.1034
-payload_mass_jarvis_CH4 = 18000
+payload_mass_jarvis_CH4 = 15000
 wet_mass_jarvis_CH4 = propellant_mass_jarvis_CH4 + structural_mass_jarvis_CH4 + payload_mass_jarvis_CH4
 CH4_mass_jarvis = 1/4.6*propellant_mass_jarvis_CH4
 print("Mass CH4: " + str(CH4_mass_jarvis) + " kg")
@@ -64,8 +64,8 @@ print("-------------------------------------------------------------------------
 print("MethaLOX Starship")
 #MethaLox Starship
 propellant_mass_starship_CH4 = 337413.4919
-payload_mass_starship_CH4 = 18000
-structural_mass_starship_CH4 =  36553.12829
+payload_mass_starship_CH4 = 15000
+structural_mass_starship_CH4 = 36553.12829
 wet_mass_starship_CH4 = propellant_mass_starship_CH4 + structural_mass_starship_CH4 + payload_mass_starship_CH4
 CH4_mass_starship = 1/4.6*propellant_mass_starship_CH4
 print("Mass CH4: " + str(CH4_mass_starship) + " kg")
@@ -81,10 +81,10 @@ print("-------------------------------------------------------------------------
 
 print("HydroLOX Starship")
 #HydroLOX Starship
-propellant_mass_starship_LH2 = 179895.8284
-structural_mass_starship_LH2 = 24770.65615
+propellant_mass_starship_LH2 = 149913.1903
+structural_mass_starship_LH2 = 20642.21346
 wet_mass_starship_LH2 = propellant_mass_starship_LH2 + structural_mass_starship_LH2
-LH2_mass_starship_LH2 = 1/7.03*propellant_mass_starship_LH2 + 18000
+LH2_mass_starship_LH2 = 1/7.03*propellant_mass_starship_LH2 + 15000
 print("Mass LH2: " + str(LH2_mass_starship_LH2) + " kg")
 LOX_mass_starship_LH2 = 6.03/7.03*propellant_mass_starship_LH2
 print("Mass LOX: " + str(LOX_mass_starship_LH2) + " kg")
@@ -149,7 +149,7 @@ def calculate_tank_thickness(wet_mass, propellant_pressure, fuel_mass, tank_leng
     print("the axial stress is: " + str(sigma_axial))
     print("the bending stress is: " + str(sigma_bend))
     #check hoop stress
-    thickness_pressure = (propellant_pressure * tank_diameter) / (2 * strength)
+    thickness_pressure = (propellant_pressure *1000* tank_diameter) / (2 * strength)
     if thickness_pressure>t:
         t = thickness_pressure
         print("Hoop stress leading")
