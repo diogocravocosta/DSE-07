@@ -16,7 +16,7 @@ tank_diameter = 7
 #LOX_volume_shrinkage_coefficient = 1.43/100 #%
 #CH4_volume_shrinkage_coefficient = 1.28/100 #%
 
-LH2_pressure = 1800*2 #kPa (7 + safety factor of 2 bar)
+LH2_pressure = 1000*2 #kPa (10 + safety factor of 2 bar)
 LOX_pressure = 270*2 #kPa (2.7 bar)
 Ch4_pressure = 400*2 #kPa (4bar)
 
