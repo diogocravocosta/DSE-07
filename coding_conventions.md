@@ -63,3 +63,4 @@ sum of element-wise multiplication
 - first describe in words what you want your code to do, this can even be your docstring
 - if you feel fancy, not sure where to start or working on a complex piece of functionality, sketch out a quick flowchart
 - I recommend pycharm (because that's what I am used, so I will be able to help more effectively if necessary)
+- Thomas' and Jiri's stuff
