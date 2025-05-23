@@ -9,6 +9,7 @@
 
 ## Repository structure
 - put your code in src and tests in verification
+- names of folders and files should be should only include lowercase letters,numbers and underscores for spaces
 - if you have multiple files make a folder for it
 - if you have additional data put it in data folder, again create your own folder if you have or expect more than one file
 - if your code needs any data to run upload it to github so other people can run it
@@ -63,4 +64,4 @@ sum of element-wise multiplication
 - first describe in words what you want your code to do, this can even be your docstring
 - if you feel fancy, not sure where to start or working on a complex piece of functionality, sketch out a quick flowchart
 - I recommend pycharm (because that's what I am used, so I will be able to help more effectively if necessary)
-- Thomas' and Jiri's stuff
+- Thomas' stuff (trade-off) is good if you need more good examples
