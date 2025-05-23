@@ -33,6 +33,7 @@ sum of element-wise multiplication
 ```
 - if you use the same block of code multiple times, make it into its own function
 - if you have several functions taking the same number as an input consider making a class and save this value as a class parameter (I can give you crash course of Object Oriented Programming)
+- for class naming capitalize each word, eg.: CustomClass
 - add comments whenever logic may be unclear
 - include units for numerical variables (at the very least inputs and outputs for each function) and don't change them
 - do not change a type of variable: eg. from number to string
@@ -61,3 +62,4 @@ sum of element-wise multiplication
 ## Other tips
 - first describe in words what you want your code to do, this can even be your docstring
 - if you feel fancy, not sure where to start or working on a complex piece of functionality, sketch out a quick flowchart
+- I recommend pycharm (because that's what I am used, so I will be able to help more effectively if necessary)
