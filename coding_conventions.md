@@ -45,7 +45,8 @@ sum of element-wise multiplication
 - each function should have at least one test: feed it a test input and check the output of the function is what its supposed to be
 - name the tests as test_<function_name>()
 - put tests in verification folder
-- if you have multiple functions working together, consider writing integrations tests: same as unit tests but from beggining to end of your module
+- if you have multiple functions working together, consider writing integrations tests: same as unit tests but from beginning to end of your module
+- when unit testing classes use the `Class.__new__(Class)` to create a class instance without running init. Otherwise, your unit test would not be independent
 
 ## Merging:
 - Don't code in main
