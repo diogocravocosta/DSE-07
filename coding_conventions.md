@@ -65,3 +65,4 @@ sum of element-wise multiplication
 - if you feel fancy, not sure where to start or working on a complex piece of functionality, sketch out a quick flowchart
 - I recommend pycharm (because that's what I am used, so I will be able to help more effectively if necessary)
 - Thomas' stuff (trade-off) is good if you need more good examples
+- Push at the end of the day so we don't lose progress
