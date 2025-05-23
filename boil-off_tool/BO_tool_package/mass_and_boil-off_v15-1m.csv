@@ -1,0 +1,2 @@
+layer density MLI [layers/cm],layers of MLI,MLI mass [kg],cooler power [W],Cooler mass [kg],t_shell [m],Shell mass [kg],Boil-off mass [kg],Vent mass [kg],Total mass [kg],Boil-off rate [%/month],Time start boil [days],Time to boil-off [days],T_liquid,T_vapour,Boil-off rate from start of month [%]
+16.0,45.0,322.71366616279585,0.0,0.0,0.012700000000000001,9058.09172497798,59.29590983651817,0.0,9440.101300977294,0.4941323913334881,1.1574074074074073e-05,30.000011574074076,21.24349412283589,21.24349412283589,0.49413258197098475

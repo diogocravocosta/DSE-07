@@ -138,3 +138,8 @@ cython_debug/
 
 # Marimo
 __marimo__
+
+# Boil-off Tool Output
+boil-off_tool/BO_tool_package/Output_data/
+BO_tool_main_body.c
+mass_and_boil-off_v15-1m.csv
