@@ -204,6 +204,6 @@ class TradeOff:
 
 
 if __name__ == '__main__':
-    to = TradeOff('tradeOffInput.xlsx', n_runs=100)
+    to = TradeOff('../../data/tradeOffInput.xlsx', n_runs=100)
     to.run()
     to.create_winner_barchart()
