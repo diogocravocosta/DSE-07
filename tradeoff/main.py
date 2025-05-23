@@ -16,7 +16,7 @@ def timer(func):
 def main():
     file_path = 'tradeOffInput.xlsx'
 
-    to = TradeOff(file_path, n_runs=500_000, sens_mode='uniform', std_frac=1)
+    to = TradeOff(file_path, n_runs=500_000, sens_mode='normal', std_frac=1/3)
     to.run()
     to.print_all_results()
     to.create_weight_boxplots()

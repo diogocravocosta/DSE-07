@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
+plt.rcParams.update({'font.size': 14})
 
 class TradeOff:
     def __init__(self, filepath: str, n_runs: int = 10, sens_mode: str = 'uniform', std_frac: float = 0.33) -> None:
@@ -164,7 +165,7 @@ class TradeOff:
 
 
     def create_weight_boxplots(self):
-        self.weight_fig, self.weight_ax = plt.subplots()
+        self.weight_fig, self.weight_ax = plt.subplots(figsize=(6, 6))
 
         labels = list(self.sensitivity_weights_lists.keys())
         data = [self.sensitivity_weights_lists[key] for key in labels]
@@ -179,7 +180,7 @@ class TradeOff:
         self.weight_fig.show()
 
     def create_winner_barchart(self, type='perc'):
-        self.win_fig, self.win_ax = plt.subplots(figsize=(8, 8))
+        self.win_fig, self.win_ax = plt.subplots(figsize=(6, 6))
 
         if type == 'abs':
             data = self.winner_matrix.values()
