@@ -87,4 +87,3 @@ ax2.legend(
 
 plt.tight_layout()
 plt.show()
-# plt.savefig('pie_chart.png', dpi=300, bbox_inches='tight')
