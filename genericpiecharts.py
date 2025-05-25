@@ -1,22 +1,32 @@
 import matplotlib.pyplot as plt
 import random
 
-# Color palette
+# Your color palette
 PALETTE = [
     '#0C2340', '#00B8C8', '#0076C2', '#6F1D77', '#EF60A3', '#A50034',
     '#E03C31', '#EC6842', '#FFB81C', '#6CC24A', '#009B77', '#5C5C5C'
 ]
 
-def plot_pie_dicts(dicts_and_titles, palette=PALETTE, legend_x=0.95, hspace=0.3):
+def plot_pie_dicts(
+    dicts_info,
+    palette=PALETTE,
+    legend_x=0.95,
+    hspace=0.3
+):
     """
-    dicts_and_titles : list of (data_dict, legend_title) tuples
-    palette          : list of hex colors to choose from
-    legend_x         : x‐position for legends (0–1)
-    hspace           : vertical spacing between subplots
+    dicts_info : list of (data_dict, title, unit, show_title, sort_flag) tuples
+                  - data_dict  : mapping labels→values
+                  - title      : legend title
+                  - unit       : unit string to append to values
+                  - show_title : bool, whether to show legend title
+                  - sort_flag  : bool, whether to sort slices by value
+    palette    : list of hex colors to choose from
+    legend_x   : x‐position for legends (0–1)
+    hspace     : vertical spacing between subplots
     """
     # 1) Collect all unique keys across all dicts
     unique_keys = []
-    for data, _ in dicts_and_titles:
+    for data, *_ in dicts_info:
         for k in data:
             if k not in unique_keys:
                 unique_keys.append(k)
@@ -32,26 +42,27 @@ def plot_pie_dicts(dicts_and_titles, palette=PALETTE, legend_x=0.95, hspace=0.3)
             key_colors[k] = random.choice(palette)
 
     # 3) Set up subplots
-    n = len(dicts_and_titles)
-    fig, axes = plt.subplots(n, 1, figsize=(8, 4*n))
+    n = len(dicts_info)
+    fig, axes = plt.subplots(n, 1, figsize=(8*0.85, 4*0.65 * n), dpi=250)
     if n == 1:
         axes = [axes]
-
     fig.subplots_adjust(hspace=hspace)
 
-    # 4) For each dict, draw the pie & legend
-    for ax, (data, title) in zip(axes, dicts_and_titles):
-        # filter zeros & sort ascending
+    # 4) Draw each pie & legend
+    for ax, (data, title, unit, show_title, sort_flag) in zip(axes, dicts_info):
+        # filter out zero entries
         filtered = {k: v for k, v in data.items() if v > 0}
-        items = sorted(filtered.items(), key=lambda iv: iv[1])
+        # sort or preserve original order
+        if sort_flag:
+            items = sorted(filtered.items(), key=lambda iv: iv[1])
+        else:
+            items = list(filtered.items())
 
-        labels = [''] * len(items)
         sizes  = [v for _, v in items]
         colors = [key_colors[k] for k, _ in items]
-
         wedges, _ = ax.pie(
             sizes,
-            labels=labels,
+            labels=[''] * len(items),
             startangle=90,
             colors=colors,
             wedgeprops=dict(edgecolor='w')
@@ -61,28 +72,33 @@ def plot_pie_dicts(dicts_and_titles, palette=PALETTE, legend_x=0.95, hspace=0.3)
         # build legend in descending order
         items_desc   = items[::-1]
         wedges_desc  = wedges[::-1]
-        legend_labels = [f"{k}: {v} kg" for k, v in items_desc]
+        legend_labels = [f"{k}: {v} {unit}" for k, v in items_desc]
 
-        ax.legend(
-            wedges_desc,
-            legend_labels,
-            title=title,
-            loc='center left',
-            bbox_to_anchor=(legend_x, 0.5)
-        )
+        legend_kwargs = {
+            'handles': wedges_desc,
+            'labels': legend_labels,
+            'loc': 'center left',
+            'bbox_to_anchor': (legend_x, 0.5)
+        }
+        if show_title:
+            legend_kwargs.update({
+                'title': title,
+            })
+
+        ax.legend(**legend_kwargs)
 
     plt.tight_layout()
     plt.show()
 
 
 delta_v = {
-    'Initial orbit injection': 6029,
-    'Injection to 600 km transfer orbit': 114,
-    'Circularization at 600 km': 112,
-    'Deorbit burn': 157,
-    'Atmospheric drag': 0,
+    '5% margin': round((6029 + 114 + 112 + 157 + 506) * 0.05),
     'Landing burn': 506,
-    'Margin' : round((6029+114+112+157+506)*0.05)
+    'Deorbit burn': 157,
+    'Circularization at 600 km': 112,
+    'Injection to 600 km transfer orbit': 114,
+    'Initial orbit injection': 6029,
+    'Atmospheric drag': 0
 }
 
 average_loads = {
@@ -108,22 +124,37 @@ empty_mass = {
     'Thermal control': 600,
     'Thrust vector control': 864,
     'Power': 719,
-    'GNC': 100,
-    'Attitude control': 4,
+    #'GNC': 100,
+    #'Attitude control': 4,
     'Oxidizer tank': 12051,
     'Engines': 5457,
     'Payload fairing': 4997,
-    'Data handling': 100,
-    'Avionics harness': 403,
-    'Interstage structure': 462
+    #'Data handling': 100,
+    #'Avionics harness': 403,
+    'Interstage structure': 462,
+    'Avionics': 100+4+100+403,
 }
 
 total_mass = {
-    'Empty mass': 28041,
-    'Fuel': 218643
+    'Empty mass': 60906,
+    'Propellant and payload': 218643
 }
 
+cost = {
+    'Ground operations': 1.388,
+    'Propellant': 0.226,
+    'Flight and mission': 39.218,
+    'Transportation': 1.323,
+    'Fees and insurance': 1.389,
+    'Indirect operational': 2.188,
+}
+
+# First: show title, second: sort
 plot_pie_dicts([
-    (empty_mass, 'Empty Mass'),
-    (total_mass, 'Total Mass'),
+    # (average_loads, "Average Loads", "W", False, True),
+    # (peak_loads,    "Peak Loads",    "W", False, True)
+    # (delta_v,       "Delta V", "m/s", False, False),
+    #(empty_mass,    "Empty Mass", "kg", False, True),
+    #(total_mass,    "Total Mass", "kg", False, True)
+    (cost,          "Cost", "M€", False, True)
 ])
