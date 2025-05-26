@@ -23,7 +23,7 @@ s_BAU = 0.6 #scope of subcontracted work under Business As Usual
 s_COM = 0.2 #scope of subcontracted work under commercial development
 q = 0.08 #average subcontractor profit
 c_p = (s_COM*q+1)/(s_BAU*q+1)
-M_PA_perc = 5.25 
+M_PA_perc = 0.0525 
 concept_number = input("Enter concept number (e.g., 1, 2, 3): ")
 
 if concept_number == "1" or concept_number == "2":
@@ -74,7 +74,7 @@ elif concept_number == "4":
     M = df['CONCEPT 4'].iloc[1:22].tolist()
 else: 
     print ("Invalid concept number. Please enter a number between 1 and 4.")
-HW = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25] 
+#HW = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25] 
 #print (M)
 def calc_T1 (a, b, M):
     T1 = []
@@ -86,10 +86,10 @@ def calc_T1 (a, b, M):
 
 T1 = calc_T1(a, b, M)
 
-def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
+def calc_DEV(T1, M_PA_perc, delta_TRL, L_d, c_p):
     DEV_list = []
     for i in range(len(a)):
-        print('T1:'+str(T1[i]))
+        print('T1:'+str(T1))
         DD = 3*T1[i]
         print("dd:"+str(DD))
         DM = 0.3 * T1[i]
@@ -100,15 +100,15 @@ def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
         print("pfm:"+str(PFM))
         DD_prime = DD + delta_TRL
         print("dd_prime:"+str(DD_prime))
-        FM1 = 1 - M_PA_perc/100
+        FM1 = T1[i]*(1- M_PA_perc) 
         print("fm1:"+str(FM1))
         ENG = DD_prime * FM1
         print("eng:"+str(ENG))
         STH = DM + EM + PFM
         print("sth:"+str(STH))
-        MAIT = FM1*STH*L_d*HW[i]
+        MAIT = FM1*STH*L_d
         print("mait:"+str(MAIT))
-        DEV = c_p*((ENG+(MAIT+ENG)*M_PA_perc)+(FM1*STH*L_d*HW[i]))
+        DEV = c_p*((ENG+(MAIT+ENG)*M_PA_perc)+(FM1*STH*L_d))
         print("dev:"+str(DEV))
         DEV_list.append(DEV)
         print("dev list:"+str(DEV_list))
@@ -180,7 +180,7 @@ elif concept_number == "4":
 else:
     print ("Invalid concept number. Please enter a number between 1 and 6.")
 
-print (T1)
-print ("Development cost (engineering cost) in M€= ", (calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p))/1000)
+#print (T1)
+#print ("Development cost (engineering cost) in M€= ", (calc_DEV(T1, M_PA_perc, delta_TRL, L_d, c_p))/1000)
 print ("Operational cost per flight in M€ = ", (calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press))/1000)
 
