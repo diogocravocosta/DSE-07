@@ -20,6 +20,7 @@
 - give variables descriptive, lowercase names with underscores, don't use abbreviations unless they are standardized in our field so everyone will immediately understand, still explain those first time the variable appears
   - for example, instead of `tc = 1`, do `thermal_conductivity = 1`
 - specify expected inputs and outputs in the function signature (e.g. `dot_product(vector1: list[float], vector2: list[float]) -> float:`)
+- put any constants you use in the design into the `constant.py` file in the `data` folder, of course this does not apply for things like `pi` or `e` which you get from `numpy`
 - use docstrings in the Google style to explain what the function does, and what are its inputs and outputs, eg.:
 
 ```python
