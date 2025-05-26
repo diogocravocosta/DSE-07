@@ -35,9 +35,9 @@ def dot_product(vector1: list[float], vector2: list[float]) -> float:
 	"""
 ```
 
-- if you use the same block of code multiple times, make it into its own function (write DRY code, i.e. don't repeat yourself)
+- if you use the same block of code multiple times, make it into its own function (write DRY code, i.e. Don't Repeat Yourself)
 - if you have several functions taking the same number as an input consider making a class and save this value as a class parameter (Matyas can give you a crash course in Object Oriented Programming)
-- for class naming capitalize each word, e.g.: CustomClass (PascalCase)
+- for class naming capitalize each word (PascalCase), e.g.: CustomClass 
 - add comments whenever logic may be unclear
 - include units for numerical variables (at the very least inputs and outputs for each function) and don't change them (try to have SI units)
 - do not change a type of variable: e.g. from number to string
@@ -67,6 +67,6 @@ def dot_product(vector1: list[float], vector2: list[float]) -> float:
 ## Other tips
 - first describe in words what you want your code to do, this can even be your docstring
 - if you feel fancy, not sure where to start or working on a complex piece of functionality, sketch out a quick flowchart
-- Matyas recommends PyCharm (because that's what he is used to, so I will be able to help more effectively if necessary)
+- Matyas recommends PyCharm (because that's what he is used to, so he will be able to help more effectively if necessary)
 - Thomas' stuff (trade-off) is good if you need more good examples
 - Push at the end of the day so we don't lose progress
