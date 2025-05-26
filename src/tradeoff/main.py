@@ -1,4 +1,4 @@
-from tradeOff import TradeOff
+from tradeoff import TradeOff
 import time
 
 
@@ -14,7 +14,7 @@ def timer(func):
 
 @timer
 def main():
-    file_path = 'tradeOffInput.xlsx'
+    file_path = '../../data/tradeOffInput.xlsx'
 
     to = TradeOff(file_path, n_runs=500_000, sens_mode='normal', std_frac=1/3)
     to.run()

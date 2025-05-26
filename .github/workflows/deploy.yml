@@ -32,7 +32,7 @@ jobs:
 
       - name: 🛠️ Export notebooks
         run: |
-          python scripts/build.py
+          python notebooks/build.py
 
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
