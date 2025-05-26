@@ -3,6 +3,7 @@
 - Fetch all remotes so you have all up-to-date code
 	
 ## Branching rules:
+- never code in `main` branch
 - whenever you start working on a new functionality or block of the code make a new branch from main
 - name branches descriptive name (eg. `hohmann_transfer_calculation` vs `matyas_branch_7`)
 - keep your branches small (reviewing 1000s of lines is not feasible, modular code is objectively better)
