@@ -84,7 +84,7 @@ def calc_T1 (a, b, M):
     T1_total = np.sum(T1)
     return T1
 
-T1 = calc_T1(a, b, M)
+#T1 = calc_T1(a, b, M)
 
 def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
     DEV_list = []
@@ -122,14 +122,20 @@ def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
 def calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press):
     #Direct Operations Cost (DOC)
     C_ground = (W * 8 * (M_0**0.67) * (LpA**(-0.9)) * (N ** 0.7) * f_c * f_v * L_0 *f_8 * f_11)/1000 #ground operations in k€
-    C_prop = ((M_p/(r +1))*c_f + (M_p - (M_p/(r+1)))* c_ox + M_press * c_press)/1000 #propellant cost in k€
+    print('C_ground'+str(C_ground))
+    C_prop = ((M_p/(r+1))*c_f + (M_p - (M_p/(r+1)))* c_ox + M_press * c_press)/1000 #propellant cost in k€
+    print('C_prop'+str(C_prop))
     C_FM = (W * 20 * Q_N * (LpA ** 0.65) * L_0 * f_8)/1000 #flight and mission cost in k€
+    print('C_FM'+str(C_FM))
     C_trans = T_s * M_0 #transportation cost in k€
+    print('C_trans', C_trans)
     C_FI = I + F + (c_payl * P)/1000 #fees & insurance costs in k€
-    C_DOC = C_ground + C_prop + C_FM + C_trans + C_FI 
+    print('C_FI', C_FI)
+    C_DOC = C_ground + C_prop + C_FM + C_trans + C_FI
+    print('C_DOC', C_DOC) 
     #Indirect Operations Cost (IOC)
     C_IOC = (40 * S + 24)* (LpA ** (-0.379)) * W / 1000
-
+    print('C_IOC', C_IOC)
     C_ops = C_DOC + C_IOC
     return C_ops
 
@@ -154,33 +160,50 @@ c_press = 35.62 #cost per kg of helium
 I = 100 #public damage insurance in M€
 
 if concept_number == "1":
-    M_p = df.at[25, 'CONCEPT 1'] #mass of propellant and oxidiser in kg
-    M_0 = (df.at[24, 'CONCEPT 1'])/1000 #gross take-off-mass Mg
-    r = df.at[28, 'CONCEPT 1'] #mass mixture ratio
+    M_p = df.at[24, 'CONCEPT 1'] #mass of propellant and oxidiser in kg
+    M_0 = (df.at[23, 'CONCEPT 1'])/1000 #gross take-off-mass Mg
+    r = df.at[27, 'CONCEPT 1'] #mass mixture ratio
     c_f = 7.08 #cost of liquefied hydrogen per kg, from https://www.sciencedirect.com/science/article/pii/S2949908923002789
-    M_press = df.at[26, 'CONCEPT 1'] #in kg
+    M_press = df.at[25, 'CONCEPT 1'] #in kg
 elif concept_number == "2":
-    M_p = df.at[25, 'CONCEPT 2']
-    M_0 = (df.at[24, 'CONCEPT 2'])/1000
-    r = df.at[28, 'CONCEPT 2']
+    M_p = df.at[24, 'CONCEPT 2']
+    M_0 = (df.at[23, 'CONCEPT 2'])/1000
+    r = df.at[27, 'CONCEPT 2']
     c_f = 1.56 #cost of liquefied methane per kg, from https://www.sciencedirect.com/science/article/pii/S1875510021002845
-    M_press = df.at[26, 'CONCEPT 2']
+    M_press = df.at[25, 'CONCEPT 2']
 elif concept_number == "3":
-    M_p = df.at[25, 'CONCEPT 3']
-    M_0 = (df.at[24, 'CONCEPT 3'])/1000
-    r = df.at[28, 'CONCEPT 3']
+    M_p = df.at[24, 'CONCEPT 3']
+    print(M_p)
+    M_0 = (df.at[23, 'CONCEPT 3'])/1000
+    print(M_0)
+    r = df.at[27, 'CONCEPT 3']
+    print(r)
     c_f = 7.08
-    M_press = df.at[26, 'CONCEPT 3']
+    M_press = df.at[25, 'CONCEPT 3']
+    print(M_press)
 elif concept_number == "4":
-    M_p = df.at[25, 'CONCEPT 4']
-    M_0 = (df.at[24, 'CONCEPT 4'])/1000
-    r = df.at[28, 'CONCEPT 4']
+    M_p = df.at[24, 'CONCEPT 4']
+    M_0 = (df.at[23, 'CONCEPT 4'])/1000
+    r = df.at[27, 'CONCEPT 4']
     c_f = 1.56
-    M_press = df.at[26, 'CONCEPT 4']
+    M_press = df.at[25, 'CONCEPT 4']
+elif concept_number == "5":
+    M_p = df.at[24, 'CONCEPT 5']
+    M_0 = (df.at[23, 'CONCEPT 5'])/1000
+    r = df.at[27, 'CONCEPT 5']
+    c_f = 7.08
+    M_press = df.at[25, 'CONCEPT 5']
+elif concept_number == "6":
+    M_p = df.at[24, 'CONCEPT 6']
+    M_0 = (df.at[23, 'CONCEPT 6'])/1000
+    r = df.at[27, 'CONCEPT 6']
+    c_f = 1.56
+    M_press = df.at[25, 'CONCEPT 6']
 else:
     print ("Invalid concept number. Please enter a number between 1 and 6.")
 
-print (T1)
-print ("Development cost (engineering cost) in M€= ", (calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p))/1000)
+
+#print (T1)
+#print ("Development cost (engineering cost) in M€= ", (calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p))/1000)
 print ("Operational cost per flight in M€ = ", (calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press))/1000)
 
