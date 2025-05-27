@@ -1,4 +1,10 @@
 import numpy as np
+import pandas as pd
+
+#Load excel file with mass inputs
+df = pd.read_excel('mass_input_cost_model.xlsx')
+
+
 
 #Nomenclature
 #DEV = Development cost (engineering cost)
@@ -17,7 +23,7 @@ s_BAU = 0.6 #scope of subcontracted work under Business As Usual
 s_COM = 0.2 #scope of subcontracted work under commercial development
 q = 0.08 #average subcontractor profit
 c_p = (s_COM*q+1)/(s_BAU*q+1)
-M_PA_perc = 5.25 
+M_PA_perc = 0.0525 
 concept_number = input("Enter concept number (e.g., 1, 2, 3): ")
 
 if concept_number == "1" or concept_number == "2":
@@ -59,48 +65,56 @@ a = [19.99465, 19.99465, 19.99465, 2.799300, 2.799300, 2.799300, 31.48271, 33.90
 b = [0.71253, 0.71253, 0.71253, 0.91199, 0.91199, 0.91199, 0.78811, 0.60977, 1.06948, 0.68815, 0.68815, 0.44623, 0.44623, 0.70000, 0.80000, 0.80000, 0.80000, 0.82458, 0.44623, 0.75000, 0.68041]
 
 if concept_number == "1":
-    M = []
+    M = [45, 611, 168, 50, 516, 8, 250, 49, 0, 20, 15, 7, 0, 0, 0, 0, 0, 0, 0, 0, 25]
 elif concept_number == "2":
-    M = []
+    M = df['CONCEPT 2'].iloc[1:22].tolist()
 elif concept_number == "3":
-    M = []
+    M = df['CONCEPT 3'].iloc[1:22].tolist()
 elif concept_number == "4":
-    M = []
-elif concept_number == "5":
-    M = []
-elif concept_number == "6":
-    M = []
+    M = df['CONCEPT 4'].iloc[1:22].tolist()
 else: 
-    print ("Invalid concept number. Please enter a number between 1 and 6.")
-HW = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25] 
-
+    print ("Invalid concept number. Please enter a number between 1 and 4.")
+#HW = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25] 
+#print (M)
 def calc_T1 (a, b, M):
     T1 = []
-    for i in range(len(a)):
-        C = a[i] * M**b[i]
+    for i in range(21):
+        C = a[i] * M[i]**b[i]
         T1.append(C)
     T1_total = np.sum(T1)
     return T1
 
 T1 = calc_T1(a, b, M)
 
-def calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p):
+def calc_DEV(T1, M_PA_perc, delta_TRL, L_d, c_p):
     DEV_list = []
     for i in range(len(a)):
+        print('T1:'+str(T1))
         DD = 3*T1[i]
+        print("dd:"+str(DD))
         DM = 0.3 * T1[i]
+        print("dm:"+str(DM))
         EM = 1.3 * T1[i]
+        print("em:"+str(EM))
         PFM = 1.5 * T1[i]
+        print("pfm:"+str(PFM))
         DD_prime = DD + delta_TRL
-        FM1 = T1 - M_PA_perc
+        print("dd_prime:"+str(DD_prime))
+        FM1 = T1[i]*(1- M_PA_perc) 
+        print("fm1:"+str(FM1))
         ENG = DD_prime * FM1
+        print("eng:"+str(ENG))
         STH = DM + EM + PFM
-        MAIT = FM1*STH*L_d*HW[i]
-        DEV = c_p*((ENG+(MAIT+ENG)*M_PA_perc)+(FM1*STH*L_d*HW[i]))
+        print("sth:"+str(STH))
+        MAIT = FM1*STH*L_d
+        print("mait:"+str(MAIT))
+        DEV = c_p*((ENG+(MAIT+ENG)*M_PA_perc)+(FM1*STH*L_d))
+        print("dev:"+str(DEV))
         DEV_list.append(DEV)
+        print("dev list:"+str(DEV_list))
         DEV_total = np.sum(DEV_list)
+        print("dev total:"+str(DEV_total))
     return DEV_total
-
 
 
 
@@ -112,7 +126,7 @@ def calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, 
     C_FM = (W * 20 * Q_N * (LpA ** 0.65) * L_0 * f_8)/1000 #flight and mission cost in k€
     C_trans = T_s * M_0 #transportation cost in k€
     C_FI = I + F + (c_payl * P)/1000 #fees & insurance costs in k€
-    C_DOC = C_ground + C_prop + C_FM + C_trans + C_FI + C_DOC
+    C_DOC = C_ground + C_prop + C_FM + C_trans + C_FI 
     #Indirect Operations Cost (IOC)
     C_IOC = (40 * S + 24)* (LpA ** (-0.379)) * W / 1000
 
@@ -140,45 +154,33 @@ c_press = 35.62 #cost per kg of helium
 I = 100 #public damage insurance in M€
 
 if concept_number == "1":
-    M_p = 932945.4 #mass of propellant and oxidiser in kg
-    M_0 = 986.836 #gross take-off-mass Mg
-    r = 0.3 #mass mixture ratio
+    M_p = df.at[25, 'CONCEPT 1'] #mass of propellant and oxidiser in kg
+    M_0 = (df.at[24, 'CONCEPT 1'])/1000 #gross take-off-mass Mg
+    r = df.at[28, 'CONCEPT 1'] #mass mixture ratio
     c_f = 7.08 #cost of liquefied hydrogen per kg, from https://www.sciencedirect.com/science/article/pii/S2949908923002789
-    M_press = 0 #in kg
+    M_press = df.at[26, 'CONCEPT 1'] #in kg
 elif concept_number == "2":
-    M_p = 932000.6
-    M_0 = 991.66
-    r = 0.3
+    M_p = df.at[25, 'CONCEPT 2']
+    M_0 = (df.at[24, 'CONCEPT 2'])/1000
+    r = df.at[28, 'CONCEPT 2']
     c_f = 1.56 #cost of liquefied methane per kg, from https://www.sciencedirect.com/science/article/pii/S1875510021002845
-    M_press = 0
+    M_press = df.at[26, 'CONCEPT 2']
 elif concept_number == "3":
-    M_p = 933942.9
-    M_0 = 995.08
-    r = 0.3
+    M_p = df.at[25, 'CONCEPT 3']
+    M_0 = (df.at[24, 'CONCEPT 3'])/1000
+    r = df.at[28, 'CONCEPT 3']
     c_f = 7.08
-    M_press = 0
+    M_press = df.at[26, 'CONCEPT 3']
 elif concept_number == "4":
-    M_p = 932000.6
-    M_0 = 991.66
-    r = 0.3
+    M_p = df.at[25, 'CONCEPT 4']
+    M_0 = (df.at[24, 'CONCEPT 4'])/1000
+    r = df.at[28, 'CONCEPT 4']
     c_f = 1.56
-    M_press = 0
-elif concept_number == "5":
-    M_p = 933033.3
-    M_0 = 982.72
-    r = 0.3
-    c_f = 7.08
-    M_press = 0
-elif concept_number == "6":
-    M_p = 931570
-    M_0 = 984.61
-    r = 0.3
-    c_f = 1.56
-    M_press = 0
+    M_press = df.at[26, 'CONCEPT 4']
 else:
     print ("Invalid concept number. Please enter a number between 1 and 6.")
 
-
-print ("Development cost (engineering cost) = ", calc_DEV(T1, M_PA_perc, delta_TRL, HW, L_d, c_p))
-print ("Operational cost per flight = ", calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S))
+#print (T1)
+#print ("Development cost (engineering cost) in M€= ", (calc_DEV(T1, M_PA_perc, delta_TRL, L_d, c_p))/1000)
+print ("Operational cost per flight in M€ = ", (calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press))/1000)
 

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Default ignored files
+/.idea/
+
 # C extensions
 *.so
 
@@ -140,6 +143,6 @@ cython_debug/
 __marimo__
 
 # Boil-off Tool Output
-boil-off_tool/BO_tool_package/Output_data/
+external_tools/boil-off_tool/BO_tool_package/Output_data/
 BO_tool_main_body.c
 mass_and_boil-off_v15-1m.csv

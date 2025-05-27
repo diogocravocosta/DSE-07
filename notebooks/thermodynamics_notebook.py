@@ -463,5 +463,30 @@ def _(io, mo):
     return change_plot_style, convert_fig_to_svg, plot_svg
 
 
+@app.cell
+def _(Fluid, FluidsList, Input):
+    # from pyfluids import Fluid, FluidsList, Input
+
+    # define the fluid
+    _hydrogen = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(1e5), Input.temperature(13.8))  # 1 bar, 13.8 K
+
+    # assume the hydrogen is heated to 20 °C
+    _initial_energy = _hydrogen.internal_energy  # internal energy at 13.8 K
+    _final_energy = _hydrogen.heating_to_temperature(temperature=293.15)  # internal energy at 20 °C
+    _heating_energy = _final_energy.internal_energy - _initial_energy  # J/kg
+
+    # calculate the boiled-off mass
+    _total_heat_flux = 1000  # W/m^2
+    _surface_area = 70.6  # m^2
+    _time = 24*3600  # s
+    _total_heat = _total_heat_flux * _surface_area * _time  # J
+
+    _boiled_off_mass = _total_heat / _heating_energy  # kg
+
+    print("Heating energy of hydrogen from 13.8 K to 20 °C:", _heating_energy, "J/kg")
+    print("Boiled-off mass of hydrogen:", _boiled_off_mass, "kg")
+    return
+
+
 if __name__ == "__main__":
     app.run()
