@@ -68,7 +68,7 @@ def dot_product(vector1: list[float], vector2: list[float]) -> float:
 	- Go through the code and try to understand what it does, discuss with whoever made it if it seems wrong or unclear
 	- Try a few of your own inputs to see whether they make sense if possible
 
-## Importing code from others
+## Importing code from others
 You can import the code from others in the following way:
 
 ```python
