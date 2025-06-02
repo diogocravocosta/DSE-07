@@ -17,7 +17,7 @@ LOX_pressure = 270*2 #kPa (2.7 bar)
 LH2_boiloff_margin = 1.1 #1.012 * 1.02 #(3.2% extra)
 LOX_boiloff_margin = 1.0143 * 1.02 #(3.46% extra)
 
-LH2_density = 70.85 #kg/m3
+LH2_density = 77 #kg/m3
 LOX_density = 1141 #kg/m3
 
 structural_mass = 28040.57293
@@ -51,13 +51,20 @@ def calculate_tank_length(tank_model, volume, tank_diameter):
 def calculate_tank_thickness(wet_mass, propellant_pressure, fuel_mass, tank_length, tank_diameter, E, strength, thrust, gamma=0.65):
     t = 0.001  # Start with 1 mm
     while True:
+        #pressure
+        p_press = 2*np.pi*E*t**2*(0.605*gamma) + propellant_pressure*np.pi*(tank_diameter/2)**2
         #axial stress due to the launch acceleration
         sigma_axial = thrust_engines / (2 * np.pi * tank_diameter/2 * t)
         #bending stress due to lateral loads
-        sigma_bend = (3*9.81* fuel_mass * tank_length/2) / (2 * np.pi * (tank_diameter/2)**2 * t)
-        sigma_cr = gamma * 0.605 * E * t / (tank_diameter/2)
+        sigma_bend = np.pi*(tank_diameter/2)*E*(t)**2*(0.605*gamma) + 0.8*propellant_pressure*np.pi*(tank_diameter/2)**3
 
-        interaction = safety_factor * (sigma_axial + sigma_bend) / sigma_cr
+        sigma_cr_axial = gamma * 0.605 * E * t / (tank_diameter/2)
+        D=E*t**3/(12*(1-0.3**2))
+        Z = tank_length**2/(tank_length/2*t) * np.sqrt(1-0.3**2)
+        k_x = gamma * Z * 4 * np.sqrt(3)/np.pi**2
+        sigma_cr_bend = k_x * (np.pi)**3 * D * (tank_diameter/2)**2/(tank_length)**2
+
+        interaction = safety_factor * (sigma_axial/sigma_cr_axial + sigma_bend/sigma_cr_bend + propellant_pressure/p_press)
 
         if interaction <= 1.0:
             break
