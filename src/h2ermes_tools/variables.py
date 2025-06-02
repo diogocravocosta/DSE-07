@@ -30,7 +30,7 @@ class Variable:
     latex_symbol: str
     confidence: str
     constraints: str
-    margin: str
+    margin: tuple = (1.0, 1.0)
 
     def __post_init__(self):
         # Set default values for confidence, constraints, and margin if not provided
@@ -40,8 +40,6 @@ class Variable:
             self.confidence = "N/A"
         if not hasattr(self, "constraints"):
             self.constraints = "N/A"
-        if not hasattr(self, "margin"):
-            self.margin = "N/A"
 
 
 # Enter your variables here
@@ -52,7 +50,7 @@ coolant_mass = Variable(
     latex_symbol="M_c",
     confidence="poor",
     constraints="must be positive",
-    margin="high",
+    margin=(1.0, 1.25),
 )
 
 heat_shield_thickness = Variable(
@@ -62,7 +60,7 @@ heat_shield_thickness = Variable(
     latex_symbol="t_{s}",
     confidence="good",
     constraints="must be greater than 0",
-    margin="10%",
+    margin=(1.0, 1.1),
 )
 
 if __name__ == "__main__":
@@ -71,9 +69,10 @@ if __name__ == "__main__":
         name="Hydrogen Tank Diameter",
         value=0.0,
         unit="m/s",
+        latex_symbol="D_{t_{LH2}}",
         confidence="good",
         constraints="only positive values",
-        margin="5%",
+        margin=(1.0, 1.05),
     )
 
     # Example of how to access the variable's attributes
