@@ -18,20 +18,24 @@ class Variable:
         name (str): The name of the variable.
         value (Any): The value of the variable.
         unit (str): The unit of the variable.
-        confidence (str): The confidence level of the variable.
-        constraints (str): Constraints on the variable.
-        margin (str): Margin of error for the variable.
+        latex-symbol (str): The LaTeX symbol for the variable (optional).
+        confidence (str): Qualitative assessment of the accuracy of the variable value (optional).
+        constraints (str): Constraints on the variable (optional).
+        margin (str): Margin of error for the variable (optional).
     """
 
     name: str
     value: Any
     unit: str
+    latex_symbol: str
     confidence: str
     constraints: str
     margin: str
 
     def __post_init__(self):
         # Set default values for confidence, constraints, and margin if not provided
+        if not hasattr(self, "latex_symbol"):
+            self.latex_symbol = self.name.replace(" ", "_").lower()
         if not hasattr(self, "confidence"):
             self.confidence = "N/A"
         if not hasattr(self, "constraints"):
@@ -45,6 +49,7 @@ coolant_mass = Variable(
     name="Coolant Mass",
     value=0.0,
     unit="kg",
+    latex_symbol="M_c",
     confidence="poor",
     constraints="must be positive",
     margin="high",
@@ -54,6 +59,7 @@ heat_shield_thickness = Variable(
     name="Heat Shield Thickness",
     value=4e-3,
     unit="m",
+    latex_symbol="t_{s}",
     confidence="good",
     constraints="must be greater than 0",
     margin="10%",
