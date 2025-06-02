@@ -9,7 +9,9 @@
 - keep your branches small (reviewing 1000s of lines is not feasible, modular code is objectively better)
 
 ## Repository structure
-- put your code in src and tests in verification
+- the repository follows the standard `src` layout
+- put your code in `src/h2ermes_tools` and tests in `verification`
+- the code inside `h2ermes_tools` can be imported by others after `pip install -e .`, see below
 - names of folders and files should only include lowercase letters, numbers and underscores for spaces (snake_case)
 - if you have multiple files, make a folder for them
 - store your data in the `data` folder or create your own folder inside the `data` folder if you have or expect more than one data file
@@ -65,6 +67,18 @@ def dot_product(vector1: list[float], vector2: list[float]) -> float:
 	- Run the code and its tests
 	- Go through the code and try to understand what it does, discuss with whoever made it if it seems wrong or unclear
 	- Try a few of your own inputs to see whether they make sense if possible
+
+## Importing code from others
+You can import the code from others in the following way:
+
+```python
+from h2ermes_tools.example import dot_product
+
+vector_a = [1, 2, 3]
+vector_b = [4, 5, 6]
+result = dot_product(vector_a, vector_b)
+print(f"The dot product of {vector_a} and {vector_b} is: {result}")
+```
 
 ## Other tips
 - first describe in words what you want your code to do, this can even be your docstring
