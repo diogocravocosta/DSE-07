@@ -21,7 +21,7 @@ class Variable:
         latex-symbol (str): The LaTeX symbol for the variable (optional).
         confidence (str): Qualitative assessment of the accuracy of the variable value (optional).
         constraints (str): Constraints on the variable (optional).
-        margin (str): Margin of error for the variable (optional).
+        margin (tuple): The bottom and upper margin represented as multipliers, default is (1.0, 1.0).
     """
 
     name: str
