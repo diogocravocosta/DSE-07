@@ -14,7 +14,7 @@
 - the code inside `h2ermes_tools` can be imported by others after `pip install -e .`, see below
 - names of folders and files should only include lowercase letters, numbers and underscores for spaces (snake_case)
 - if you have multiple files, make a folder for them
-- store your data in the `data` folder or create your own folder inside the `data` folder if you have or expect more than one data file
+- store your data in the `src/data` folder or create your own folder inside the `src/data` folder if you have or expect more than one data file
 - if your code needs data to run, upload it to GitHub so other people can run your code
 - if your code outputs figures, graphs or things like that, do not commit those files as it makes merging annoying
 
