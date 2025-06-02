@@ -6,7 +6,7 @@ authors = [
     { name = "Jiri Kovar", email = "j.kovar@student.tudelft.nl" },
 ]
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
     "cython>=3.1.0",
