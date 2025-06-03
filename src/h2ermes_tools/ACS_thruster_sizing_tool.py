@@ -7,8 +7,8 @@ vehicle_dimensions = np.array([10, 10, 5])  # Length, Width, Height in meters
 gravitational_constant = 3.986 * 10**14  # m^3/s^2
 theta = 50 # Angle between the spacecraft and the local vertical in degrees
 altitude = 600 # Altitude of the spacecraft in km
-COM = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2, vehicle_dimensions[2] / 2])  # Center of mass of the spacecraft in meters from the geometric center
-re_entry_moment = 166000/3 # Maximum moment during re-entry in Nm
+COM = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2, vehicle_dimensions[2] / 2])  # Center of mass of the spacecraft in meters
+re_entry_moment = 166000 # Maximum moment during re-entry in Nm
 redundancy_factor = 2 # Redundancy factor for thrusters
 
 thrusters = {
@@ -165,7 +165,7 @@ magnetic_torque = magnetic_torque(altitude)
 # print("Magnetic torque on the spacecraft:", magnetic_torque, "Nm")
 
 torque_list = [solar_torque, gravity_gradient_torque, aerodynamic_drag, magnetic_torque]  # List of all torques
-print(torque_list)
+# print(torque_list)
 disturbance_load = np.sum([magnetic_torque, gravity_gradient_torque, aerodynamic_drag, solar_torque])  # Maximum disturbance load
 
 
@@ -178,12 +178,6 @@ ang_acc_y = 0.003  # in rad/s^2
 ang_acc_z = 0.0008  # in rad/s^2
 
 ang_acc_max = max(ang_acc_x,ang_acc_y,ang_acc_z)  # in rad/s^2
-
-
-
-
-
-
 
 
 def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
@@ -277,7 +271,10 @@ print("Number of thrusters required:", number_of_thrusters)
 print("Moment arm for each thruster type:", thruster_moment_arm['nammo_220_4'])
 # print("Power required for each thruster type:", power_thrusters)
 
-print("Coordinates of the center of mass of H2ermes: ", COM)
+# print("Coordinates of the center of mass of H2ermes: ", COM)
+
+
+
 
 
 
