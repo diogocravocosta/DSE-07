@@ -137,7 +137,7 @@ def aerodynamic_drag_torque(altitude, vehicle_dimensions, gravitational_constant
     atmospheric_density = 1.03 * 10**-14  # kg/m^3
     aerodynamic_surface_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the flow
 
-    aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * aerodynamic_surface_area * vehicle_velocity_squared  # Aerodynamic drag torque
+    aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * aerodynamic_surface_area * vehicle_velocity_squared * (np.linalg.norm(COM - geo_midpoint))  # Aerodynamic drag torque
     return aerodynamic_drag
 
 # Uncomment the lines below to print the aerodynamic drag torque
