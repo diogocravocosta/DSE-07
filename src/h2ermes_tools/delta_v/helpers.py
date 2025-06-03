@@ -60,3 +60,5 @@ def plot_rectangular(df: pd.DataFrame):
     plt.ylabel('Altitude [km]')
     plt.grid(True)
     plt.show()
+
+
