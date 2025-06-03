@@ -24,8 +24,9 @@ class bluntBody:
 
     def compute_aerodynamics(self, mode):
         if mode == 1: #computing aerodynamics for the structure with respect to all angles of attacks
-            self.alpha = np.linspace(-1 * self.alpha_max, self.alpha_max, 100)
+            #self.alpha = np.linspace(-1 * self.alpha_max, self.alpha_max, 100)
             self.alpha = np.linspace(0, self.alpha_max, 100)
+            #self.alpha = np.linspace(-1 * self.alpha_max, 0, 100)
             
             self.C_x = 0.5 * (np.sin(self.alpha)**2) * (np.sin(self.mu_b)**2) + \
                 (1 + np.cos(self.mu_b)**2) * (np.cos(self.alpha)**2)
@@ -50,6 +51,7 @@ class bluntBody:
 
             self.D_x_tot = self.C_x_tilde + self.C_x
             self.C_y_tot = self.C_y + self.C_y_tilde
+            self.LD = self.C_y_tot / self.D_x_tot
 
             #calculating lift curve slope
             self.Cl_alpha = (self.C_y_tot[1] - self.C_y_tot[-1]) / (self.alpha[1] - self.alpha[-1])
@@ -73,6 +75,8 @@ class bluntBody:
         if mode == 1:
             plt.plot(self.alpha * 180/np.pi, self.C_x + self.C_x_tilde, label="Cx coefficient", color="blue")
             plt.plot(self.alpha * 180/np.pi, self.C_y + self.C_y_tilde, label="Cy coefficient", color="red")
+            plt.plot(self.alpha * 180/np.pi, (self.C_y + self.C_y_tilde)/(self.C_x + self.C_x_tilde), label="L/D", color="green")
+            
             #plt.plot(self.alpha * 180/np.pi, self.D_x, label = "Drag force", color = "black")
             #plt.plot(self.alpha * 180/np.pi, self.L_y, label = "Lift force", color = "black")
 
@@ -100,7 +104,7 @@ class bluntBody:
         x_cone, rho_cone = np.meshgrid(x_cone, rho_cone)
 
         #cone parameteric equations
-        r_cone = B - (self.Rc/a)*(x_cone-c)
+        r_cone = self.B - ((self.B-self.Rc)/a)*(x_cone-c)
         y_cone = r_cone * np.cos(rho_cone)
         z_cone = r_cone * np.sin(rho_cone)
 
@@ -131,6 +135,7 @@ class bluntBody:
         self.Y_cap = 0.5 * self.rho_at * self.vel**2 * np.pi*self.B**2 * Y
         self.Y_cone = 0.5 * self.rho_at * self.vel**2 * np.pi*self.B**2 * Y_tilde
         self.x_moment_arm = ((self.R*self.Y_cap) + (x_tilde*self.Y_cone)) / (self.Y_cap + self.Y_cone)
+        print((self.x_moment_arm - (self.a/4)) * self.Y_cap) #this shit is prolly wrong so take a look
         
         plt.xlabel("Moment Arm")
         plt.xlabel("Moments Nm")
@@ -149,18 +154,18 @@ class bluntBody:
         self.Cmq_Cmadot = ((4*self.I) / (self.m*self.B**2)) * self.Cl_alpha
         print(self.Cmq_Cmadot)
         self.damping = self.D_x_tot - self.Cl_alpha + (2*self.B / self.rg)*self.Cmq_Cmadot
-        plt.plot(self.alpha * 180/np.pi, self.damping, label='damping coefficient')
+        plt.plot(self.alpha * 180/np.pi, self.Cmq_Cmadot, label='damping coefficient')
         plt.show()
         #print(self.damping)
 
 
 if __name__ == "__main__":
-    B = 4.94
-    c = 2.5
-    vel = 4000
-    rho_at = 3.31E-04
-    Rc = 2.47
-    a = 10
+    B = 4.92 # max radius
+    c = 2 # arc height of blunt nose
+    vel = 4000 #test velocity
+    rho_at = 3.31E-04 #test atmosphere
+    Rc = 2.92 #min radius of cone
+    a = 14 #length of cone
     vels = [1000,2000,3000,4000,5000,6000,7000]
     rho_atmos = [0.1, 0.5, 0.7, 0.8, 0.9, 1.1, 1.5]
     aoa = 30 * np.pi/180
@@ -171,8 +176,10 @@ if __name__ == "__main__":
 
     body.compute_aerodynamics(mode = 1)
 
+    body.draw_geom()
+
     body.plots(mode = 1)
 
-    body.dynamic_stability()
+    body.moments()
 
-    #body.draw_geom()
+    body.dynamic_stability()
