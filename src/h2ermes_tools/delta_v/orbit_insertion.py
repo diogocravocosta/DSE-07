@@ -66,18 +66,18 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
     else:
         target_orbit_energy = None
 
-    if target_orbital_altitude is None and (guidance != 'gravity turn' or guidance != 'vertical'):
-        raise ValueError('this guidance requires target orbital altitude')
-
-    if guidance == 'linear tangent' or guidance == 'another tangent':
-        target_orbit_velocity = np.sqrt(cn.gravitational_parameter / (target_orbital_altitude + cn.earth_radius))
-
-        delta_v_estimate = 5700 #m/s, calculate based on inputs
-
-        final_mass_estimate = np.e**(-delta_v_estimate/(specific_impulse * cn.g_0))
-        burn_time_estimate = (1-final_mass_estimate)/mass_flow_non_dimensional
-    elif guidance == 'altitude':
-        slope = flightpath_angle / (target_orbital_altitude - initial_altitude)
+    # if target_orbital_altitude is None and (guidance != 'gravity turn' or guidance != 'vertical'):
+    #     raise ValueError('this guidance requires target orbital altitude')
+    #
+    # if guidance == 'linear tangent' or guidance == 'another tangent':
+    #     target_orbit_velocity = np.sqrt(cn.gravitational_parameter / (target_orbital_altitude + cn.earth_radius))
+    #
+    #     delta_v_estimate = 5700 #m/s, calculate based on inputs
+    #
+    #     final_mass_estimate = np.e**(-delta_v_estimate/(specific_impulse * cn.g_0))
+    #     burn_time_estimate = (1-final_mass_estimate)/mass_flow_non_dimensional
+    # elif guidance == 'altitude':
+    #     slope = flightpath_angle / (target_orbital_altitude - initial_altitude)
 
     # Save initial values
     data[0] = [time,
