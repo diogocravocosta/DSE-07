@@ -16,6 +16,7 @@ dependencies = [
     "pandas>=2.2.3",
     "pyfluids>=2.8.0",
     "tqdm>=4.67.1",
+    "scipy>=1.15.3",
 ]
 
 [build-system]
