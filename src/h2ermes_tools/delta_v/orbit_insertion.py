@@ -66,18 +66,18 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
     else:
         target_orbit_energy = None
 
-    # if target_orbital_altitude is None and (guidance != 'gravity turn' or guidance != 'vertical'):
-    #     raise ValueError('this guidance requires target orbital altitude')
+    if target_orbital_altitude is None and (guidance != 'gravity turn' or guidance != 'vertical'):
+        raise ValueError('this guidance requires target orbital altitude')
 
-    # if guidance == 'linear tangent' or guidance == 'another tangent':
-    #     target_orbit_velocity = np.sqrt(cn.gravitational_parameter / (target_orbital_altitude + cn.earth_radius))
-    #
-    #     delta_v_estimate = 5600 #m/s, calculate based on inputs
-    #
-    #     final_mass_estimate = np.e**(-delta_v_estimate/(specific_impulse * cn.g_0))
-    #     burn_time_estimate = (1-final_mass_estimate)/mass_flow_non_dimensional
-    # elif guidance == 'altitude':
-    #     slope = flightpath_angle / (target_orbital_altitude - initial_altitude)
+    if guidance == 'linear tangent' or guidance == 'another tangent':
+        target_orbit_velocity = np.sqrt(cn.gravitational_parameter / (target_orbital_altitude + cn.earth_radius))
+
+        delta_v_estimate = 5700 #m/s, calculate based on inputs
+
+        final_mass_estimate = np.e**(-delta_v_estimate/(specific_impulse * cn.g_0))
+        burn_time_estimate = (1-final_mass_estimate)/mass_flow_non_dimensional
+    elif guidance == 'altitude':
+        slope = flightpath_angle / (target_orbital_altitude - initial_altitude)
 
     # Save initial values
     data[0] = [time,
@@ -102,13 +102,13 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
         flightpath_angle = np.atan2(past_r_dot, past_r * past_theta_dot)
 
         if guidance == 'gravity turn':
-            pitch_angle = flightpath_angle + np.deg2rad(7.2) # offset from flightpath angle needs to be manually adjusted
+            pitch_angle = flightpath_angle + np.deg2rad(7.81) # offset from flightpath angle needs to be manually adjusted
         elif guidance == 'vertical':
             pitch_angle = np.pi/2
         # elif guidance == 'linear tangent':
         #     target_flightpath_angle = np.atan2(cn.g_0 * (burn_time_estimate - time), target_orbit_velocity)
         #
-        #     pitch_gain = 2
+        #     pitch_gain = 0.5
         #     pitch_angle = target_flightpath_angle + (target_flightpath_angle-flightpath_angle)*pitch_gain
         # elif guidance == 'altitude':
         #     target_flightpath_angle = slope * (target_orbital_altitude - past_r + cn.earth_radius)
@@ -169,7 +169,7 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
 if __name__ == '__main__':
 
     start = time.time()
-    specific_impulse = 420
+    specific_impulse = 450
 
     trajectory = simulate_ascent(0.88,
                                  specific_impulse,
