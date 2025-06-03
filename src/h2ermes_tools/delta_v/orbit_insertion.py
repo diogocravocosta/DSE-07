@@ -14,11 +14,13 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
                     timestep: float = 1.,
                     simulation_time:float = 600,
                     target_orbital_altitude: float|None = None,
-                    guidance: str = 'gravity turn',):
+                    guidance: str = 'gravity turn',) -> pd.DataFrame:
     """
+    Simulates the ascent from arbitrary initial conditions until an energy equivalent
+    to the energy of a circular orbit at the target orbital altitude.
 
     Args:
-        guidance:
+        guidance (str): defines the guidance scheme used to control pitch angle. currently only gravity turn with offset and vertical burn are implemented
         target_orbital_altitude:
         initial_thrust_to_weight_ratio:
         specific_impulse:
@@ -29,7 +31,7 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
         initial_altitude:
 
     Returns:
-
+    pd.DataFrame logging the states throughout the ascent
     """
     states = ['time', # s
               'T/W', # -, thrust to weight ratio
@@ -180,5 +182,5 @@ if __name__ == '__main__':
 
     print(trajectory.loc[len(trajectory)-1])
 
-    print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory)-1, 'mass_ratio'], specific_impulse))
+    print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
     print('time:', end-start)
