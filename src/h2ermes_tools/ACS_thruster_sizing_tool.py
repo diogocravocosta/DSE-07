@@ -4,11 +4,41 @@ import numpy as np
 vehicle_mass = 60000  # kg
 vehicle_shape = 'rectangular_prism'  # Shape of the spacecraft
 vehicle_dimensions = np.array([10, 10, 5])  # Length, Width, Height in meters
-
+gravitational_constant = 3.986 * 10**14  # m^3/s^2
+theta = 50 # Angle between the spacecraft and the local vertical in degrees
 altitude = 600 # Altitude of the spacecraft in km
 COM = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2, vehicle_dimensions[2] / 2])  # Center of mass of the spacecraft in meters from the geometric center
-
+re_entry_moment = 166000/3 # Maximum moment during re-entry in Nm
 redundancy_factor = 2 # Redundancy factor for thrusters
+
+thrusters = {
+    'alphard_20': {
+        'thrust': 10,  # in N
+        'Isp': 160,  # seconds
+        'power': 18,  # in W
+        'moment_arm': 5  # in meters
+    },
+    'nammo_220': {
+        'thrust': 100,  # in N
+        'Isp': 160,  # seconds
+        'power': 50,  # in W
+        'moment_arm': 5  # in meters
+    },
+
+    'nammo_220_3': {
+        'thrust': 215,  # in N
+        'Isp': 160,  # seconds
+        'power': 50,  # in W
+        'moment_arm': 5  # in meters
+        },
+    'nammo_220_4': {
+        'thrust': 250,  # in N
+        'Isp': 160,  # seconds
+        'power': 50,  # in W
+        'moment_arm': 5  # in meters
+    },
+
+}
 
 
 
@@ -64,86 +94,104 @@ def solar_radiation_pressure_torque (altitude, MMOI_vehicle):
 
     return solar_torque
 
+
+
+
+# Uncomment the lines below to print the solar radiation pressure torque
 solar_torque = solar_radiation_pressure_torque(altitude, MMOI_vehicle)
-print("Solar radiation pressure torque on the spacecraft:", solar_torque, "Nm")
-def disturbance_loads(altitude, MMOI_vehicle):
+# print("Solar radiation pressure torque on the spacecraft:", solar_torque, "Nm")
+
+def gravity_gradient_torque(altitude, theta, gravitational_constant, MMOI_vehicle):
+
     """
-    Function to calculate the disturbance loads on the spacecraft.
+    Function to calculate the gravity gradient torque on the spacecraft.
+    args:
+        altitude (float): Altitude of the spacecraft in kilometers.
+        gravitational_constant (float): Gravitational constant in m^3/s^2.
+        MMOI_vehicle (np.array): Mass moment of inertia of the spacecraft in kg*m^2
+    Returns:
+        gravity_gradient_torque (float): Gravity gradient torque on the spacecraft in Nm.
+    """
+    altitude_r = (altitude + 6371) * 1000  # Convert altitude to meters
+    theta_r = np.radians(theta)  # Convert angle to radians
+    gravity_gradient_torque = 1.5 * (gravitational_constant / altitude_r**3) * np.abs(MMOI_vehicle[2] - MMOI_vehicle[1]) * np.sin(2*theta_r)  # Gravity gradient torque
+    return gravity_gradient_torque
+
+# Uncomment the lines below to print the gravity gradient torque
+gravity_gradient_torque = gravity_gradient_torque(altitude, theta, gravitational_constant, MMOI_vehicle)
+# print("Gravity gradient torque on the spacecraft:", gravity_gradient_torque, "Nm")
+
+def aerodynamic_drag_torque(altitude, vehicle_dimensions, gravitational_constant):
+    """    Function to calculate the aerodynamic drag on the spacecraft.
     Args:
         altitude (float): Altitude of the spacecraft in kilometers.
-        MMOI_vehicle (np.array): Mass moment of inertia of the spacecraft in kg*m^2
+        vehicle_dimensions (np.array): Dimensions of the spacecraft in meters.
         gravitational_constant (float): Gravitational constant in m^3/s^2.
     Returns:
-        disturbance_loads (list): List of all disturbance loads on the spacecraft.
+        aerodynamic_drag (float): Torque due to aerodynamic drag on the spacecraft in Nm.
     """
-    altitude_r  = (altitude + 6371) * 1000  # Convert altitude to meters
-    gravitational_constant = 3.986 * 10**14  # m^3/s^2
-    theta = np.random.randint(1,90) # Random angle in degrees
-    # c_light = 3 * 10**8  # Speed of light in m/s
-    vehicle_velocity = np.sqrt(gravitational_constant / altitude_r)  # in m/s
-    theta_r = np.radians(theta)  # Random angle in radians
+    altitude_r = (altitude + 6371) * 1000  # Convert altitude to meters
+    vehicle_velocity_squared = gravitational_constant / altitude_r  # in m/s
+
+    drag_coefficient = 2.2  # Dimensionless; typical value for spacecraft
+    atmospheric_density = 1.03 * 10**-14  # kg/m^3
+    aerodynamic_surface_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the flow
+
+    aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * aerodynamic_surface_area * vehicle_velocity_squared  # Aerodynamic drag torque
+    return aerodynamic_drag
+
+# Uncomment the lines below to print the aerodynamic drag torque
+aerodynamic_drag = aerodynamic_drag_torque(altitude, vehicle_dimensions, gravitational_constant)
+# print("Aerodynamic drag torque on the spacecraft:", aerodynamic_drag, "Nm")
 
 
+
+def magnetic_torque(altitude):
+    """
+    Function to calculate the magnetic torque on the spacecraft.
+    Args:
+        altitude (float): Altitude of the spacecraft in kilometers.
+    Returns:
+        magnetic_torque (float): Magnetic torque on the spacecraft in Nm.
+    """
+    altitude_r = (altitude + 6371) * 1000  # Convert altitude to meters
     vehicle_dipole_moment = 0.01  # in Am^2, assuming a small dipole moment for the spacecraft
     magnetic_constant = 7.8 * 10**15  # T*m^3
-    vehicle_lambda = 2
-    
-    drag_coefficient = 2.2  # Dimensionless
-    atmospheric_density = 1.03 * 10**-14  # kg/m^3
+    vehicle_lambda = 1.1  # Dimensionless factor for magnetic torque; ranges from 1 at the equator to 2 at the poles
+    magnetic_torque = vehicle_dipole_moment * (magnetic_constant / altitude_r**3) * vehicle_lambda  # Magnetic torque
+    return magnetic_torque
+# Uncomment the lines below to print the magnetic torque
+magnetic_torque = magnetic_torque(altitude)
+# print("Magnetic torque on the spacecraft:", magnetic_torque, "Nm")
 
-    geo_midpoint = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2,0])  # Geometric midpoint of the spacecraft
-    # q_solar = 0.5 # Reflectance factor for solar radiation pressure torque
-    # phi_2 = 0.2 # in radians
-    # solar_flux = 1361  # W/m^2, solar constant
-    # solar_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the sun
+torque_list = [solar_torque, gravity_gradient_torque, aerodynamic_drag, magnetic_torque]  # List of all torques
+print(torque_list)
+disturbance_load = np.sum([magnetic_torque, gravity_gradient_torque, aerodynamic_drag, solar_torque])  # Maximum disturbance load
 
-    magnetic_torque = vehicle_dipole_moment * (magnetic_constant / altitude_r**3) * vehicle_lambda
-    gravity_gradient_torque = 1.5 * (gravitational_constant / altitude_r**3) * np.abs(MMOI_vehicle[2] - MMOI_vehicle[0]) * np.sin(2 * theta_r)
-    aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * vehicle_velocity**2 * vehicle_dimensions[0] * vehicle_dimensions[1]
-    # solar_torque = solar_area * (solar_flux/c_light) * (1 + q_solar) * np.cos(phi_2) * (geo_midpoint - COM)  # Solar radiation pressure torque
-    # solar_torque = np.linalg.norm(solar_torque)  # Convert to magnitude
 
-    disturbance_loads = [gravity_gradient_torque, magnetic_torque, aerodynamic_drag]
-    return disturbance_loads
+# print("Total disturbance torque on the spacecraft:", disturbance_load, "Nm")
 
-gravity_gradient_torque, magnetic_torque, aerodynamic_drag = disturbance_loads(altitude, MMOI_vehicle)
-# print(disturbance_loads(altitude, MMOI_vehicle))
-# Calculate the required torque to counteract the disturbances
-required_torque = sum(np.abs([gravity_gradient_torque, magnetic_torque, aerodynamic_drag]))
 # print("Torque required to counteract disturbances:", required_torque, "Nm")
 
-slew_rate_x = 0.5  # in rad/s^2
-slew_rate_y = 0.5  # in rad/s^2
-slew_rate_z = 0.57  # in rad/s^2
+ang_acc_x = 0.0025  # in rad/s^2
+ang_acc_y = 0.003  # in rad/s^2
+ang_acc_z = 0.0008  # in rad/s^2
 
-slew_rate_max = max(slew_rate_x,slew_rate_y,slew_rate_z)  # in rad/s^2
-
-
+ang_acc_max = max(ang_acc_x,ang_acc_y,ang_acc_z)  # in rad/s^2
 
 
 
-thrusters = {
-    'alphard_20': {
-        'thrust': 10,  # in N
-        'Isp': 160,  # seconds
-        'power': 18,  # in W
-        'moment_arm': 5  # in meters
-    },
-    'nammo_220': {
-        'thrust': 100,  # in N
-        'Isp': 160,  # seconds
-        'power': 50,  # in W
-        'moment_arm': 5  # in meters
-    }
-}
 
 
-def thruster_sizing(thrusters, slew_rate_maximum, MMOI_vehicle):
+
+
+
+def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     """
     Function to size the thrusters based on the required torque and slew rate.
     Args:
         thrusters (dict): Dictionary containing thruster specifications.
-        slew_rate_maximum (float): Maximum slew rate in rad/s^2.
+        ang_acc_max (float): Maximum slew rate in rad/s^2.
         MMOI_vehicle (np.array): Mass moment of inertia of the spacecraft in kg*m^2.
     Returns:
         number_of_thrusters (dict): Dictionary containing the number of thrusters required for each type.
@@ -153,43 +201,70 @@ def thruster_sizing(thrusters, slew_rate_maximum, MMOI_vehicle):
     number_of_thrusters = {}
     thruster_moment_arm = {}
 
-    torque_produced = np.array([MMOI_vehicle[0] * slew_rate_maximum, MMOI_vehicle[1] * slew_rate_maximum, MMOI_vehicle[2] * slew_rate_maximum])  # Torque produced by each thruster in Nm
+    torque_produced = np.array([MMOI_vehicle[0] * ang_acc_max, MMOI_vehicle[1] * ang_acc_max, MMOI_vehicle[2] * ang_acc_max]) + disturbance_load + re_entry_moment  # Torque produced by each thruster in Nm
     
-    thrust_x_direction_one = torque_produced[0] / (2 * thrusters['alphard_20']['moment_arm']) + required_torque  # Thrust required in the x-direction
-    thrust_x_direction_two = torque_produced[0]/ (2 * thrusters['nammo_220']['moment_arm']) + required_torque  # Thrust required in the x-direction
-    thrust_y_direction_one = torque_produced[1] / (2 * thrusters['alphard_20']['moment_arm']) + required_torque  # Thrust required in the y-direction
-    thrust_y_direction_two = torque_produced[1] / (2 * thrusters['nammo_220']['moment_arm']) + required_torque  # Thrust required in the y-direction
-    thrust_z_direction_one = torque_produced[2] / (2 * thrusters['alphard_20']['moment_arm']) + required_torque  # Thrust required in the z-direction
-    thrust_z_direction_two = torque_produced[2] / (2 * thrusters['nammo_220']['moment_arm']) + required_torque    # Calculate the number of thrusters required for each type  
-    number_of_thrusters['alphard_20'] = {
-        'x': np.ceil(2 * (thrust_x_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor),
-        'y': np.ceil(2 * (thrust_y_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor),
-        'z': np.ceil(2 * (thrust_z_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor)
-    }
+    # thrust_x_direction_one = torque_produced[0] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the x-direction
+    thrust_x_direction_two = torque_produced[0]/ (2 * thrusters['nammo_220']['moment_arm'])  # Thrust required in the x-direction
+    thrust_x_direction_three = torque_produced[0]/ (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the x-direction
+    thrust_x_direction_four = torque_produced[0]/ (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the x-direction
+    # thrust_y_direction_one = torque_produced[1] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the y-direction
+    thrust_y_direction_two = torque_produced[1] / (2 * thrusters['nammo_220']['moment_arm'])  # Thrust required in the y-direction
+    thrust_y_direction_three = torque_produced[1] / (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the y-direction
+    thrust_y_direction_four = torque_produced[1] / (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the y-direction
+    # thrust_z_direction_one = torque_produced[2] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the z-direction
+    thrust_z_direction_two = torque_produced[2] / (2 * thrusters['nammo_220']['moment_arm'])    # Calculate the number of thrusters required for each type
+    thrust_z_direction_three = torque_produced[2] / (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the z-direction
+    thrust_z_direction_four = torque_produced[2] / (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the z-direction  
+    # number_of_thrusters['alphard_20'] = {
+    #     'x': np.ceil((thrust_x_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor),
+    #     'y': np.ceil((thrust_y_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor),
+    #     'z': np.ceil((thrust_z_direction_two / thrusters['alphard_20']['thrust']) * redundancy_factor)
+    # }
 
     number_of_thrusters['nammo_220'] = {
-        'x': np.ceil(2 * (thrust_x_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor),
-        'y': np.ceil(2 * (thrust_y_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor),
-        'z': np.ceil(2 * (thrust_z_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor)
+        'x': np.ceil((thrust_x_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor),
+        'y': np.ceil((thrust_y_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor),
+        'z': np.ceil((thrust_z_direction_two / thrusters['nammo_220']['thrust']) * redundancy_factor)
     }
+
+    number_of_thrusters['nammo_220_3'] = {
+    'x': np.ceil((thrust_x_direction_three / thrusters['nammo_220_3']['thrust']) * redundancy_factor),
+    'y': np.ceil((thrust_y_direction_three / thrusters['nammo_220_3']['thrust']) * redundancy_factor),
+    'z': np.ceil((thrust_z_direction_three / thrusters['nammo_220_3']['thrust']) * redundancy_factor)
+    }
+
+    number_of_thrusters['nammo_220_4'] = {
+        'x': np.ceil((thrust_x_direction_four / thrusters['nammo_220_4']['thrust']) * redundancy_factor),
+        'y': np.ceil((thrust_y_direction_four / thrusters['nammo_220_4']['thrust']) * redundancy_factor),
+        'z': np.ceil((thrust_z_direction_four / thrusters['nammo_220_4']['thrust']) * redundancy_factor)
+}
 
     # Calculate the moment arm for each thruster type
-    thruster_moment_arm['alphard_20'] = {
-        'x': torque_produced[0] / (number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['thrust']),
-        'y': torque_produced[1] / (number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['thrust']),
-        'z': torque_produced[2] / (number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['thrust'])
-    }
+    # thruster_moment_arm['alphard_20'] = {
+    #     'x': torque_produced[0] / (number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['thrust']),
+    #     'y': torque_produced[1] / (number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['thrust']),
+    #     'z': torque_produced[2] / (number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['thrust'])
+    # }
 
     thruster_moment_arm['nammo_220'] = {
-        'x': torque_produced[0] / (number_of_thrusters['nammo_220']['x'] * thrusters['nammo_220']['thrust']),
+        'x': torque_produced[0] / (number_of_thrusters['nammo_220']['x'] * thrusters['nammo_220']['thrust']), 
         'y': torque_produced[1] / (number_of_thrusters['nammo_220']['y'] * thrusters['nammo_220']['thrust']),
         'z': torque_produced[2] / (number_of_thrusters['nammo_220']['z'] * thrusters['nammo_220']['thrust'])
     }
-
+    thruster_moment_arm['nammo_220_3'] = {
+    'x': torque_produced[0] / (number_of_thrusters['nammo_220_3']['x'] * thrusters['nammo_220_3']['thrust']),
+    'y': torque_produced[1] / (number_of_thrusters['nammo_220_3']['y'] * thrusters['nammo_220_3']['thrust']),
+    'z': torque_produced[2] / (number_of_thrusters['nammo_220_3']['z'] * thrusters['nammo_220_3']['thrust'])
+    }
+    thruster_moment_arm['nammo_220_4'] = {
+        'x': torque_produced[0] / (number_of_thrusters['nammo_220_4']['x'] * thrusters['nammo_220_4']['thrust']),       
+        'y': torque_produced[1] / (number_of_thrusters['nammo_220_4']['y'] * thrusters['nammo_220_4']['thrust']),
+        'z': torque_produced[2] / (number_of_thrusters['nammo_220_4']['z'] * thrusters['nammo_220_4']['thrust'])
+    }
     power_thrusters = {
-        'alphard_20': number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['power'] + \
-                      number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['power'] + \
-                      number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
+        # 'alphard_20': number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['power'] + \
+        #               number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['power'] + \
+        #               number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
         'nammo_220': number_of_thrusters['nammo_220']['x'] * thrusters['nammo_220']['power'] + \
                      number_of_thrusters['nammo_220']['y'] * thrusters['nammo_220']['power'] + \
                      number_of_thrusters['nammo_220']['z'] * thrusters['nammo_220']['power']
@@ -197,16 +272,16 @@ def thruster_sizing(thrusters, slew_rate_maximum, MMOI_vehicle):
 
     return number_of_thrusters, thruster_moment_arm, power_thrusters
 
-number_of_thrusters, thruster_moment_arm, power_thrusters = thruster_sizing(thrusters, slew_rate_max, MMOI_vehicle)
+number_of_thrusters, thruster_moment_arm, power_thrusters = thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle)
 print("Number of thrusters required:", number_of_thrusters)
-print("Moment arm for each thruster type:", thruster_moment_arm)
-print("Power required for each thruster type:", power_thrusters)
+print("Moment arm for each thruster type:", thruster_moment_arm['nammo_220_4'])
+# print("Power required for each thruster type:", power_thrusters)
+
+print("Coordinates of the center of mass of H2ermes: ", COM)
 
 
 
 
-# moment_arm = required_torque/np.array([thrusters['nammo_220']['thrust']])
-# print(moment_arm)
 
 
 
