@@ -8,12 +8,6 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-    | Variable | Adjustment | Value |
-    |:---|:---:|:---|
-    | Coolant Initial Temperature | {coolant_inlet_temperature} | {coolant_inlet_temperature.value} K |
-    | Coolant Pressure | {coolant_inlet_pressure} | {round(coolant_inlet_pressure.value*1e-5, 1)} bar |
-
-
     | Parameter                 | Hess & Kunz    | McCarthy <br> & Wolf | Miller <br> Seader <br> & Trebes | Taylor           |
     |:--------------------------|:---------------|:---------------------|:---------------------------------|:-----------------|
     | \(X/D\) (dimensionless)   | *              | 6-50                 | 5-47                             | 2-252            |
@@ -26,6 +20,19 @@ def _(mo):
     | ID (mm)                   | 5,08 - 7,62    | 5,08 - 10,16         | 5,08                             | *                |
 
     \* *not given*
+    """
+    )
+    return
+
+
+@app.cell
+def _(coolant_inlet_pressure, coolant_inlet_temperature, mo):
+    mo.md(
+        rf"""
+    | Variable | Adjustment | Value |
+    |:---|:---:|:---|
+    | Coolant Initial Temperature | {coolant_inlet_temperature} | {coolant_inlet_temperature.value} K |
+    | Coolant Pressure | {coolant_inlet_pressure} | {round(coolant_inlet_pressure.value*1e-5, 1)} bar |
     """
     )
     return
@@ -57,10 +64,16 @@ def _(mo):
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(
+    Fluid,
+    FluidsList,
+    Input,
+    coolant_inlet_pressure,
+    coolant_inlet_temperature,
+):
     def get_nusselt_number_taylor(reynolds_number, prandtl_number, temperature_ratio, dimensionless_length) -> float:
-        \"\"\"
+        """
         Calculate the Nusselt number based on the Taylor relationship.
     
         Parameters:
@@ -71,18 +84,30 @@ app._unparsable_cell(
     
         Returns:
         - Nusselt number calculated using the Taylor empirical relationship
-        \"\"\"
+        """
         return 0.023 * (reynolds_number ** 0.8) * (prandtl_number ** 0.4) * (temperature_ratio ** (-0.57 - (1.59 / dimensionless_length)))
 
 
-    def get_reynolds_number(fluid_density, fluid_speed, hydraulic_diameter, dynamic_viscosity)
+    def get_reynolds_number(fluid, fluid_speed, hydraulic_diameter) -> float:
+        """
+        Calculate the Reynolds number.
+    
+        Parameters:
+        - fluid: Fluid object from pyfluids
+        - fluid_speed: Speed of the fluid (m/s)
+        - hydraulic_diameter: Hydraulic diameter of the channel (m)
+    
+        Returns:
+        - Reynolds number (dimensionless)
+        """
+        return (fluid.density * fluid_speed * hydraulic_diameter) / fluid.dynamic_viscosity
 
     _coolant = Fluid(FluidsList.Hydrogen).with_state(Input.temperature(coolant_inlet_temperature.value), Input.pressure(coolant_inlet_pressure.value))
     _temperature_ratio = 0.55  # sample value
     _dimensionless_length = 1.0  # sample value
-    """,
-    name="_"
-)
+
+    get_reynolds_number(_coolant, 10.0, 1e-3)  # sample values for fluid speed and hydraulic diameter
+    return
 
 
 @app.cell
@@ -111,7 +136,7 @@ def _(mo):
     # sliders
     coolant_inlet_temperature = mo.ui.slider(13.8, 50, 0.1, value=13.8)
     coolant_inlet_pressure = mo.ui.slider(1e5, 50e5, 0.1e5, value=10e5)
-    return
+    return coolant_inlet_pressure, coolant_inlet_temperature
 
 
 @app.cell
@@ -156,7 +181,7 @@ def _():
     import matplotlib.pyplot as plt
     import marimo as mo
     import numpy as np
-    return io, mo, plt
+    return Fluid, FluidsList, Input, io, mo, plt
 
 
 if __name__ == "__main__":

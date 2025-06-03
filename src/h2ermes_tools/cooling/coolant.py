@@ -2,72 +2,136 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyfluids import Fluid, FluidsList, Input
 from h2ermes_tools.variables import coolant_inlet_pressure, coolant_inlet_temperature
-
-coolant = Fluid(FluidsList.Hydrogen).with_state(
-    Input.pressure(coolant_inlet_pressure.value),  # Pa
-    Input.temperature(coolant_inlet_temperature.value),  # K
-)
+from h2ermes_tools.cooling.channel import CircularChannel
 
 
-def plot_coolant_properties():
-    temperatures = np.linspace(13.8, 300, 100)  # K
-    pressures = np.linspace(1e5, 1e7, 100)  # Pa
+class Coolant:
+    """
+    Represents a coolant with properties derived from the pyfluids library.
 
-    enthalpies = [
-        coolant.with_state(
-            Input.temperature(T), Input.pressure(coolant_inlet_pressure.value)
+    Attributes:
+        fluid (Fluid): The fluid object from pyfluids representing the coolant.
+        channel (Channel): The channel through which the coolant flows.
+    """
+
+    def __init__(self, fluid, channel):
+        self.fluid = fluid
+        self.channel = channel
+
+    def enthalpy(self, temperature, pressure):
+        return self.fluid.with_state(
+            Input.temperature(temperature), Input.pressure(pressure)
         ).enthalpy
-        for T in temperatures
-    ]
-    density = [
-        coolant.with_state(
-            Input.temperature(T), Input.pressure(coolant_inlet_pressure.value)
+
+    def density(self, temperature, pressure):
+        return self.fluid.with_state(
+            Input.temperature(temperature), Input.pressure(pressure)
         ).density
-        for T in temperatures
-    ]
 
-    specific_heats = [
-        coolant.with_state(
-            Input.temperature(T), Input.pressure(coolant_inlet_pressure.value)
+    def specific_heat(self, temperature, pressure):
+        return self.fluid.with_state(
+            Input.temperature(temperature), Input.pressure(pressure)
         ).specific_heat
-        for T in temperatures
-    ]
 
-    fig, axs = plt.subplots(3, 1, figsize=(15, 7))
-    axs[0].plot(temperatures, enthalpies, label="Enthalpy")
-    # axs[0].set_title("Coolant Enthalpy vs Temperature")
-    # axs[0].set_xlabel("Temperature (K)")
-    axs[0].set_ylabel("Enthalpy (J/kg)")
-    axs[0].grid()
-    axs[0].legend()
+    def plot_coolant_properties(
+        self, temperatures=np.linspace(13.8, 300, 100), pressure=1e6
+    ):
+        enthalpies = [
+            self.fluid.with_state(
+                Input.temperature(T), Input.pressure(pressure)
+            ).enthalpy
+            for T in temperatures
+        ]
+        density = [
+            self.fluid.with_state(
+                Input.temperature(T), Input.pressure(pressure)
+            ).density
+            for T in temperatures
+        ]
 
-    axs[1].plot(temperatures, density, label="Density", color="orange")
-    # axs[1].set_title("Coolant Density vs Temperature")
-    # axs[1].set_xlabel("Temperature (K)")
-    axs[1].set_ylabel("Density (kg/m³)")
-    axs[1].grid()
-    axs[1].legend()
+        specific_heats = [
+            self.fluid.with_state(
+                Input.temperature(T), Input.pressure(pressure)
+            ).specific_heat
+            for T in temperatures
+        ]
 
-    axs[2].plot(temperatures, specific_heats, label="Specific Heat", color="green")
-    # axs[2].set_title("Coolant Specific Heat vs Temperature")
-    axs[2].set_xlabel("Temperature (K)")
-    axs[2].set_ylabel("Specific Heat (J/kg·K)")
-    axs[2].grid()
-    axs[2].legend()
+        fig, axs = plt.subplots(3, 1, figsize=(15, 7))
+        axs[0].plot(temperatures, enthalpies, label="Enthalpy")
+        # axs[0].set_title("Coolant Enthalpy vs Temperature")
+        # axs[0].set_xlabel("Temperature (K)")
+        axs[0].set_ylabel("Enthalpy (J/kg)")
+        axs[0].grid()
+        axs[0].legend()
 
-    plt.suptitle(
-        f"Coolant Properties for Liquid Hydrogen at P= {round(coolant_inlet_pressure.value * 1e-5, 1)} bar"
-    )
+        axs[1].plot(temperatures, density, label="Density", color="orange")
+        # axs[1].set_title("Coolant Density vs Temperature")
+        # axs[1].set_xlabel("Temperature (K)")
+        axs[1].set_ylabel("Density (kg/m³)")
+        axs[1].grid()
+        axs[1].legend()
 
-    plt.tight_layout()
-    plt.show()
+        axs[2].plot(temperatures, specific_heats, label="Specific Heat", color="green")
+        # axs[2].set_title("Coolant Specific Heat vs Temperature")
+        axs[2].set_xlabel("Temperature (K)")
+        axs[2].set_ylabel("Specific Heat (J/kg·K)")
+        axs[2].grid()
+        axs[2].legend()
+
+        plt.suptitle(
+            f"Coolant Properties for Hydrogen at P = {round(coolant_inlet_pressure.value * 1e-5, 1)} bar"
+        )
+
+        plt.tight_layout()
+        plt.show()
+
+    def get_nusselt_number_taylor(
+        self, reynolds_number, temperature_ratio=0.55, dimensionless_length=1.0
+    ) -> float:
+        """
+        Calculate the Nusselt number based on the Taylor relationship.
+
+        Parameters:
+        - reynolds_number: Reynolds number (dimensionless)
+        - temperature_ratio: Ratio of surface temperature to bulk temperature (dimensionless)
+        - dimensionless_length: Dimensionless length (x/D, where x is the length and D is the diameter)
+
+        Returns:
+        - Nusselt number calculated using the Taylor empirical relationship
+        """
+        return (
+            0.023
+            * (reynolds_number**0.8)
+            * (self.fluid.prandtl**0.4)
+            * (temperature_ratio ** (-0.57 - (1.59 / dimensionless_length)))
+        )
+
+    def get_reynolds_number(self, fluid_speed) -> float:
+        """
+        Calculate the Reynolds number.
+
+        Parameters:
+        - fluid: Fluid object from pyfluids
+        - fluid_speed: Speed of the fluid (m/s)
+
+        Returns:
+        - Reynolds number (dimensionless)
+        """
+        return (
+            self.fluid.density * fluid_speed * self.channel.diameter
+        ) / self.fluid.dynamic_viscosity
 
 
 if __name__ == "__main__":
-    plot_coolant_properties()
-    print(
-        f"Coolant Enthalpy at {coolant_inlet_temperature.value} K and {coolant_inlet_pressure.value} Pa: {coolant.enthalpy(coolant_inlet_temperature.value, coolant_inlet_pressure.value)} J/kg"
+    coolant = Fluid(FluidsList.Hydrogen).with_state(
+        Input.pressure(coolant_inlet_pressure.value),  # Pa
+        Input.temperature(coolant_inlet_temperature.value),  # K
     )
-    print(
-        f"Coolant Density at {coolant_inlet_temperature.value} K and {coolant_inlet_pressure.value} Pa: {coolant.density(coolant_inlet_temperature.value, coolant_inlet_pressure.value)} kg/m³"
-    )
+    coolant = Coolant(fluid=coolant, channel=CircularChannel(1e-3, 5, 1e-5))
+
+    # quick tests
+    # coolant.plot_coolant_properties()
+    reynolds_number = coolant.get_reynolds_number(10.0)  # Example fluid speed of 1 m/s
+    nusselt_number = coolant.get_nusselt_number_taylor(reynolds_number)
+    print(f"Reynolds Number: {reynolds_number}")
+    print(f"Nusselt Number: {nusselt_number}")
