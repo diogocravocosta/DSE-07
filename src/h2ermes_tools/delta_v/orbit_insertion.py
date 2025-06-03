@@ -102,7 +102,7 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
         flightpath_angle = np.atan2(past_r_dot, past_r * past_theta_dot)
 
         if guidance == 'gravity turn':
-            pitch_angle = flightpath_angle + np.deg2rad(6.75) # pitch angle is equal to flightpath angle for a gravity turn
+            pitch_angle = flightpath_angle + np.deg2rad(7.2) # pitch angle is equal to flightpath angle for a gravity turn
         elif guidance == 'vertical':
             pitch_angle = np.pi/2
         elif guidance == 'linear tangent':
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     start = time.time()
     specific_impulse = 420
 
-    trajectory = simulate_ascent(0.9,
+    trajectory = simulate_ascent(0.88,
                                  specific_impulse,
                                  2280,
                                  1040,
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                                  timestep=0.01,
                                  simulation_time=5e3,
                                  target_orbital_altitude=2e5,
-                                 guidance='another tangent',
+                                 guidance='gravity turn',
                                  )
 
     end = time.time()
