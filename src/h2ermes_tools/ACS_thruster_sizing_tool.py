@@ -1,9 +1,9 @@
 import numpy as np
 
 # Constants and parameters for the spacecraft
-vehicle_mass = 1000  # kg
+vehicle_mass = 60000  # kg
 vehicle_shape = 'rectangular_prism'  # Shape of the spacecraft
-vehicle_dimensions = np.array([10, 15, 5])  # Length, Width, Height in meters
+vehicle_dimensions = np.array([10, 10, 5])  # Length, Width, Height in meters
 
 altitude = 600 # Altitude of the spacecraft in km
 COM = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2, vehicle_dimensions[2] / 2])  # Center of mass of the spacecraft in meters from the geometric center
@@ -37,7 +37,35 @@ geo_midpoint = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2,0])
 # print("Mass Moment of Inertia (MMOI) of the spacecraft:", MMOI_vehicle)
 # print("MMOI in the x-direction:", MMOI_vehicle[0], "kg*m^2")
 
+def solar_radiation_pressure_torque (altitude, MMOI_vehicle):
+    """
+    Function to calculate the solar radiation pressure torque on the spacecraft.
+    Args:
+        altitude (float): Altitude of the spacecraft in kilometers.
+        MMOI_vehicle (np.array): Mass moment of inertia of the spacecraft in kg*m^2
+    Returns:
+        solar_torque (float): Solar radiation pressure torque on the spacecraft in Nm.
+    """
+    altitude_r  = (altitude + 6371) * 1000  # Convert altitude to meters
+    c_light = 3 * 10**8  # Speed of light in m/s
+    vehicle_dipole_moment = 0.01  # in Am^2, assuming a small dipole moment for the spacecraft
+    magnetic_constant = 7.8 * 10**15  # T*m^3
+    vehicle_lambda = 2
+    
+    q_solar = np.average([0.15,0.8]) # Reflectance factor for solar radiation pressure torque
+    phi_2 = 60  # in degrees
+    solar_flux = 1361  # W/m^2, solar constant
+    solar_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the sun
 
+    geo_midpoint = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2,0])  # Geometric midpoint of the spacecraft
+
+    solar_torque = (solar_flux/c_light) * solar_area * (1 + q_solar) * (geo_midpoint - COM) * np.cos(np.deg2rad(phi_2))  # Solar radiation pressure torque
+    solar_torque = np.linalg.norm(solar_torque)  # Convert to magnitude
+
+    return solar_torque
+
+solar_torque = solar_radiation_pressure_torque(altitude, MMOI_vehicle)
+print("Solar radiation pressure torque on the spacecraft:", solar_torque, "Nm")
 def disturbance_loads(altitude, MMOI_vehicle):
     """
     Function to calculate the disturbance loads on the spacecraft.
@@ -50,8 +78,8 @@ def disturbance_loads(altitude, MMOI_vehicle):
     """
     altitude_r  = (altitude + 6371) * 1000  # Convert altitude to meters
     gravitational_constant = 3.986 * 10**14  # m^3/s^2
-    theta = 20 # Random angle in degrees
-    c_light = 3 * 10**8  # Speed of light in m/s
+    theta = np.random.randint(1,90) # Random angle in degrees
+    # c_light = 3 * 10**8  # Speed of light in m/s
     vehicle_velocity = np.sqrt(gravitational_constant / altitude_r)  # in m/s
     theta_r = np.radians(theta)  # Random angle in radians
 
@@ -61,27 +89,27 @@ def disturbance_loads(altitude, MMOI_vehicle):
     vehicle_lambda = 2
     
     drag_coefficient = 2.2  # Dimensionless
-    atmospheric_density = 1.225 * np.exp(-altitude_r / 8500)  # kg/m^3
+    atmospheric_density = 1.03 * 10**-14  # kg/m^3
 
     geo_midpoint = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2,0])  # Geometric midpoint of the spacecraft
-    phi_1 = 0.1 # in radians
-    phi_2 = 0.2 # in radians
-    solar_flux = 1361  # W/m^2, solar constant
-    solar_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the sun
+    # q_solar = 0.5 # Reflectance factor for solar radiation pressure torque
+    # phi_2 = 0.2 # in radians
+    # solar_flux = 1361  # W/m^2, solar constant
+    # solar_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the sun
 
     magnetic_torque = vehicle_dipole_moment * (magnetic_constant / altitude_r**3) * vehicle_lambda
     gravity_gradient_torque = 1.5 * (gravitational_constant / altitude_r**3) * np.abs(MMOI_vehicle[2] - MMOI_vehicle[0]) * np.sin(2 * theta_r)
     aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * vehicle_velocity**2 * vehicle_dimensions[0] * vehicle_dimensions[1]
-    solar_torque = solar_area * (phi_1/c_light) * (1 + solar_flux) * np.cos(phi_2) * (geo_midpoint - COM)  # Solar radiation pressure torque
-    solar_torque = np.linalg.norm(solar_torque)  # Convert to magnitude
+    # solar_torque = solar_area * (solar_flux/c_light) * (1 + q_solar) * np.cos(phi_2) * (geo_midpoint - COM)  # Solar radiation pressure torque
+    # solar_torque = np.linalg.norm(solar_torque)  # Convert to magnitude
 
-    disturbance_loads = [gravity_gradient_torque, magnetic_torque, aerodynamic_drag, solar_torque]
+    disturbance_loads = [gravity_gradient_torque, magnetic_torque, aerodynamic_drag]
     return disturbance_loads
 
-gravity_gradient_torque, magnetic_torque, aerodynamic_drag, solar_torque = disturbance_loads(altitude, MMOI_vehicle)
+gravity_gradient_torque, magnetic_torque, aerodynamic_drag = disturbance_loads(altitude, MMOI_vehicle)
 # print(disturbance_loads(altitude, MMOI_vehicle))
 # Calculate the required torque to counteract the disturbances
-required_torque = sum(np.abs([gravity_gradient_torque, magnetic_torque, aerodynamic_drag, solar_torque]))
+required_torque = sum(np.abs([gravity_gradient_torque, magnetic_torque, aerodynamic_drag]))
 # print("Torque required to counteract disturbances:", required_torque, "Nm")
 
 slew_rate_x = 0.5  # in rad/s^2
@@ -90,7 +118,7 @@ slew_rate_z = 0.57  # in rad/s^2
 
 slew_rate_max = max(slew_rate_x,slew_rate_y,slew_rate_z)  # in rad/s^2
 
-maneuver_time = 120  # in seconds
+
 
 
 
