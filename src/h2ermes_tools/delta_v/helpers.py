@@ -54,3 +54,9 @@ def plot_rectangular(df: pd.DataFrame):
     plt.ylabel('Altitude [km]')
     plt.grid(True)
     plt.show()
+
+    plt.plot(thrust_df['theta'] * cn.earth_radius / 1000, (thrust_df['r'] - cn.earth_radius) / 1000, color='blue')
+    plt.xlabel('Downrange [km]')
+    plt.ylabel('Altitude [km]')
+    plt.grid(True)
+    plt.show()

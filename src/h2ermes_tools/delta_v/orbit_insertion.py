@@ -3,8 +3,7 @@ import numpy as np
 import time
 
 import data.constants as cn
-from h2ermes_tools.delta_v.helpers import delta_v_from_final_mass
-from helpers import calculate_circular_orbit_energy, plot_polar, plot_rectangular
+from h2ermes_tools.delta_v.helpers import delta_v_from_final_mass, calculate_circular_orbit_energy, plot_polar, plot_rectangular
 
 def simulate_ascent(initial_thrust_to_weight_ratio: float,
                     specific_impulse: float,
@@ -41,74 +40,98 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
               'throttle' # -, throttle setting, between 0 and 1
               ]
 
-    data = pd.DataFrame(columns=states)
+    data = np.empty((int(simulation_time//timestep + 3), len(states)))
 
     # Initialize states
-    i = 0
-    mass_flow_non_dimensional = initial_thrust_to_weight_ratio / specific_impulse
+    time = 0
+    past_tw = initial_thrust_to_weight_ratio
+    past_mass = 1.
+    past_r = initial_altitude + cn.earth_radius
+    past_theta = 0.
+    past_r_dot = initial_vertical_velocity
+    past_theta_dot = initial_horizontal_velocity/past_r
     throttle = 1
 
+    mass_flow_non_dimensional = initial_thrust_to_weight_ratio / specific_impulse
+
     # Save initial values
-    data.loc[0] = [0,
-                   initial_thrust_to_weight_ratio,
-                   1.,
-                   initial_altitude + cn.earth_radius,
-                   0.,
-                   initial_vertical_velocity,
-                   initial_horizontal_velocity / (initial_altitude + cn.earth_radius),
-                   throttle]
+    data[0] = [time,
+               past_tw,
+               past_mass,
+               past_r,
+               past_theta,
+               past_r_dot,
+               past_theta_dot,
+               throttle]
+    if desired_orbital_altitude:
+        desired_orbit_energy = calculate_circular_orbit_energy(desired_orbital_altitude)
 
-    while (data.loc[i, 'time'] < simulation_time
-           and data.loc[i, 'r'] >= cn.earth_radius/2
-           and data.loc[i, 'mass_ratio'] > 0):
-        past = data.loc[i]
-        i += 1
-        curr = pd.Series(index = states)
-
-        curr['time'] = past['time'] + timestep
-        curr['T/W'] = initial_thrust_to_weight_ratio / past['mass_ratio'] * throttle
-        curr['mass_ratio'] = past['mass_ratio'] - mass_flow_non_dimensional * timestep * throttle
-        curr['r'] = past['r'] + past['r_dot'] * timestep
-        curr['theta'] = past['theta'] + past['theta_dot'] * timestep
+    for i in range(len(data)):
+        time += timestep
+        curr_tw = initial_thrust_to_weight_ratio / past_mass * throttle
+        curr_mass = past_mass - mass_flow_non_dimensional * timestep * throttle
+        curr_r = past_r + past_r_dot * timestep
+        curr_theta = past_theta + past_theta_dot * timestep
 
         if guidance == 'gravity turn':
-            pitch_angle = np.atan2(past['r_dot'], past['r'] * past['theta_dot']) # pitch angle is equal to flightpath angle for a gravity turn
+            pitch_angle = np.atan2(past_r_dot, past_r * past_theta_dot) # pitch angle is equal to flightpath angle for a gravity turn
         elif guidance == 'vertical':
             pitch_angle = np.pi/2
 
-        vertical_acceleration = -cn.gravitational_parameter / past['r'] ** 2 + past['T/W'] * cn.g_0 * np.sin(pitch_angle)
-        r_double_dot = vertical_acceleration + past['r'] * past['theta_dot'] ** 2
+        vertical_acceleration = -cn.gravitational_parameter / past_r ** 2 + past_tw * cn.g_0 * np.sin(pitch_angle)
+        r_double_dot = vertical_acceleration + past_r * past_theta_dot ** 2
 
-        horizontal_acceleration = past['T/W'] * cn.g_0 * np.cos(pitch_angle)
-        theta_double_dot = (horizontal_acceleration - 2*past['r_dot']*past['theta_dot'])/past['r']
+        horizontal_acceleration = past_tw * cn.g_0 * np.cos(pitch_angle)
+        theta_double_dot = (horizontal_acceleration - 2*past_r_dot*past_theta_dot)/past_r
 
-        curr['r_dot'] = past['r_dot'] + r_double_dot * timestep
-        curr['theta_dot'] = past['theta_dot'] + theta_double_dot * timestep
-        curr['throttle'] = throttle
+        curr_r_dot = past_r_dot + r_double_dot * timestep
+        curr_theta_dot = past_theta_dot + theta_double_dot * timestep
 
-        data.loc[i] = curr
+        data[i] = (
+            time,
+            past_tw,
+            past_mass,
+            past_r,
+            past_theta,
+            past_r_dot,
+            past_theta_dot,
+            throttle
+         ) = (
+            time,
+            curr_tw,
+            curr_mass,
+            curr_r,
+            curr_theta,
+            curr_r_dot,
+            curr_theta_dot,
+            throttle
+        )
 
-        velocity = np.sqrt(past['r_dot']**2 + (past['r'] * past['theta_dot'])**2)
-        energy = velocity**2/2 - cn.gravitational_parameter/past['r']
 
-        if desired_orbital_altitude and energy > calculate_circular_orbit_energy(desired_orbital_altitude) and throttle > 0:
+        velocity = np.sqrt(past_r_dot**2 + (past_r * past_theta_dot)**2)
+        energy = velocity**2/2 - cn.gravitational_parameter/past_r
+
+        if desired_orbital_altitude and energy > desired_orbit_energy and throttle > 0:
             throttle = 0
-            timestep = 0.1
-            print(data.loc[len(data)-1])
+            print(pd.Series(data[i], index = states))
             print('energy', energy)
+
+        if past_r < cn.earth_radius/2 or past_mass < 0:
+            break
+
     print('energy', energy)
-    return data
+    return pd.DataFrame(data, columns=states)
 
 if __name__ == '__main__':
 
     start = time.time()
-    trajectory = simulate_ascent(1.1,
+    trajectory = simulate_ascent(1.18,
                                  420,
-                                 1820,
-                                 1050,
+                                 2280,
+                                 1040,
                                  81700,
-                                 timestep=0.1,
-                                 simulation_time=4e2,
+                                 timestep=0.01,
+                                 simulation_time=5e3,
                                  desired_orbital_altitude=2e5)
 
     end = time.time()
