@@ -71,18 +71,23 @@ area_ratios = np.linspace(20, 140, 1000)
 
 print(C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78))  # Example Isp calculation for a specific area ratio
 print(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3) #corrected Isp so that if it deviates as much as the RS 25 we can get 450 in reality
+Engine_arr = [['RS-25',20.64*10**6, 6.03, 78]['RL10', 4.412*10**6, 5.88, 280, 462],['Vinci', 6.1*10**6, 5.8, 240, 457],['YF-75D', 4.1*10**6, 6.0, 80, 442.6],['YF-79', 4.1*10**6, 6.0, 160, 455.2],['LE-5B', 3.58*10**6, 5, 110, 447], ['LE-9', 10.0*10**6, 5.9, 37, 426]]
 
-for e in area_ratios:
-    isp = C.get_Isp(Pc=pc, MR=MR, eps=e)
-    IspArr.append(isp)
+for i in range(len(Engine_arr)):
+    IspArr.append(C.get_Isp(Pc=Engine_arr[i][1], MR=Engine_arr[i][2], eps=Engine_arr[i][3]))
+    
 
-plt.plot(area_ratios, IspArr, label='Isp at MR=%.2f' % MR)
-plt.xlabel('Area Ratio')
-plt.ylabel('Isp (sec)')
-plt.title('Isp vs Area Ratio for O/F Ratio %.2f' % MR)
-plt.grid(True)
-plt.legend()
-plt.show()
+# for e in area_ratios:
+#     isp = C.get_Isp(Pc=pc, MR=MR, eps=e)
+#     IspArr.append(isp)
 
-print("The necessary area ratio to achieve 450 seconds of Isp is: %.2f" % (np.interp(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3, IspArr, area_ratios)))
+# plt.plot(area_ratios, IspArr, label='Isp at MR=%.2f' % MR)
+# plt.xlabel('Area Ratio')
+# plt.ylabel('Isp (sec)')
+# plt.title('Isp vs Area Ratio for O/F Ratio %.2f' % MR)
+# plt.grid(True)
+# plt.legend()
+# plt.show()
+
+# print("The necessary area ratio to achieve 450 seconds of Isp is: %.2f" % (np.interp(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3, IspArr, area_ratios)))
 
