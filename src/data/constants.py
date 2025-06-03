@@ -2,6 +2,7 @@
 
 # General physics
 gravitational_constant = 6.67430e-11 #N*m2/kg2
+boltzmann = 5.67e-8  # stefan boltzmann constant
 
 
 
