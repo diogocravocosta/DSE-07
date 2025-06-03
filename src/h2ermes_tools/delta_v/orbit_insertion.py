@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
+import time
 
 import data.constants as cn
+from h2ermes_tools.delta_v.helpers import delta_v_from_final_mass
 from helpers import calculate_circular_orbit_energy, plot_polar, plot_rectangular
 
 def simulate_ascent(initial_thrust_to_weight_ratio: float,
@@ -91,22 +93,30 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
 
         if desired_orbital_altitude and energy > calculate_circular_orbit_energy(desired_orbital_altitude) and throttle > 0:
             throttle = 0
-            timestep = 5
-
+            timestep = 0.1
+            print(data.loc[len(data)-1])
+            print('energy', energy)
+    print('energy', energy)
     return data
 
 if __name__ == '__main__':
-    trajectory = simulate_ascent(1,
+
+    start = time.time()
+    trajectory = simulate_ascent(1.1,
                                  420,
-                                 2200,
-                                 1082,
-                                 7e4,
+                                 1820,
+                                 1050,
+                                 81700,
                                  timestep=0.1,
-                                 simulation_time=6e3,
+                                 simulation_time=4e2,
                                  desired_orbital_altitude=2e5)
 
-
+    end = time.time()
 
     plot_polar(trajectory)
     plot_rectangular(trajectory)
 
+    print(trajectory.loc[len(trajectory)-1])
+
+    print("delta_v:", delta_v_from_final_mass(trajectory.loc[len(trajectory)-1, 'mass_ratio'], 420))
+    print('time:', end-start)
