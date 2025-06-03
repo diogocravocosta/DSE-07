@@ -12,7 +12,7 @@ Pc = 6000000
 MR = 6.0
 eps = 120
 
-Isp = C.get_Isp(Pc, MR, eps=40.0, frozen=0, frozenAtThroat=0)
+Isp = C.get_Isp(Pc, MR, eps=eps)
 thrust = 66700 #in N
 
 def obtain_cstar(Pc, MR):
@@ -35,13 +35,14 @@ def obtain_exit_pressure(Pc, MR, eps, frozen=0, frozenAtThroat=0):
     return P_exit
 
 Pc = 6000000
+print(Isp)
 
-def area_throat(thrust, Isp = Isp, g_0=9.81, Pc= Pc):
+def area_throat(thrust, Isp = Isp, g_0=9.81, Pc= Pc, MR=MR):
     mass_flow = thrust / (g_0 * Isp)
-    area_throat = (mass_flow * c_star) / Pc
+    area_throat = (mass_flow * C.get_Cstar(Pc, MR)) / Pc
     return area_throat
 
 print("exit presssure is", obtain_exit_pressure(Pc, MR, eps))
-print("exit area is", area_throat(thrust, Isp=Isp, Pc=Pc)*eps)
-print("exit diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc)*eps))/np.pi)**0.5 * 2)
-print("area of the throat", area_throat(thrust, Isp=Isp, Pc=Pc))
+print("exit area is", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps)
+print("exit diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps))/np.pi)**0.5 * 2)
+print("area of the throat", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR))
