@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import matplotlib.pyplot as plt
 
 from h2ermes_tools.delta_v.landing_burn import landing_burn_no_drag, landing_burn_with_drag
 import data.constants as cn

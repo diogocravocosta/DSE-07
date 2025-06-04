@@ -62,7 +62,7 @@ def landing_burn_with_drag(initial_velocity: float,
 
     data = np.empty((int(max_time / time_step) + 1, len(states)))
 
-    density = cn.rho_0  # Assuming sea level standard density for simplicity
+    density = cn.density_sea_level  # Assuming sea level standard density for simplicity
 
     # Initialize the initial conditions
     i = 0
