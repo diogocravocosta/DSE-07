@@ -63,6 +63,26 @@ heat_shield_thickness = Variable(
     margin=(1.0, 1.1),
 )
 
+coolant_inlet_pressure = Variable(
+    name="Coolant Inlet Pressure",
+    value=50e5,  # 5 bar
+    unit="Pa",
+    latex_symbol="P_{c_{in}}",
+    confidence="a guess at this point",
+    constraints="must be positive, depends on the pump/propulsion system",
+    margin=(1.0, 1.05),
+)
+
+coolant_inlet_temperature = Variable(
+    name="Coolant Inlet Temperature",
+    value=13.8,  # K
+    unit="K",
+    latex_symbol="T_{c_{in}}",
+    confidence="a guess at this point, assuming subcooled liquid hydrogen",
+    constraints="must be positive, depends on the pump/propulsion system and the coolant",
+    margin=(1.0, 1.05),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
