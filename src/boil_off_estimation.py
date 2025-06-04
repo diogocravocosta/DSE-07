@@ -73,7 +73,7 @@ def heat_load(solar_power, planetary_power, albedo_power,area, emissivity, absor
     heat_load = (solar_flux + planetary_flux + albedo_flux) * area + q_load
     return heat_load
 
-def linear_regression(heat_load_data, boil_off_mass, heat_load):
+def linear_regression(heat_load_data, boil_off_mass, heat_load_h2go):
     """
     Perform linear regression to estimate boil-off mass based on heat load data.
     
@@ -97,17 +97,25 @@ def linear_regression(heat_load_data, boil_off_mass, heat_load):
     boil_off_specific = a*heat_load_h2go + b
     return boil_off_specific
 
-def vanderwaals(P,V,R,T,a,b,h2_nm):
-    n=80000
-    f = ((P+a*(n/V)**2)*(V-n*b))/n /(R*T)
-    while not (0.99 <= f <= 1.01):
-        if f < 0.99:
-            n = n - 100
+def vanderwaals(P, V, R, T, a, b, h2_nm):
+    n = 600000
+    f = ((P + a * (n / V) ** 2) * (V - n * b)) / (n * R * T)
+    iter_count = 0
+    while not (0.999 <= f <= 1.001):
+        if f < 1:
+            n = n -500
         else:
-            n = n +100
-        f = ((P+a*(n/V)**2)*(V-n*b))/(n) /(R*T)
-        m_gh2 = n * h2_nm/1000
-    return m_gh2  # Return the mass of hydrogen based on the Van der Waals equation
+            n =n +500
+        f = ((P + a * (n / V) ** 2) * (V - n * b)) / (n * R * T)
+        m_gh2 = n * h2_nm / 1000
+        iter_count += 1
+        if iter_count > 10000:
+            raise RuntimeError("Van der Waals solver did not converge")
+    return m_gh2
+
+def pres_vanderwaals(n, V, R, T, a, b):
+    P = (n * R * T)/(V - n * b) - a * (n / V) ** 2
+    return P
 #------------------------------------------------
 # Calculations
 #------------------------------------------------
@@ -140,27 +148,24 @@ print("Boil off mass: ", boil_off_specific, "kg for the given heat load of: ", h
 # During Refueling
 V1 = volume_cone(calculate_cone_param(ro,ri,h,13500)[1], calculate_cone_param(ro,ri,h,13500)[0], ri)[0]  # Volume of the cone
 V2 = volume_cone(calculate_cone_param(ro,ri,h,3000)[1], calculate_cone_param(ro,ri,h,3000)[0], ri)[0]  #m3
-P1 = 10e6
+P1 = 10**6
 T1 = 75 # K, temperature before refueling (temperature of gh2 during venting. should be ideally reset every iteration)
 T2 = 50 # K, temperature after refueling (temperature of gh2 after long period of venting. should be ideally reset every iteration)
-
 m_gh2_orbit = vanderwaals(P1,V1, R, T1, 0.2453e-6, 0.02651e-3,h2_nm)
-m_gh2_refuel = vanderwaals(3*10**5,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm)
-g = m_gh2_orbit/ m_gh2_refuel  # Ratio of gaseous hydrogen before and after refueling
-pn = 30000 # Initial pressure in Pa (300 kPa)
-while not (0.999 <= g <= 1.001):
-    if g < 0.999:
-        pn = pn - 1000
-    else:
-        pn = pn + 1000
-    m_gh2_refuel = vanderwaals(pn,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm)
-    g = m_gh2_orbit/ m_gh2_refuel
-
-print('pressure inside tank if vapor mass remains constant: ',pn,'pa')
-print('Mass of gaseous hydrogen in tank before refuelling: ',m_gh2_refuel,'kg')
+nh2 = m_gh2_orbit / h2_nm*1000
+p = pres_vanderwaals(nh2, V2, R, T2, 0.2453e-6, 0.02651e-3)
+m_gh2_refuel = vanderwaals(p,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm)
+if m_gh2_refuel/m_gh2_orbit<1.01:
+    print("The pressure will decrease which will not cause boil-off. The vapor mass is: ", m_gh2_refuel, "kg")
+    m_boiloff_worst_case = vanderwaals(P1,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm) - m_gh2_orbit
+    print('Worst case boil off if pressure is held constant: ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar')
+else:
+    print('run complex calc on boilfast to get initial and final pressure and temperature')
 
 
 #During re-entry
 ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry)  # Calculate new outer radius based on ullage height 
 area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  
 radiation_load = rad_load(200, 20, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
+m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
+# can be left as is and can be ignored.
