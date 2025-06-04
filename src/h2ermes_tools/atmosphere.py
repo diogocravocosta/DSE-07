@@ -6,17 +6,17 @@ import math
 import src.data.constants as ct
 
 class Atmosphere:
+    """
+    Class for atmospheric calculations.
+
+    Parameters:
+        altitude (float): Altitude at which to perform calculations
+    """
     def __init__(self,
-                 altitude: float) -> None:
-        """
-            Class for atmospheric calculations.
+                 altitude,
+                 model) -> None:
 
-            Args:
-                altitude: km
 
-            Returns:
-
-            """
         # VARIABLES AND CONSTANTS
         # gravitational acceleration at surface
         self.g_0 = ct.g_0           # m/s^2
@@ -36,9 +36,13 @@ class Atmosphere:
         self.g = self.gravitational_acceleration()
         self.geop_altitude = self.geopotential_altitude()
 
+        # EXPONENTIAL MODEL
+
         self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
 
         self.rho_exp = self.exponential_density()
+
+
 
     def gravitational_acceleration(self) -> float:
         """
@@ -99,3 +103,5 @@ class Atmosphere:
         """
         rho = self.rho_0 * np.exp(-self.beta * self.h)
         return rho
+
+
