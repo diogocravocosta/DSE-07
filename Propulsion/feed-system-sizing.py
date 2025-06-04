@@ -7,7 +7,7 @@ head_loss_coefficient= 1.2 #takes non-reversible pressure losses into account, 1
 
 def obtain_size_propellant_channel(mass_flow, propellant_density, velocity_propellant, head_loss_coefficient): 
     propellant_channel_area = mass_flow/(propellant_density * velocity_propellant) #in m2
-    propellant_channel_diameter = (propellant_channel_area/np.pi) ** 0.5 * 2 #in m
+    propellant_channel_diameter = ((propellant_channel_area/np.pi) ** 0.5) * 2 #in m
     #pressure_drop_injector = head_loss_coefficient * 0.5 * propellant_density * velocity_propellant**2
     return propellant_channel_area, propellant_channel_diameter
 
