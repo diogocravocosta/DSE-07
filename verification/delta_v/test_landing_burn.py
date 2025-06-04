@@ -49,3 +49,19 @@ def test_landing_burn_with_drag_with_falcon_9_values():
     assert abs(df['time'].iloc[-1] - burn_time) < 6
     # Check if the propellant mass is reasonable
     assert np.isclose(approximate_propellant_mass, 6, rtol=0.1)
+
+def test_cross_verification():
+    initial_velocity = 50.0  # m/s
+    thrust_to_weight_ratio = 1.2  # dimensionless
+    ballistic_coefficient = float('inf')  # kg/m^2, infinite for no drag
+
+    # Test without drag
+    distance_no_drag, delta_v_no_drag = landing_burn_no_drag(initial_velocity, thrust_to_weight_ratio)
+
+    # Test with drag
+    df_with_drag, delta_v_with_drag = landing_burn_with_drag(initial_velocity, thrust_to_weight_ratio, ballistic_coefficient)
+
+    # Check that the delta_v with drag is less than without drag
+    assert np.isclose(delta_v_with_drag, delta_v_no_drag, rtol=1e-3)
+    # Check that the distance with drag is less than without drag
+    assert np.isclose(-df_with_drag['distance'].iloc[-1], distance_no_drag, rtol=1e-3)
