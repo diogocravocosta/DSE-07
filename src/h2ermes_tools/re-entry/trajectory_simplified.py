@@ -30,7 +30,7 @@ class GlidingEntry:
                  c_d,
                  c_l,
                  nose_radius=7,
-                 lift_drag_ratio = 2,
+                 lift_drag_ratio = None,
                  lift_parameter = None,
                  boundary_layer="laminar",
                  range_to_cover = None
@@ -70,6 +70,11 @@ class GlidingEntry:
         else:
             raise ValueError("boundary_layer must be either 'laminar' or 'turbulent'")
 
+        if lift_drag_ratio is None:
+            self.lift_drag_ratio = self.c_l / self.c_d
+        else:
+            self.lift_drag_ratio = lift_drag_ratio
+
         # CALCULATIONS
         self.altitude = np.linspace(self.h_0 * 1000, 0, 10000)       # m
 
@@ -77,7 +82,7 @@ class GlidingEntry:
         self.v_c = np.sqrt(self.g * self.Re)
 
         if range_to_cover is None:
-            self.lift_drag_ratio = lift_drag_ratio
+            self.lift_drag_ratio = self.lift_drag_ratio
         else:
             self.lift_drag_ratio = -2 * ((range_to_cover/self.Re)/(np.log(1-(self.entry_speed**2/self.v_c**2))))
 
@@ -184,10 +189,7 @@ class GlidingEntry:
         return qc*1e-3, qc_max*1e-3, normalised_heat_flux
 
 
-glide = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-10,h_0=120,m=30000,S=9,c_d=1.5,c_l=0.5,lift_drag_ratio=0.3)
+glide = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-20,h_0=120,m=30000,S=9,c_d=17,c_l=0.1)
 
 
-print(glide.dataframe, glide.qc_max)
-
-plot = glide.dataframe.hvplot.line(x="normalized_velocity_ratio",y="heatflux ratio",title="Heat Flux",ylabel="kW/m^2",xlabel="V ratio",width=600,height=400)
-hvplot.show(plot)
+print(glide.qc_max)
