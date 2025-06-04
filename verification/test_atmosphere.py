@@ -1,7 +1,7 @@
 import pytest
 import numpy.testing as npt
 
-import src.data.constants as ct
+import data.constants as ct
 from h2ermes_tools import atmosphere as atm
 
 class TestAtmosphere:
