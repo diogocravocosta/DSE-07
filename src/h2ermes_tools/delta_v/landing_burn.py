@@ -150,10 +150,11 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
-    ballistic_coefficients = [float('inf'), 1000, 500, 200, 100]
-    thrust_to_weight_ratios = [1.5, 2.0, 2.5, 3.0, 3.5]
-    initial_velocities = [100, 150, 200, 250, 300]
-
-    plot_landing_burn_heatmaps(ballistic_coefficients,
-                               thrust_to_weight_ratios,
-                               initial_velocities)
+    # Uncomment the following line to generate delta v heatmaps
+    # ballistic_coefficients = [float('inf'), 1000, 500, 200, 100]
+    # thrust_to_weight_ratios = [1.5, 2.0, 2.5, 3.0, 3.5]
+    # initial_velocities = [100, 150, 200, 250, 300]
+    #
+    # plot_landing_burn_heatmaps(ballistic_coefficients,
+    #                            thrust_to_weight_ratios,
+    #                            initial_velocities)
