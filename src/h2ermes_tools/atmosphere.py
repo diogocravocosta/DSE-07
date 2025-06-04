@@ -27,6 +27,7 @@ class Atmosphere:
         self.Re = ct.earth_radius         # m
         # height
         self.h = altitude * 1000      # m
+        self.model = model
 
         # gas constants
         self.R_star = ct.R_star
@@ -40,13 +41,14 @@ class Atmosphere:
         self.geop_altitude = self.geopotential_altitude()
 
         # EXPONENTIAL MODEL
-        if model == "exponential":
+        if self.model == "exponential":
             self.g = self.gravitational_acceleration()
 
             self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
 
             self.rho_exp = self.exponential_density()
-        elif model == "standard":
+        elif self.model == "standard":
+            self.R_0 = 6356766          # m
             self.g = self.gravitational_acceleration_std()
             self.T_std = 0              #TODO: add values
             self.rho_std = 0            #TODO: add values
@@ -116,13 +118,17 @@ class Atmosphere:
     # FOR STANDARD ATMOSPHERE MODEL
     def gravitational_acceleration_std(self) -> float:
         """
-            Calculates the exponential density at a certain altitude.
+            Calculates the gravitational acceleration used in standard atmosphere calculations.
+
             Returns:
-                rho: the density calculated using the exponential density
+                g: the gravitational acceleration
 
         """
-        b = 2 / self.Re
-        g = self.g_0 * (1 - b * self.h)
+        g = self.g_0 * (self.R_0 / (self.R_0 + self.h))
 
         return g
+
+atm = Atmosphere(altitude=86, model="exponential")
+
+print(atm.geop_altitude)
 

@@ -81,6 +81,10 @@ class TestAtmosphere:
 
     def test_std_gravitational_acceleration(self):
         atmosphere = self.make_test_atmosphere()
-        atmosphere.g = atmosphere.gravitational_acceleration()
 
+        atmosphere.g = atmosphere.gravitational_acceleration_std()
 
+        # to calculate expected_gravitational_acceleration use: g0 * (1-2*h/Re) with h and Re in meters
+        expected_gravitational_acceleration = 8.576616841
+
+        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
