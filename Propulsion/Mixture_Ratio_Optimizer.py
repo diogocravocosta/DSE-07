@@ -92,7 +92,7 @@ def eps_for_isp(MR=6, pc = 6.1*10**6, Isp_desired=450):
     
     #Getting The Engine Area Ratio for the desired Isp
 
-    necesarry_eps = np.interp(desired_isp*(1-correction_factor/100), IspArr, area_ratios) #assume we design for 450 s
+    necesarry_eps = np.interp(Isp_desired*(1-correction_factor/100), IspArr, area_ratios) #assume we design for 450 s
     isp_theoretical = C.get_Isp(Pc=pc, MR=MR, eps=necesarry_eps)
     return necesarry_eps, isp_theoretical, correction_factor
 
@@ -103,11 +103,12 @@ def calculate_propmass(struct_ratio, Isp, deltaV, payload):
     #deltaV in m/s
     #payload in kg
 
+    g0 = 9.81  # Gravitational constant in m/s²
     mu = np.exp(deltaV/(Isp*g0))
     prop_mass = payload*((mu-1)*(1-struct_ratio))/(1-mu*struct_ratio)*1.0126
     return prop_mass
 
-def Mixture_Ratio_Optimizer(pc=6.1*10**6, struct_ratio = 0.121029372, deltaV = 7264.29, payload = 15000, OF_MIN= 4, OF_MAX = 8):
+def Mixture_Ratio_Optimizer(pc=6.1*10**6, struct_ratio = 0.121029372, deltaV = 7264.29, payload = 15000, OF_MIN= 4, OF_MAX = 8, eps=80):
     #Pc in Pa
     #struct_ratio is the structural mass ratio (0.121029372 for the Stoke Space Nova Second Stage)
     #deltaV in m/s
@@ -120,7 +121,7 @@ def Mixture_Ratio_Optimizer(pc=6.1*10**6, struct_ratio = 0.121029372, deltaV = 7
     Isp_list = []
     prop_masses = []
     for i in range(len(mixture_ratios)):
-        Isp_new = C.get_Isp(Pc=pc, MR=mixture_ratios[i], eps=necesarry_eps)/((1-correction_factor/100))
+        Isp_new = C.get_Isp(Pc=pc, MR=mixture_ratios[i], eps=eps)/((1-correction_factor/100))
         Isp_list.append(Isp_new)
         prop_masses.append(calculate_propmass(struct_ratio=struct_ratio, Isp=Isp_new, deltaV=deltaV, payload=payload))
 
