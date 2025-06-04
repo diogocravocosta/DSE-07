@@ -1,33 +1,28 @@
 # external
 import numpy as np
 import math
+import pandas as pd
 
 # internal
 import data.constants as ct
 
-class Atmosphere:
+class ExponentialAtmosphere:
     """
-    Class for atmospheric calculations.
+    Class for exponential atmospheric calculations.
 
     Parameters:
         altitude (float): Altitude at which to perform calculations
-        model (str): Atmospheric model to use. Expected to be one of the following:
-            "exponential", "standard" or "NRLMSIS"
-
     """
     def __init__(self,
                  altitude,
-                 model) -> None:
-
-
+                 ) -> None:
         # VARIABLES AND CONSTANTS
         # gravitational acceleration at surface
         self.g_0 = ct.g_0           # m/s^2
         # radius of earth
         self.Re = ct.earth_radius         # m
         # height
-        self.h = altitude * 1000      # m
-        self.model = model
+        self.altitude = altitude * 1000      # m
 
         # gas constants
         self.R_star = ct.R_star
@@ -38,22 +33,14 @@ class Atmosphere:
 
         # CALCULATIONS
 
-        self.geop_altitude = self.geopotential_altitude()
+        self.altitude_gp = self.geopotential_altitude()
 
         # EXPONENTIAL MODEL
-        if self.model == "exponential":
-            self.g = self.gravitational_acceleration()
+        self.g = self.gravitational_acceleration()
 
-            self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
+        self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.atmosphere(scale_height=7050)
 
-            self.rho_exp = self.exponential_density()
-        elif self.model == "standard":
-            self.R_0 = 6356766          # m
-            self.g = self.gravitational_acceleration_std()
-            self.T_std = 0              #TODO: add values
-            self.rho_std = 0            #TODO: add values
-
-
+        self.rho_exp = self.density()
 
     def gravitational_acceleration(self) -> float:
         """
@@ -63,7 +50,7 @@ class Atmosphere:
                 g: gravitational acceleration
 
         """
-        g = self.g_0 / (1 + (self.h / self.Re))**2
+        g = self.g_0 / (1 + (self.altitude / self.Re))**2
 
         return g
 
@@ -75,12 +62,12 @@ class Atmosphere:
                 gp_altitude : geopotential altitude
 
         """
-        gp_altitude = self.h * (1 - self.h / self.Re)
+        gp_altitude = self.altitude * (1 - self.altitude / self.Re)
 
         return gp_altitude
 
     # FOR EXPONENTIAL ATMOSPHERE MODEL
-    def exponential_atmosphere(self, scale_height: float) -> tuple[int, float, float, float]:
+    def atmosphere(self, scale_height: float) -> tuple[int, float, float, float]:
         """
             Calculates the gravitational acceleration at a certain altitude.
 
@@ -105,15 +92,41 @@ class Atmosphere:
 
         return T_exp, scale_height, beta, speed_of_sound
 
-    def exponential_density(self) -> float:
+    def density(self) -> float:
         """
             Calculates the exponential density at a certain altitude.
             Returns:
                 rho: the density calculated using the exponential density
 
         """
-        rho = self.rho_0 * np.exp(-self.beta * self.h)
+        rho = self.rho_0 * np.exp(-self.beta * self.altitude)
         return rho
+
+class StandardAtmosphere:
+    def __init__(self,
+                 altitude: float,
+                 ) -> None:
+        # VARIABLES AND CONSTANTS
+        # gravitational acceleration at surface
+        self.g_0 = ct.g_0  # m/s^2
+        # radius of earth
+        self.Re = ct.earth_radius  # m
+        # height
+        self.altitude = altitude * 1000  # m
+
+        # gas constants
+        self.R_star = ct.R_star
+        self.M = ct.molecular_mass
+        self.R = self.R_star / self.M
+        self.gamma = ct.gamma
+        self.rho_0 = ct.density_sea_level
+
+        self.R_0 = 6356766  # m
+
+        # CALCULATIONS
+        self.g = self.gravitational_acceleration_std()
+        self.T_std = 0  # TODO: add values
+        self.rho_std = 0  # TODO: add values
 
     # FOR STANDARD ATMOSPHERE MODEL
     def gravitational_acceleration_std(self) -> float:
@@ -128,7 +141,6 @@ class Atmosphere:
 
         return g
 
-atm = Atmosphere(altitude=86, model="exponential")
-
-print(atm.geop_altitude)
+    def atmosphere(self):
+        atmosphere_df = pd.DataFrame({"Geometric Height": []})
 
