@@ -15,7 +15,7 @@ class Material:
         specific_heat (float): Specific heat [J/kg/K].
         poisson_ratio (float): Poisson's ratio.
         youngs_modulus (float): Young's modulus [Pa].
-        thermal_expansion_coeffient (float): Thermal expansion coefficient [1/K].
+        thermal_expansion_coefficient (float): Thermal expansion coefficient [1/K].
         emissivity (float): Thermal emissivity.
         ultimate_strength (float): Ultimate strength [Pa].
         roughness_height (float): Effective roughness height [m].
@@ -104,9 +104,9 @@ Ti6Al4V.set_thermal_conductivity(
 k = 23  # thermal conductivity [W/m/K] at 500 C
 Cp = 590  # specific heat [J/kg/K] at 500 C
 rho = 7750  # density [kg/m^3] at 500 C
-v = 0.3  # poiosson ratio
+v = 0.3  # Poisson ratio
 E = 193e9  # youngs modulus [Pa]
-cte = 15.9e-6  # thermal expasion coefficinent [1/K]
+cte = 15.9e-6  # thermal expansion coefficient [1/K]
 uts = 515e6  # ultimate strength [Pa]
 eps = 0.5  # thermal emissivity
 Ra = 0.9e-5  # effective roughness height [m] from Materialize
