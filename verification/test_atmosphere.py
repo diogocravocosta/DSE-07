@@ -23,7 +23,7 @@ class TestAtmosphere:
     def test_atmosphere_init(self):
         expected_atmosphere = self.make_test_atmosphere()
 
-        test_atmosphere = atm.Atmosphere(self.height)
+        test_atmosphere = atm.Atmosphere(self.height, "exponential")
 
         assert expected_atmosphere.g_0 == test_atmosphere.g_0
         assert expected_atmosphere.Re == test_atmosphere.Re
@@ -34,16 +34,6 @@ class TestAtmosphere:
         assert expected_atmosphere.rho_0 == test_atmosphere.rho_0
         assert expected_atmosphere.h == test_atmosphere.h
 
-    def test_gravitational_acceleration(self):
-        atmosphere = self.make_test_atmosphere()
-
-        atmosphere.g = atmosphere.gravitational_acceleration()
-
-        # to calculate expected_gravitational_acceleration use: g0  / (1 + h / Re)**2 with h and Re in meters
-        expected_gravitational_acceleration = 8.68335742
-
-        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
-
     def test_geopotential_altitude(self):
         atmosphere = self.make_test_atmosphere()
 
@@ -53,6 +43,16 @@ class TestAtmosphere:
         expected_geop_altitude = 374914.3049138
 
         npt.assert_almost_equal(atmosphere.geop_altitude, expected_geop_altitude)
+
+    def test_exp_gravitational_acceleration(self):
+        atmosphere = self.make_test_atmosphere()
+
+        atmosphere.g = atmosphere.gravitational_acceleration()
+
+        # to calculate expected_gravitational_acceleration use: g0  / (1 + h / Re)**2 with h and Re in meters
+        expected_gravitational_acceleration = 8.68335742
+
+        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
 
     def test_exponential_atmosphere(self):
         atmosphere = self.make_test_atmosphere()
@@ -78,5 +78,9 @@ class TestAtmosphere:
         npt.assert_almost_equal(atmosphere.beta, expected_beta)
         npt.assert_almost_equal(atmosphere.speed_of_sound, expected_speed_of_sound)
         npt.assert_almost_equal(atmosphere.rho_exp, expected_rho_exp)
+
+    def test_std_gravitational_acceleration(self):
+        atmosphere = self.make_test_atmosphere()
+        atmosphere.g = atmosphere.gravitational_acceleration()
 
 

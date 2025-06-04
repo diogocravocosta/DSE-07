@@ -11,6 +11,9 @@ class Atmosphere:
 
     Parameters:
         altitude (float): Altitude at which to perform calculations
+        model (str): Atmospheric model to use. Expected to be one of the following:
+            "exponential", "standard" or "NRLMSIS"
+
     """
     def __init__(self,
                  altitude,
@@ -33,14 +36,20 @@ class Atmosphere:
         self.rho_0 = ct.density_sea_level
 
         # CALCULATIONS
-        self.g = self.gravitational_acceleration()
+
         self.geop_altitude = self.geopotential_altitude()
 
         # EXPONENTIAL MODEL
+        if model == "exponential":
+            self.g = self.gravitational_acceleration()
 
-        self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
+            self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
 
-        self.rho_exp = self.exponential_density()
+            self.rho_exp = self.exponential_density()
+        elif model == "standard":
+            self.g = self.gravitational_acceleration_std()
+            self.T_std = 0              #TODO: add values
+            self.rho_std = 0            #TODO: add values
 
 
 
@@ -104,4 +113,16 @@ class Atmosphere:
         rho = self.rho_0 * np.exp(-self.beta * self.h)
         return rho
 
+    # FOR STANDARD ATMOSPHERE MODEL
+    def gravitational_acceleration_std(self) -> float:
+        """
+            Calculates the exponential density at a certain altitude.
+            Returns:
+                rho: the density calculated using the exponential density
+
+        """
+        b = 2 / self.Re
+        g = self.g_0 * (1 - b * self.h)
+
+        return g
 
