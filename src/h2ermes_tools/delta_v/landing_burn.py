@@ -130,20 +130,22 @@ def plot_landing_burn_heatmaps(ballistic_coefficients=None,
 
 if __name__ == "__main__":
     # Example usage
-    initial_velocity = 100.0  # m/s
-    thrust_to_weight_ratio = 5  # dimensionless
-    ballistic_coefficient = 100  # kg/m^2, example value, float('inf') for no drag
+    initial_velocity = 250  # m/s
+    thrust_to_weight_ratio = 1.8  # dimensionless
+    ballistic_coefficient = 175_000  # kg/m^2, example value, float('inf') for no drag
 
     landing_burn_distance, delta_v = landing_burn_no_drag(initial_velocity, thrust_to_weight_ratio)
     print(f"Landing burn distance (no drag): {landing_burn_distance:.2f} m, Delta V: {delta_v:.2f} m/s")
 
     df, delta_v_with_drag = landing_burn_with_drag(initial_velocity, thrust_to_weight_ratio, ballistic_coefficient)
-    print(f"Landing burn distance (with drag): {-df['distance'].iloc[-1]:.2f} m, Delta V: {delta_v_with_drag:.2f} m/s")
+    print(f"Landing burn distance (with drag): {-df['distance'].iloc[-1]:.2f} m, "
+          f"Delta V: {delta_v_with_drag:.2f} m/, "
+          f"Time: {df['time'].iloc[-1]:.2f} s")
 
     # Plot velocity, acceleration, and distance over time in one plot with scaled y-axes
     plt.plot(df['time'], df['velocity'], label='Velocity (m/s)', color='blue')
     plt.plot(df['time'], df['acceleration'], label='Acceleration (m/s²)', color='orange')
-    plt.plot(df['time'], df['distance'] - min(df['distance']), label='Distance (m)', color='green')
+    plt.plot(df['time'], (df['distance'] - min(df['distance']))/10, label='Distance (10m)', color='green')
     plt.xlabel('Time (s)')
     plt.title('Landing Burn Profile')
     plt.legend()
