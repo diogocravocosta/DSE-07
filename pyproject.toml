@@ -1,9 +1,19 @@
 [project]
-name = "mass_budget"
+name = "h2ermes-tools"
 version = "0.0.1"
-description = "Mass budget calculations for a reusable second stage liquid hydrogen tanker"
+description = "Tools for design & analysis of a reusable second stage liquid hydrogen tanker"
 authors = [
     { name = "Jiri Kovar", email = "j.kovar@student.tudelft.nl" },
+    { name = "Soham Katewale", email = "s.katewale@student.tudelft.nl"},
+    { name = "Diogo Costa", email = "D.F.CravodaCosta@student.tudelft.nl"},
+    { name = "Angélique Orban", email = "A.S.M.Orban@student.tudelft.nl"},
+    { name = "Thomas van Haarst", email = "t.j.vanhaarst@student.tudelft.nl"},
+    { name = "Ashwanth Krishnamoorthi", email = "a.krishnamoorthi@student.tudelft.nl"},
+    { name = "Gergely Homoki", email = "G.Homoki-1@student.tudelft.nl"},
+    { name = "Andreea Lupei", email = "A.E.Lupei-1@student.tudelft.nl"},
+    { name = "Lucía García Gutiérrez", email = "lgarciagutierr@tudelft.nl"},
+    { name = "Matyas Karasek", email = "M.Karasek@student.tudelft.nl"},
+    { name = "Dhruv Maggon", email = "D.Maggon@student.tudelft.nl"},
 ]
 license = "MIT"
 requires-python = ">=3.11"
@@ -18,6 +28,10 @@ dependencies = [
     "tqdm>=4.67.1",
     "scipy>=1.15.3",
 ]
+optional-dependencies = { dev = [
+        "ruff>=0.11.12",
+        "pytest>=8.4.0",
+]}
 
 [build-system]
 requires = ["setuptools", "wheel"]
