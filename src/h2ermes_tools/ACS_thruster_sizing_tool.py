@@ -175,7 +175,7 @@ disturbance_load = np.sum([magnetic_torque, gravity_gradient_torque, aerodynamic
 
 ang_acc_x = 0.0025  # in rad/s^2
 ang_acc_y = 0.003  # in rad/s^2
-ang_acc_z = 0.0008  # in rad/s^2
+ang_acc_z = 0.008  # in rad/s^2
 
 ang_acc_max = max(ang_acc_x,ang_acc_y,ang_acc_z)  # in rad/s^2
 
@@ -195,16 +195,16 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     number_of_thrusters = {}
     thruster_moment_arm = {}
 
-    torque_produced = np.array([MMOI_vehicle[0] * ang_acc_max, MMOI_vehicle[1] * ang_acc_max, MMOI_vehicle[2] * ang_acc_max]) + disturbance_load + re_entry_moment  # Torque produced by each thruster in Nm
+    torque_produced = np.array([MMOI_vehicle[0] * ang_acc_max, MMOI_vehicle[1] * ang_acc_max, MMOI_vehicle[2] * ang_acc_max]) + disturbance_load  # Torque produced by each thruster in Nm
     
     # thrust_x_direction_one = torque_produced[0] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the x-direction
     thrust_x_direction_two = torque_produced[0]/ (2 * thrusters['nammo_220']['moment_arm'])  # Thrust required in the x-direction
     thrust_x_direction_three = torque_produced[0]/ (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the x-direction
     thrust_x_direction_four = torque_produced[0]/ (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the x-direction
     # thrust_y_direction_one = torque_produced[1] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the y-direction
-    thrust_y_direction_two = torque_produced[1] / (2 * thrusters['nammo_220']['moment_arm'])  # Thrust required in the y-direction
-    thrust_y_direction_three = torque_produced[1] / (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the y-direction
-    thrust_y_direction_four = torque_produced[1] / (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the y-direction
+    thrust_y_direction_two = (torque_produced[1] + re_entry_moment) / (2 * thrusters['nammo_220']['moment_arm'])  # Thrust required in the y-direction
+    thrust_y_direction_three = (torque_produced[1] + re_entry_moment) / (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the y-direction
+    thrust_y_direction_four = (torque_produced[1] + re_entry_moment) / (2 * thrusters['nammo_220_4']['moment_arm'])  # Thrust required in the y-direction
     # thrust_z_direction_one = torque_produced[2] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the z-direction
     thrust_z_direction_two = torque_produced[2] / (2 * thrusters['nammo_220']['moment_arm'])    # Calculate the number of thrusters required for each type
     thrust_z_direction_three = torque_produced[2] / (2 * thrusters['nammo_220_3']['moment_arm'])  # Thrust required in the z-direction
@@ -261,7 +261,10 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
         #               number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
         'nammo_220': number_of_thrusters['nammo_220']['x'] * thrusters['nammo_220']['power'] + \
                      number_of_thrusters['nammo_220']['y'] * thrusters['nammo_220']['power'] + \
-                     number_of_thrusters['nammo_220']['z'] * thrusters['nammo_220']['power']
+                     number_of_thrusters['nammo_220']['z'] * thrusters['nammo_220']['power'],
+        'nammo_220_4':  number_of_thrusters['nammo_220_4']['x'] * thrusters['nammo_220_4']['power'] + \
+                        number_of_thrusters['nammo_220_4']['y'] * thrusters['nammo_220_4']['power'] + \
+                        number_of_thrusters['nammo_220_4']['z'] * thrusters['nammo_220_4']['power'],
     }
 
     return number_of_thrusters, thruster_moment_arm, power_thrusters
@@ -274,6 +277,96 @@ print("Moment arm for each thruster type:", thruster_moment_arm['nammo_220_4'])
 # print("Coordinates of the center of mass of H2ermes: ", COM)
 
 
+def get_thruster_positions(COM, thrusters, number_of_thrusters):
+    """
+    Returns positions for all thrusters distributed around the vehicle geometry.
+    Args:
+        COM (np.array): Center of mass of the vehicle in meters
+        thrusters (dict): Dictionary containing thruster specifications
+        number_of_thrusters (dict): Dictionary containing number of thrusters per axis
+    Returns:
+        dict: Dictionary containing thruster positions and directions for each type and axis
+    """
+    all_positions = {}
+    
+    for thruster_type in number_of_thrusters.keys():
+        all_positions[thruster_type] = {'x': [], 'y': [], 'z': []}
+        moment_arm = thrusters[thruster_type]['moment_arm']
+        dims = vehicle_dimensions
+
+        # # Helper to clamp position within geometry
+        # def clamp_position(pos):
+        #     return np.array([
+        #         np.clip(pos[0], -dims[0]/2, dims[0]/2),
+        #         np.clip(pos[1], -dims[1]/2, dims[1]/2),
+        #         np.clip(pos[2], -dims[2]/2, dims[2]/2)
+        #     ])
+
+        # X-axis thrusters
+        n_thrusters_x = int(number_of_thrusters[thruster_type]['x'])
+        if n_thrusters_x > 0:
+            for i in range(n_thrusters_x):
+                    if i == 0:
+                        sign = 1
+                        y_offset = sign * moment_arm
+                        z_offset = sign * moment_arm
+                    else:
+                        # Alternate offsets for redundancy
+                        sign = 1 if i % 2 == 0 else -1
+                        y_offset = sign * moment_arm
+                        z_offset = - sign * moment_arm
+                    pos = np.array([0, y_offset, z_offset])
+                    direction = np.array([sign, 0, 0])
+                    all_positions[thruster_type]['x'].append({'position': pos, 'direction': direction})
+
+        # Y-axis thrusters
+        n_thrusters_y = int(number_of_thrusters[thruster_type]['y'])
+        if n_thrusters_y > 0:
+            for i in range(n_thrusters_y):
+                    if i == 0:
+                        sign = 1
+                        x_offset = sign * moment_arm
+                        z_offset = sign * moment_arm
+                    else:
+                        # Alternate offsets for redundancy
+                        sign = 1 if i % 2 == 0 else -1
+                        x_offset = sign * moment_arm
+                        z_offset = - sign * moment_arm
+                    pos = np.array([x_offset, 0, z_offset])
+                    direction = np.array([0, sign, 0])
+                    all_positions[thruster_type]['y'].append({'position': pos, 'direction': direction})
+
+        # Z-axis thrusters
+        n_thrusters_z = int(number_of_thrusters[thruster_type]['z'])
+        if n_thrusters_z > 0:
+            for i in range(n_thrusters_z):
+                if i == 0:
+                    sign = 1
+                    x_offset = sign * moment_arm
+                    y_offset = sign * moment_arm
+                else:
+                    # Alternate offsets for redundancy
+                    sign = 1 if i % 2 == 0 else -1
+                    x_offset = sign * moment_arm
+                    y_offset = - sign * moment_arm
+                pos = np.array([x_offset, y_offset, 0])
+                direction = np.array([0, 0, sign])
+                all_positions[thruster_type]['z'].append({'position': pos, 'direction': direction})
+
+    return all_positions
+
+# Usage example:
+# all_thruster_positions = get_thruster_positions(COM, thrusters, number_of_thrusters)
+# print("\nAll thruster positions:")
+# for thruster_type in all_thruster_positions:
+#     # if (thruster_type == 'nammo_220_4'):
+#     print(f"\n{thruster_type}:")
+# for axis in ['x', 'y', 'z']:
+#     print(f"\n  {axis}-axis thrusters:")
+#     for i, thruster in enumerate(all_thruster_positions[thruster_type][axis]):
+#         print(f"    Thruster {i+1}:")
+#         print(f"      Position: {thruster['position']}")
+#         print(f"      Direction: {thruster['direction']}")
 
 
 
@@ -287,10 +380,13 @@ print("Moment arm for each thruster type:", thruster_moment_arm['nammo_220_4'])
 
 
 
-
-
-
-
-
-
-
+all_thruster_positions = get_thruster_positions(COM, thrusters, number_of_thrusters)
+print("\nAll thruster positions:")
+for thruster_type in all_thruster_positions:
+    print(f"\n{thruster_type}:")
+    for axis in ['x', 'y', 'z']:
+        print(f"\n  {axis}-axis thrusters:")
+        for i, thruster in enumerate(all_thruster_positions[thruster_type][axis]):
+            print(f"    Thruster {i+1}:")
+            print(f"      Position: {thruster['position']}")
+            print(f"      Direction: {thruster['direction']}")
