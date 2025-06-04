@@ -4,12 +4,13 @@ materials_properties = {
     "Annealed 304L Stainless Steel": {"density": 7800, "strength": 1060*10**6, "young modulus": 200*10**9},
 }
 #Geometry
+R = 5 #m
 radius_ratio = 0.5
 phi = 10
 
 #Constraints
-safety_factor = 2.0
-safety_factor_pressure = 1
+safety_factor = 1.5
+safety_factor_pressure = 2.0
 tank_diameter = 7
 payload_mass = 15000
 thrust_engines = 2129573.909
@@ -56,13 +57,14 @@ def tank_overall_dimensions():
               f'\n{h[i]=}\n')
     print(sols)
 
-def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi):
+def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R):
     # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
     # V_total = pi/3 * h (r^2 + r*R + R^2)
+    #R = ((volume*3*np.tan(phi))/(np.pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio**2)))**(1/3)
+    #length = ((1-radius_ratio) * R)/np.tan(phi)
     phi = phi/180*np.pi
-    R = ((volume*3*np.tan(phi))/(np.pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio**2)))**(1/3)
     r = radius_ratio * R
-    length = ((1-radius_ratio) * R)/np.tan(phi)
+    length = volume/(np.pi/3 * (R**2 + r*R + r**2))
     return length, R, r
 
 def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, LOX_radius):
@@ -104,6 +106,7 @@ def calculate_tank_thickness(wet_mass, propellant_pressure, fuel_mass, tank_leng
         raise ValueError("Could not find a suitable tank thickness. Check your assumptions or inputs.")
     print("the axial load is: " + str(N_axial))
     print("the bending load is: " + str(M_bend))
+    print("The PRESSURE IS: " + str(p_cr))
     #check hoop stress
     if t_press>t:
         t = t_press
@@ -115,8 +118,13 @@ def calculate_tank_mass(R, r, tank_length, thickness, material_density):
     mass = volume_shell_wall * material_density
     return mass
 
-def check_vibrations():
-    return
+def check_vibrations(tank_mass, thickness, E, tank_length):
+    omega = np.sqrt((3*E*(np.pi*(2*thickness)/64)/(tank_mass*tank_length**3))) #with k = 3EI/L^3 modelled as cantiliver beam
+    f_natural = 1/(2*np.pi)*omega
+    print(f_natural)
+    return f_natural
+
+
 ######################################################################################################################
 
 print("######################################################################################################")
@@ -129,7 +137,7 @@ density = materials_properties[material]["density"]       # kg/m^3
 strength = materials_properties[material]["strength"]     # Pa
 young_modulus = materials_properties[material]["young modulus"]   # Pa
 
-tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX("LOX", LOX_volume, radius_ratio, phi)
+tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX("LOX", LOX_volume, radius_ratio, phi, R)
 print("LOX Tank Length: " + str(tank_length_LOX))
 print("LOX Tank Bottom Diameter: " + str(R_LOX * 2))
 print("LOX Tank Top Diameter: " + str(r_LOX * 2))
@@ -150,4 +158,6 @@ print("Mass LH2 Tank: " + str(mass_LH2_tank))
 mass_LOX_tank = calculate_tank_mass(R_LOX, r_LOX, tank_length_LOX, thickness_LOX, density)
 print("Mass LOX Tank: " + str(mass_LOX_tank))
 
-tank_overall_dimensions()
+#tank_overall_dimensions()
+natural_frequency = check_vibrations(mass_LH2_tank, thickness_LH2, young_modulus, tank_length_LH2)
+print("Natural Frequency: " + str(natural_frequency))
