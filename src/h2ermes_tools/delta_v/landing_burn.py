@@ -114,40 +114,6 @@ def landing_burn_with_drag(initial_velocity: float,
     # Convert to a pandas dataframe for easier access
     return pd.DataFrame(data, columns=states)
 
-def plot_landing_burn_heatmaps(ballistic_coefficients=None,
-                               thrust_to_weight_ratios=None,
-                               initial_velocities=None) -> None:
-    """
-    Plot heatmaps of landing burn delta v for different ballistic coefficients, thrust-to-weight ratios, and initial velocities.
-
-    Args:
-        ballistic_coefficients:
-        thrust_to_weight_ratios:
-        initial_velocities:
-    """
-    for bc in ballistic_coefficients:
-        delta_vs = []
-        for ttw in thrust_to_weight_ratios:
-            row = []
-            for iv in initial_velocities:
-                _, delta_v = landing_burn_with_drag(iv, ttw, bc, )
-                row.append(delta_v)
-            delta_vs.append(row)
-
-        df = pd.DataFrame(delta_vs, index=thrust_to_weight_ratios, columns=initial_velocities)
-        plt.figure(figsize=(10, 6))
-        plt.title(f'Landing Burn Delta V Heatmap (BC={bc})')
-        plt.xlabel('Initial Velocity (m/s)')
-        plt.ylabel('Thrust-to-Weight Ratio')
-        plt.imshow(df, aspect='auto', cmap='viridis', origin='lower',
-                   extent=(initial_velocities[0], initial_velocities[-1],
-                           thrust_to_weight_ratios[0], thrust_to_weight_ratios[-1]))
-        plt.colorbar(label='Delta V (m/s)')
-        plt.xticks(initial_velocities)
-        plt.yticks(thrust_to_weight_ratios)
-        plt.grid(False)
-        plt.show()
-
 if __name__ == "__main__":
     # Example usage
     initial_velocity = 100  # m/s
@@ -173,12 +139,3 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
     plt.show()
-
-    # Uncomment the following line to generate delta v heatmaps
-    # ballistic_coefficients = [float('inf'), 1000, 500, 200, 100]
-    # thrust_to_weight_ratios = [1.5, 2.0, 2.5, 3.0, 3.5]
-    # initial_velocities = [100, 150, 200, 250, 300]
-    #
-    # plot_landing_burn_heatmaps(ballistic_coefficients,
-    #                            thrust_to_weight_ratios,
-    #                            initial_velocities)
