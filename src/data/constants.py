@@ -3,8 +3,6 @@
 # General physics
 gravitational_constant = 6.67430e-11 #N*m2/kg2
 
-
-
 # Earth parameters
 g_0 = 9.81 # m/s2, standard gravity
 mass = 5.9722e24 # kg
@@ -16,3 +14,4 @@ density_sea_level = 1.225
 # atmospheric constants
 R_star = 8314.32            # J/(kmol K), universal gas constant
 molecular_mass = 28.9644    # kg/kmol, molecular mass of Earth's atmosphere
+gamma = 1.4
