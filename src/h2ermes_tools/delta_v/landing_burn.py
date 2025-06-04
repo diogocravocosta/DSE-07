@@ -31,9 +31,9 @@ def landing_burn_no_drag(initial_velocity: float,
 def landing_burn_with_drag(initial_velocity: float,
                            thrust_to_weight_ratio: float,
                            ballistic_coefficient: float,
-                           time_step: float = 0.1,
+                           time_step: float = 0.01,
                            max_time: float = 100.0
-                           ):
+                           ) -> tuple[pd.DataFrame, float]:
     """
     Simulate the landing burn including drag.
 
@@ -62,14 +62,15 @@ def landing_burn_with_drag(initial_velocity: float,
 
     data = np.empty((int(max_time / time_step) + 1, len(states)))
 
+    density = cn.rho_0  # Assuming sea level standard density for simplicity
+
     # Initialize the initial conditions
     i = 0
     time = 0.
-    past_velocity = -initial_velocity
-    past_acceleration = 0.
+    past_velocity = -initial_velocity # up is defined as positive, so initial velocity is negative
+    past_acceleration = 1 / 2 * past_velocity ** 2 * density / ballistic_coefficient + (
+                    thrust_to_weight_ratio - 1) * cn.g_0
     past_distance = 0.
-
-    density = cn.rho_0  # Assuming sea level standard density for simplicity
 
     data[i] = [time, past_velocity, past_acceleration, past_distance]
 
@@ -79,16 +80,38 @@ def landing_burn_with_drag(initial_velocity: float,
         # Update velocity, and distance
         curr_velocity = past_velocity + past_acceleration * time_step
         curr_distance = past_distance + past_velocity * time_step
-        curr_acceleration = 1 / 2 * past_velocity ** 2 * density * ballistic_coefficient + (
+        curr_acceleration = 1 / 2 * past_velocity ** 2 * density / ballistic_coefficient + (
                     thrust_to_weight_ratio - 1) * cn.g_0
 
         data[i] = [time, past_velocity, past_acceleration, past_distance] = [time, curr_velocity, curr_acceleration, curr_distance]
 
-        if past_velocity <= 0:
+        if past_velocity >= 0:
             # trim the data to the last valid point
             data = data[:i + 1]
             break
 
+    delta_v = data[-1, 0] * thrust_to_weight_ratio * cn.g_0  # Final delta_v is thrust-to-weight ratio times g_0 times time
     # Convert to a pandas dataframe for easier access
-    return pd.DataFrame(data, columns=states)
+    return pd.DataFrame(data, columns=states), delta_v
 
+if __name__ == "__main__":
+    # Example usage
+    initial_velocity = 100.0  # m/s
+    thrust_to_weight_ratio = 5  # dimensionless
+    ballistic_coefficient = 100  # kg/m^2, example value
+
+    landing_burn_distance, delta_v = landing_burn_no_drag(initial_velocity, thrust_to_weight_ratio)
+    print(f"Landing burn distance (no drag): {landing_burn_distance:.2f} m, Delta V: {delta_v:.2f} m/s")
+
+    df, delta_v_with_drag = landing_burn_with_drag(initial_velocity, thrust_to_weight_ratio, ballistic_coefficient)
+    print(f"Landing burn distance (with drag): {-df['distance'].iloc[-1]:.2f} m, Delta V: {delta_v_with_drag:.2f} m/s")
+
+    # Plot velocity, acceleration, and distance over time in one plot with scaled y-axes
+    plt.plot(df['time'], df['velocity'], label='Velocity (m/s)', color='blue')
+    plt.plot(df['time'], df['acceleration'], label='Acceleration (m/s²)', color='orange')
+    plt.plot(df['time'], df['distance'] - min(df['distance']), label='Distance (m)', color='green')
+    plt.xlabel('Time (s)')
+    plt.title('Landing Burn Profile')
+    plt.legend()
+    plt.grid()
+    plt.show()
