@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # internal
-import src.data.constants as ct
+import data.constants as ct
 
 class Atmosphere:
     def __init__(self,
