@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # internal
-import src.data.constants as ct
+import data.constants as ct
 
 class Atmosphere:
     """
@@ -21,7 +21,7 @@ class Atmosphere:
         # gravitational acceleration at surface
         self.g_0 = ct.g_0           # m/s^2
         # radius of earth
-        self.Re = ct.radius         # m
+        self.Re = ct.earth_radius         # m
         # height
         self.h = altitude * 1000      # m
 

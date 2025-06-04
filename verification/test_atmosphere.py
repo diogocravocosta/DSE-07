@@ -1,7 +1,7 @@
 import pytest
 import numpy.testing as npt
 
-import src.data.constants as ct
+import data.constants as ct
 from h2ermes_tools import atmosphere as atm
 
 class TestAtmosphere:
@@ -10,7 +10,7 @@ class TestAtmosphere:
     def make_test_atmosphere(self):
         atmosphere = atm.Atmosphere.__new__(atm.Atmosphere)
         atmosphere.g_0 = ct.g_0  # m/s^2
-        atmosphere.Re = ct.radius  # m
+        atmosphere.Re = ct.earth_radius  # m
         atmosphere.R_star = ct.R_star
         atmosphere.M = ct.molecular_mass
         atmosphere.R = atmosphere.R_star / atmosphere.M
