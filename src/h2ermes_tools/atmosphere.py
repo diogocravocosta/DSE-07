@@ -1,19 +1,29 @@
 # external
 import numpy as np
+import math
 
 # internal
 import src.data.constants as ct
 
 class Atmosphere:
     def __init__(self,
-                 height: float):
+                 altitude: float) -> None:
+        """
+            Class for atmospheric calculations.
+
+            Args:
+                altitude: km
+
+            Returns:
+
+            """
         # VARIABLES AND CONSTANTS
         # gravitational acceleration at surface
         self.g_0 = ct.g_0           # m/s^2
         # radius of earth
         self.Re = ct.radius         # m
         # height
-        self.h = height * 1000      # m
+        self.h = altitude * 1000      # m
 
         # gas constants
         self.R_star = ct.R_star
@@ -24,37 +34,68 @@ class Atmosphere:
 
         # CALCULATIONS
         self.g = self.gravitational_acceleration()
+        self.geop_altitude = self.geopotential_altitude()
 
-    def gravitational_acceleration(self):
-        g = self.g_0 / (1 + self.h / self.Re)**2
+        self.T_exp, self.scale_height, self.beta, self.speed_of_sound = self.exponential_atmosphere(scale_height=7050)
+
+        self.rho_exp = self.exponential_density()
+
+    def gravitational_acceleration(self) -> float:
+        """
+            Calculates the gravitational acceleration at a certain altitude.
+
+            Returns:
+                g: gravitational acceleration
+
+        """
+        g = self.g_0 / (1 + (self.h / self.Re))**2
 
         return g
 
     def geopotential_altitude(self):
-        z = self.h * (1 - self.h / self.Re)
+        """
+            Calculates the geopotential altitude equivalent at a certain altitude.
 
-        return z
+            Returns:
+                gp_altitude : geopotential altitude
 
-    # FOR EXPONENTIAL MODEL
-    def exponential_density(self, height, beta):
-        rho = self.rho_0 * np.exp(-beta * height)
-        return rho
+        """
+        gp_altitude = self.h * (1 - self.h / self.Re)
 
-    def exponential_atmosphere(self, height, constant_temp = 240):
-        self.rho_0 = ct.density_sea_level
+        return gp_altitude
 
-        if constant_temp is None:
-            T_exp = 246
-            scale_height = 7200
+    # FOR EXPONENTIAL ATMOSPHERE MODEL
+    def exponential_atmosphere(self, scale_height: float) -> tuple[int, float, float, float]:
+        """
+            Calculates the gravitational acceleration at a certain altitude.
+
+            Returns:
+                T_exp: the assumed constant temperature for the exponential atmosphere model
+                scale_height: the scale height of the model
+                beta: 1/scale_height
+                speed_of_sound: the speed of sound at the given constant temperature
+
+        """
+
+        if scale_height is None:
+            h_s = 7050
         else:
-            T_exp = constant_temp
-            scale_height = (self.R * T_exp) / self.g_0
+            h_s = scale_height
+
+        T_exp = math.floor(h_s * self.g_0 / self.R)
 
         beta = 1 / scale_height
 
-        rho_exp = self.exponential_density(height, beta)
+        speed_of_sound = round(math.sqrt(self.gamma * self.R * T_exp),1)
 
-        speed_of_sound = np.sqrt(self.gamma * self.R * T_exp)
+        return T_exp, scale_height, beta, speed_of_sound
 
-        return rho_exp, speed_of_sound
+    def exponential_density(self) -> float:
+        """
+            Calculates the exponential density at a certain altitude.
+            Returns:
+                rho: the density calculated using the exponential density
 
+        """
+        rho = self.rho_0 * np.exp(-self.beta * self.h)
+        return rho

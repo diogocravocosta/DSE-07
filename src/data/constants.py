@@ -4,7 +4,7 @@
 gravitational_constant = 6.67430e-11 #N*m2/kg2
 
 # Earth parameters
-g_0 = 9.81 # m/s2, standard gravity
+g_0 = 9.80665 # m/s2, standard gravity
 mass = 5.9722e24 # kg
 gravitational_parameter = gravitational_constant * mass # m3/s2
 radius = 6378137 # m

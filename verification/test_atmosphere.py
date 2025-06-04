@@ -5,7 +5,7 @@ import src.data.constants as ct
 from h2ermes_tools import atmosphere as atm
 
 class TestAtmosphere:
-    height = 0
+    height = 400
 
     def make_test_atmosphere(self):
         atmosphere = atm.Atmosphere.__new__(atm.Atmosphere)
@@ -37,8 +37,35 @@ class TestAtmosphere:
     def test_gravitational_acceleration(self):
         atmosphere = self.make_test_atmosphere()
 
-        gravitational_acceleration = atmosphere.gravitational_acceleration()
-        expected_gravitational_acceleration = 9.81
-        npt.assert_almost_equal(gravitational_acceleration, expected_gravitational_acceleration)
+        atmosphere.g = atmosphere.gravitational_acceleration()
+        expected_gravitational_acceleration = 8.68335742
+        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
+
+    def test_geopotential_altitude(self):
+        atmosphere = self.make_test_atmosphere()
+
+        atmosphere.geop_altitude = atmosphere.geopotential_altitude()
+        expected_geop_altitude = 374914.3049138
+
+        npt.assert_almost_equal(atmosphere.geop_altitude, expected_geop_altitude)
+
+    def test_exponential_atmosphere(self):
+        atmosphere = self.make_test_atmosphere()
+        atmosphere.T_exp, atmosphere.scale_height, atmosphere.beta, atmosphere.speed_of_sound = atmosphere.exponential_atmosphere(scale_height=7050)
+
+        expected_T_exp = 240
+        expected_scale_height = 7050
+        expected_beta = 0.0001418439716
+        expected_speed_of_sound = 310.6
+
+        atmosphere.rho_exp = atmosphere.exponential_density()
+
+        expected_rho_exp = 2.8010084592781267e-25
+
+        npt.assert_almost_equal(atmosphere.T_exp, expected_T_exp)
+        npt.assert_almost_equal(atmosphere.scale_height, expected_scale_height)
+        npt.assert_almost_equal(atmosphere.beta, expected_beta)
+        npt.assert_almost_equal(atmosphere.speed_of_sound, expected_speed_of_sound)
+        npt.assert_almost_equal(atmosphere.rho_exp, expected_rho_exp)
 
 
