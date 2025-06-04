@@ -11,3 +11,4 @@ earth_mass = 5.9722e24 # kg
 gravitational_parameter = gravitational_constant * earth_mass # m3/s2
 earth_radius = 6378137 # m
 sidereal_rotation_period = 23 * 3600 + 56 * 60 + 4.1 # s, period of one Earths rotation around its axis with respect to distant stars
+rho_0 = 1.225 # kg/m3, air density at sea level
