@@ -1,8 +1,8 @@
 """
-1-D 10-node stainless-steel wall with
- • constant incident flux at the hot face
- • T⁴ radiation from the hot face
- • constant cooling flux at the cold face
+1-D transient heat conduction in a stainless-steel wall
+• Constant incident heat flux at the hot face
+• T⁴ radiation from the hot face
+• Constant cooling flux at the cold face
 Material: AISI 304L (properties assumed T-independent)
 Scheme  : Explicit FTCS, uniform grid
 """
@@ -10,84 +10,98 @@ Scheme  : Explicit FTCS, uniform grid
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ----------  USER INPUT  ----------------------------------------------------
-# Geometry & discretisation
-L = 0.010  # [m] total wall thickness
-N = 31  # number of nodes
-dx = L / (N - 1)  # [m] node spacing
+# ---------------- USER INPUT ----------------
+# Geometry & discretization
+wall_thickness = 0.010  # total wall thickness [m]
+num_nodes = 3  # number of nodes
+node_spacing = wall_thickness / (num_nodes - 1)  # node spacing [m]
 
-# Material (304L, room-temperature values)
-rho = 8_030.0  # [kg m-3]
-cp = 500.0  # [J kg-1 K-1]
-k = 14.6  # [W m-1 K-1]
-alpha = k / (rho * cp)  # [m² s-1] thermal diffusivity
+# Material properties (304L, room-temperature values)
+density = 8030.0  # [kg/m³]
+specific_heat = 500.0  # [J/(kg·K)]
+thermal_conductivity = 14.6  # [W/(m·K)]
+thermal_diffusivity = thermal_conductivity / (density * specific_heat)
 
 # Boundary heat fluxes ( + = heat INTO the wall, – = heat OUT )
-q_inc = 100e3  # [W m-2] constant aerodynamic heating on node 0
-q_c = 30e3  # [W m-2] constant cooling on node 9  (drawn out)
+incident_heat_flux = 100_000.0  # constant aerodynamic heating on node 0 [W/m²]
+cooling_heat_flux = 30_000.0  # constant cooling on node N-1 [W/m²]
 
 # Radiation
-eps = 0.78  # emissivity, typical oxidised 304L
-sigma = 5.670374419e-8  # [W m-2 K-4] Stefan–Boltzmann constant
+emissivity = 0.78  # typical oxidised 304L
+stefan_boltzmann = 5.670374419e-8  # [W/(m²·K⁴)]
 
 # Initial & run parameters
-T_init = 20.0  # [K] uniform start temperature
-t_end = 900.0  # [s] total simulated time
+initial_temperature = 20.0  # uniform start temperature [K]
+total_time = 900.0  # total simulated time [s]
 
 # Stability-limited time-step (Fo = α dt / dx² ≤ 0.5)
-dt_max = 0.5 * dx**2 / alpha
-dt = 0.9 * dt_max  # 90 % of the limit for safety
-Nt = int(np.ceil(t_end / dt))  # number of steps (integer)
-time = np.linspace(0, Nt * dt, Nt + 1)  # time axis for plotting
-# ---------------------------------------------------------------------------
+max_dt = 0.5 * node_spacing ** 2 / thermal_diffusivity
 
+time_step = 0.9 * max_dt  # 90% of the limit for safety
+num_time_steps = int(np.ceil(total_time / time_step))
+time_axis = np.linspace(0, num_time_steps * time_step, num_time_steps + 1)
+# --------------------------------------------
 
-# ----------  ARRAYS ---------------------------------------------------------
-T = np.full(N, T_init, dtype=float)  # current temperatures
-Tn1 = T.copy()  # next-step temperatures
-Fo = alpha * dt / dx**2  # Fourier number (scalar, <= 0.5)
+# ---------------- ARRAYS -------------------
+temperature = np.full(num_nodes, initial_temperature, dtype=float)  # current temperatures
+temperature_next = temperature.copy()  # next-step temperatures
+fourier_number = thermal_diffusivity * time_step / node_spacing ** 2  # scalar, <= 0.5
 
 # For plotting
-plot_every = max(1, Nt // 10)  # plot 10 curves
-x = np.linspace(0, L, N)
+plot_every = max(1, num_time_steps // 10)  # plot 10 curves
+x = np.linspace(0, wall_thickness, num_nodes)
 
 plt.figure(figsize=(9, 6))
 plt.xlabel("x [m]")
 plt.ylabel("Temperature [K]")
-plt.title(f"1-D {N}-node wall - explicit FTCS")
+plt.title(f"1-D {num_nodes}-node wall - explicit FTCS")
 plt.grid(True)
 
-# ----------  TIME LOOP ------------------------------------------------------
-for n in range(Nt):
-    # --- internal nodes (1 … 8) ---
-    for i in range(1, N - 1):
-        Tn1[i] = T[i] + Fo * (T[i + 1] - 2 * T[i] + T[i - 1])
+# ---------------- TIME LOOP ----------------
+for step in range(num_time_steps):
+    # Internal nodes (1 … N-2)
+    for idx in range(1, num_nodes - 1):
+        temperature_next[idx] = (
+            temperature[idx]
+            + fourier_number * (temperature[idx + 1] - 2 * temperature[idx] + temperature[idx - 1])
+        )
 
-    # --- node 0 : incident flux – radiation – conduction to node 1 -----------
-    q_r = eps * sigma * T[0] ** 4  # Stefan-Boltzmann
-    net_q_0 = q_inc - q_r - k * (T[0] - T[1]) / dx  # W m-2, into CV
-    vol_0 = dx / 2.0  # [m] half-CV thickness
-    Tn1[0] = T[0] + dt * net_q_0 / (rho * cp * vol_0)
+    # Node 0: incident flux – radiation – conduction to node 1
+    radiative_loss = emissivity * stefan_boltzmann * temperature[0] ** 4
+    net_heat_flux_0 = (
+        incident_heat_flux
+        - radiative_loss
+        - thermal_conductivity * (temperature[0] - temperature[1]) / node_spacing
+    )
+    control_volume_0 = node_spacing / 2.0
+    temperature_next[0] = temperature[0] + time_step * net_heat_flux_0 / (
+        density * specific_heat * control_volume_0
+    )
 
-    # --- node N-1 : conduction from node N-2 – cooling flux ----------------------
-    net_q_last = k * (T[N - 2] - T[N - 1]) / dx - q_c  # +ve into CV
-    vol_last = dx / 2.0
-    Tn1[N - 1] = T[N - 1] + dt * net_q_last / (rho * cp * vol_last)
+    # Node N-1: conduction from node N-2 – cooling flux
+    net_heat_flux_last = (
+        thermal_conductivity * (temperature[num_nodes - 2] - temperature[num_nodes - 1]) / node_spacing
+        - cooling_heat_flux
+    )
+    control_volume_last = node_spacing / 2.0
+    temperature_next[num_nodes - 1] = temperature[num_nodes - 1] + time_step * net_heat_flux_last / (
+        density * specific_heat * control_volume_last
+    )
 
-    # advance in time
-    T[:] = Tn1[:]
+    # Advance in time
+    temperature[:] = temperature_next[:]
 
-    # plot a handful of profiles
-    if n % plot_every == 0 or n == Nt - 1:
-        plt.plot(x, T, label=f"t = {n * dt:>5.0f} s")
+    # Plot a handful of profiles
+    if step % plot_every == 0 or step == num_time_steps - 1:
+        plt.plot(x, temperature, label=f"t = {step * time_step:>5.0f} s")
 
-# ----------  RESULTS --------------------------------------------------------
+# ---------------- RESULTS ------------------
 plt.legend()
 plt.tight_layout()
 plt.show()
 
 print("Simulation finished")
-print(f"Δx = {dx * 1e3:5.3f} mm,   dt = {dt:7.4f} s  (Fo = {Fo:5.3f})")
-print(f"Final surface temperature (node 0): {T[0]:.1f} K")
-print(f"Final centre temperature (node (N-1)/2):  {T[int((N - 1) / 2)]:.1f} K")
-print(f"Final cooled face temperature (node N-1): {T[N - 1]:.1f} K")
+print(f"Δx = {node_spacing * 1e3:5.3f} mm,   dt = {time_step:7.4f} s  (Fo = {fourier_number:5.3f})")
+print(f"Final surface temperature (node 0): {temperature[0]:.1f} K")
+print(f"Final centre temperature (node (N-1)/2):  {temperature[int((num_nodes - 1) / 2)]:.1f} K")
+print(f"Final cooled face temperature (node N-1): {temperature[num_nodes - 1]:.1f} K")
