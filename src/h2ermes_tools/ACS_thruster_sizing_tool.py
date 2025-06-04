@@ -1,12 +1,15 @@
 import numpy as np
+import data.constants as cn   # Importing constants from a separate file
+import h2ermes_tools.variables as vr  # Importing the Variable class from variables module
+from variables import Variable  # Importing the Variable class from variables module
   # Assuming constants are defined in a separate file
 
 # Constants and parameters for the spacecraft
-vehicle_mass = 60000  # kg
-vehicle_shape = 'rectangular_prism'  # Shape of the spacecraft
+vehicle_mass =  vr.mass_vehicle.value # kg
+vehicle_shape = 'rectangular_prism'  # Shape of the spacecraft (Supposed to be a cone)
 #spacecraft_dimensions # Needs to be imported from constants file
-vehicle_dimensions = np.array([15, 10, 5])  # Length, Width, Height in meters
-gravitational_constant = 3.986 * 10**14  # m^3/s^2
+vehicle_dimensions = vr.launch_vehicle_dimensions.value  # Length, Width, Height in meters
+gravitational_constant = cn.gravitational_parameter  # m^3/s^2
 # MMOI_vehicle # To be imported from constants file
 theta = 50 # Angle between the spacecraft and the local vertical in degrees
 altitude = 600 # Altitude of the spacecraft in km
@@ -79,15 +82,14 @@ def solar_radiation_pressure_torque (altitude, MMOI_vehicle):
     Returns:
         solar_torque (float): Solar radiation pressure torque on the spacecraft in Nm.
     """
-    altitude_r  = (altitude + 6371) * 1000  # Convert altitude to meters
-    c_light = 3 * 10**8  # Speed of light in m/s
-    vehicle_dipole_moment = 0.01  # in Am^2, assuming a small dipole moment for the spacecraft
-    magnetic_constant = 7.8 * 10**15  # T*m^3
-    vehicle_lambda = 2
+    altitude_r  = (altitude * 1000) + cn.earth_radius  # Convert altitude to meters
+    c_light = cn.speed_of_light  # Speed of light in m/s
+ 
+
     
     q_solar = np.average([0.15,0.8]) # Reflectance factor for solar radiation pressure torque
     phi_2 = 60  # in degrees
-    solar_flux = 1361  # W/m^2, solar constant
+    solar_flux = cn.solar_constant  # W/m^2, solar constant
     solar_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the sun
 
     geo_midpoint = np.array([vehicle_dimensions[0] / 2,vehicle_dimensions[1] / 2,0])  # Geometric midpoint of the spacecraft
@@ -137,7 +139,7 @@ def aerodynamic_drag_torque(altitude, vehicle_dimensions, gravitational_constant
     vehicle_velocity_squared = gravitational_constant / altitude_r  # in m/s
 
     drag_coefficient = 2.2  # Dimensionless; typical value for spacecraft
-    atmospheric_density = 1.03 * 10**-14  # kg/m^3
+    atmospheric_density = cn.orbit_altitude_density  # kg/m^3
     aerodynamic_surface_area = vehicle_dimensions[0] * vehicle_dimensions[1]  # Area exposed to the flow
 
     aerodynamic_drag = 0.5 * atmospheric_density * drag_coefficient * aerodynamic_surface_area * vehicle_velocity_squared * (np.linalg.norm(COM - geo_midpoint))  # Aerodynamic drag torque
@@ -157,9 +159,9 @@ def magnetic_torque(altitude):
     Returns:
         magnetic_torque (float): Magnetic torque on the spacecraft in Nm.
     """
-    altitude_r = (altitude + 6371) * 1000  # Convert altitude to meters
+    altitude_r = cn.earth_radius + (altitude * 10**3)  # Convert altitude to meters
     vehicle_dipole_moment = 0.01  # in Am^2, assuming a small dipole moment for the spacecraft
-    magnetic_constant = 7.8 * 10**15  # T*m^3
+    magnetic_constant = cn.magnetic_permeability_constant  # T*m^3
     vehicle_lambda = 1.1  # Dimensionless factor for magnetic torque; ranges from 1 at the equator to 2 at the poles
     magnetic_torque = vehicle_dipole_moment * (magnetic_constant / altitude_r**3) * vehicle_lambda  # Magnetic torque
     return magnetic_torque
@@ -175,7 +177,7 @@ disturbance_load = np.sum([magnetic_torque, gravity_gradient_torque, aerodynamic
 # print("Total disturbance torque on the spacecraft:", disturbance_load, "Nm")
 
 # print("Torque required to counteract disturbances:", required_torque, "Nm")
-ang_acc_z = 0.008  # in rad/s^2
+
 
 #slew rate = 3 deg/s
 slew_rate = np.deg2rad(3) # in rad/s, average slew rate for low earth orbit spacecraft with similar maneuverability requirements

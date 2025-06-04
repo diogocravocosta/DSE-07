@@ -63,6 +63,46 @@ heat_shield_thickness = Variable(
     margin=(1.0, 1.1),
 )
 
+launch_vehicle_dimensions = Variable(
+    name="Launch Vehicle Dimensions",
+    value=[15,10,5], # Rectangular dimensions in meters (length, width, height); Needs to be updated with actual shape
+    unit="m",
+    latex_symbol="lv_{dim}",
+    confidence="highly approximate", #Update with actual dimensions
+    constraints="must be positive",
+    margin=(1.0, 1.05),
+)
+
+mass_vehicle= Variable(
+    name="Vehicle Mass",
+    value=60000, # Approximate value for H2ermes vehicle
+    unit="kg",
+    latex_symbol="M_{vehicle}",
+    confidence="highly approximate", #Needs to be updated with actual values
+    constraints="must be positive",
+    margin=(1.0, 1.1),
+)
+
+MMOI_vehicle = Variable(
+    name="Mass Moment of Inertia",
+    value=[625000, 1250000, 1625000], # Approximate values for chosen shape
+    unit="kg*m^2",
+    latex_symbol="I_{mass}",
+    confidence="highly approximate", #Needs to be updated with actual values
+    constraints="must be positive",
+    margin=(1.0, 1.1),
+)
+
+vehicle_surface_area = Variable(
+    name="Vehicle Surface Area",
+    value=150,  # Placeholder value, needs to be calculated based on actual dimensions
+    unit="m^2",
+    latex_symbol="A_{vehicle}",
+    confidence="approximate",
+    constraints="must be positive",
+    margin=(1.0, 1.1),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
