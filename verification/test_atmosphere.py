@@ -38,13 +38,18 @@ class TestAtmosphere:
         atmosphere = self.make_test_atmosphere()
 
         atmosphere.g = atmosphere.gravitational_acceleration()
+
+        # to calculate expected_gravitational_acceleration use: g0  / (1 + h / Re)**2 with h and Re in meters
         expected_gravitational_acceleration = 8.68335742
+
         npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
 
     def test_geopotential_altitude(self):
         atmosphere = self.make_test_atmosphere()
 
         atmosphere.geop_altitude = atmosphere.geopotential_altitude()
+
+        # to calculate expected_geop_altitude use: h * (1 - h/Re) with h and Re in meters
         expected_geop_altitude = 374914.3049138
 
         npt.assert_almost_equal(atmosphere.geop_altitude, expected_geop_altitude)
@@ -53,13 +58,19 @@ class TestAtmosphere:
         atmosphere = self.make_test_atmosphere()
         atmosphere.T_exp, atmosphere.scale_height, atmosphere.beta, atmosphere.speed_of_sound = atmosphere.exponential_atmosphere(scale_height=7050)
 
+        # following calculations come from the scale_height, which can take values between 7050m and 7200 according to prof. Mooij
+        expected_scale_height = 7050 # input value
+
+        # to calculate expected_T_exp use: floor(scale_height * g_0 / R) where g0 = 9.80665 and R = 287
         expected_T_exp = 240
-        expected_scale_height = 7050
+        # to calculate expected_beta use: 1 / scale_height
         expected_beta = 0.0001418439716
+        # to calculate expected_speed_of_sounds use: round(sqrt(gamma * temperature * R), 1), with gamma = 1.4 and R = 287
         expected_speed_of_sound = 310.6
 
         atmosphere.rho_exp = atmosphere.exponential_density()
 
+        # to calculate expected_rho_exp use: rho_0 * exp(-beta * height)
         expected_rho_exp = 2.8010084592781267e-25
 
         npt.assert_almost_equal(atmosphere.T_exp, expected_T_exp)
