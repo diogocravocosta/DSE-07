@@ -1,0 +1,63 @@
+function gs = createGroundStation(sc)
+%GROUNDSTATION Summary of this function goes here
+%   Detailed explanation goes here
+
+%% Parameters:
+latitude = 5.251439;       % deg
+longitude = -52.804664;    % deg
+%altitude = -14.6709;       % Is shadowed by Earth's surface below 0 m, unused
+
+dish_diameter = 15;        % m
+txbeamwidth = 0.65;        % deg
+rxbeamwidth = 0.6;         % deg 
+
+% Txparameters
+frequency = 2.11e9;        % Hz
+txloss = 0;                % dB
+bitrate = 1.2;             % Mbps
+power = pow2db(400);       % dB
+
+% Rx parameters
+g_over_t = 41;             % dB/K
+rxloss = 0;                % dB
+prereceiverloss = 0;       % dB
+Eb_over_No_margin = 20;    % dB
+
+%% Create station
+gs = groundStation(sc, ...
+    latitude, ...
+    longitude, ...
+    "Name","Estrack Kourou");
+
+
+% Add gimbal to ground station
+gsGimbal = gimbal(gs, ...
+    "MountingAngles", [0; 180; 0], ... % facing up
+    "MountingLocation", [0; 0; -5]);   % 5 m from the ground (arbitrary)
+
+% Add transmitter to gimbal
+gsTx = transmitter(gsGimbal, ...
+    "Name", "Kourou transmitter", ...
+    "MountingLocation", [0; 0; 1], ...
+    "MountingAngles", [0; -90; 0], ...
+    "Antenna", phased.GaussianAntennaElement("Beamwidth", txbeamwidth, "FrequencyRange", [0 3e9]), ...
+    "SystemLoss", txloss, ...
+    "Frequency", frequency, ...
+    "BitRate", bitrate, ...
+    "Power", power);
+
+
+% Add receiver to gimbal
+gsRx = receiver(gsGimbal, ...
+    "Name", "Kourou receiver", ...
+    "MountingLocation", [0; 0; 1], ... % 1 m above gimbal (arbitrary)
+    "MountingAngles", [0; -90; 0], ...
+    "Antenna", phased.GaussianAntennaElement("Beamwidth", txbeamwidth, "FrequencyRange", [0 3e9]), ...
+    "SystemLoss", rxloss, ...
+    "PreReceiverLoss", prereceiverloss, ...
+    "GainToNoiseTemperatureRatio", g_over_t, ...
+    "RequiredEbNo", Eb_over_No_margin);
+
+phased.GaussianAntennaElement("Beamwidth", rxbeamwidth, "FrequencyRange", [0 3e9]);
+end
+
