@@ -119,6 +119,19 @@ SS14404.set_thermal_conductivity(
     np.array([273, 373, 473, 573, 673, 773, 873, 973, 1073, 1173, 1273]),
 )
 
+## SS 1.4845 (SS 310S)
+k = 16.2  # thermal conductivity [W/m/K] at 500 C
+Cp = 500  # specific heat [J/kg/K] at 500 C
+rho = 7900  # density [kg/m^3] at 500 C
+v = 0.3  # Poisson ratio
+E = 1  # Youngs modulus [Pa]
+cte = 1  # thermal expansion coefficient [1/K]
+uts = 1  # ultimate strength [Pa]
+eps = 0.8  # thermal emissivity
+Ra = 0.9e-5  # effective roughness height [m] from Materialise
+alpha = k / rho / Cp  # thermal diffusivity [m^2/s]
+SS14845 = Material("SS14845", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
+
 
 if __name__ == "__main__":
     # Example usage

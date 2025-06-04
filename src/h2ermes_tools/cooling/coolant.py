@@ -12,11 +12,13 @@ class Coolant:
     Attributes:
         fluid (Fluid): The fluid object from pyfluids representing the coolant.
         channel (Channel): The channel through which the coolant flows.
+        mass_flow (float): The mass flow rate of the coolant in kg/s.
     """
 
-    def __init__(self, fluid, channel):
+    def __init__(self, fluid, channel, mass_flow):
         self.fluid = fluid
         self.channel = channel
+        self.mass_flow = mass_flow
 
     def enthalpy(self, temperature, pressure):
         return self.fluid.with_state(

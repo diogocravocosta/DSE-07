@@ -65,6 +65,30 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ## Considerations
+    Below is a list of assumptions for the 1-D heat transfer simulation
+
+    - 1-D heat transfer simulation will be performed across the heat shield wall
+    - Another 1-D simulation might be performed along the heat shield contour
+    - The coolant is liquid hydrogen pressurized by the turbopumps, its temperature corresponds to subcooled liquid hydrogen
+    - The heat shield contour is provided by the aerodynamics team
+    - The coolant heat flux is determined using empirical relationships that were derived for a similar flow regime
+    - The nodes of the heat shield wall are as follows:
+        - The first node experiences a constant incident heat flux determined by re-entry parameters (corresponds to the stagnation point heat flux)
+        - The first node has thermal diffusivity that spreads the heat to the adjacent node
+        - The wall itself is represented by a couple nodes up to the coolant channel wall
+        - This node experiences heat flux to the coolant
+        - The coolant itself is considered as a bulk fluid that represents the last node in the chain
+    - The coolant is considered as a bulk fluid, meaning its properties are averaged over the flow, rather than at a specific point.
+    """
+    )
+    return
+
+
+@app.cell
 def _(
     Fluid,
     FluidsList,
