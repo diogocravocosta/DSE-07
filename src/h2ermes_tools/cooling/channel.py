@@ -7,6 +7,7 @@ class CircularChannel:
         length (float): Length of the channel in meters.
         roughness (float): Roughness height of the channel in meters.
     """
+
     def __init__(self, diameter, length, roughness):
         self.diameter = diameter
         self.length = length
