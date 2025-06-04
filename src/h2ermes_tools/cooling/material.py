@@ -39,16 +39,16 @@ class Material:
         Initialize a Material instance with its properties.
         """
         self.name = name
-        self.alpha = thermal_diffusivity
-        self.k = thermal_conductivity
-        self.rho = density
-        self.Cp = specific_heat
-        self.nu = poisson_ratio
-        self.E = youngs_modulus
-        self.cte = thermal_expansion_coeffient
-        self.eps = emissivity
-        self.uts = ultimate_strength
-        self.Ra = roughness_height
+        self.thermal_diffusivity = thermal_diffusivity
+        self.thermal_conductivity = thermal_conductivity
+        self.density = density
+        self.specific_heat = specific_heat
+        self.poisson_ratio = poisson_ratio
+        self.youngs_modulus = youngs_modulus
+        self.thermal_expansion_coeffient = thermal_expansion_coeffient
+        self.emissivity = emissivity
+        self.ultimate_strength = ultimate_strength
+        self.roughness_height = roughness_height
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """
@@ -58,7 +58,7 @@ class Material:
             conductivity_values (np.ndarray): Array of thermal conductivity values [W/m/K].
             temperature_values (np.ndarray): Array of corresponding temperatures [K].
         """
-        self.k = interpolate.interp1d(
+        self.thermal_conductivity = interpolate.interp1d(
             temperature_values,
             conductivity_values,
             kind="linear",
@@ -104,11 +104,11 @@ Ti6Al4V.set_thermal_conductivity(
 k = 23  # thermal conductivity [W/m/K] at 500 C
 Cp = 590  # specific heat [J/kg/K] at 500 C
 rho = 7750  # density [kg/m^3] at 500 C
-v = 1  # poiosson ratio
-E = 1  # youngs modulus [Pa]
-cte = 1  # thermal expasion coefficinent [1/K]
-uts = 1  # ultimate strength [Pa]
-eps = 0.8  # thermal emissivity
+v = 0.3  # poiosson ratio
+E = 193e9  # youngs modulus [Pa]
+cte = 15.9e-6  # thermal expasion coefficinent [1/K]
+uts = 515e6  # ultimate strength [Pa]
+eps = 0.5  # thermal emissivity
 Ra = 0.9e-5  # effective roughness height [m] from Materialize
 alpha = k / rho / Cp  # thermal diffusivity [m^2/s]
 SS14404 = Material("SS14404", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
@@ -124,10 +124,10 @@ k = 16.2  # thermal conductivity [W/m/K] at 500 C
 Cp = 500  # specific heat [J/kg/K] at 500 C
 rho = 7900  # density [kg/m^3] at 500 C
 v = 0.3  # Poisson ratio
-E = 1  # Youngs modulus [Pa]
-cte = 1  # thermal expansion coefficient [1/K]
-uts = 1  # ultimate strength [Pa]
-eps = 0.8  # thermal emissivity
+E = 200e9  # Youngs modulus [Pa]
+cte = 15.9e-6 # thermal expansion coefficient [1/K]
+uts = 600e9  # ultimate strength [Pa]
+eps = 0.9  # thermal emissivity (applicable for highly oxidized surfaces)
 Ra = 0.9e-5  # effective roughness height [m] from Materialise
 alpha = k / rho / Cp  # thermal diffusivity [m^2/s]
 SS14845 = Material("SS14845", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
@@ -135,7 +135,7 @@ SS14845 = Material("SS14845", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
 
 if __name__ == "__main__":
     # Example usage
-    Ti6Al4V.plot_property(Ti6Al4V.k, "Thermal Conductivity [W/m/K]")
-    SS14404.plot_property(SS14404.k, "Thermal Conductivity [W/m/K]")
-    print(Ti6Al4V.k(500))  # Get thermal conductivity at 500 K
-    print(SS14404.k(500))  # Get thermal conductivity at 500 K
+    Ti6Al4V.plot_property(Ti6Al4V.thermal_conductivity, "Thermal Conductivity [W/m/K]")
+    SS14404.plot_property(SS14404.thermal_conductivity, "Thermal Conductivity [W/m/K]")
+    print(Ti6Al4V.thermal_conductivity(500))  # Get thermal conductivity at 500 K
+    print(SS14404.thermal_conductivity(500))  # Get thermal conductivity at 500 K
