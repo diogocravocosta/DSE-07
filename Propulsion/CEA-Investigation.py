@@ -44,7 +44,7 @@ C = CEA_Obj( oxName='LOX', fuelName='LH2', pressure_units='Pa', cstar_units='m/s
 
 #------------------------------------------ Assuming a Certain O/F Ratio  -----------------------------------------------------------------------------------------
 
-
+MR = 6
 #print(C.get_Cstar(Pc=6000000, MR=6.0))
 
 #chamber_pressures = np.linspace(4*10**6, 10*10**6, 10000)  # Chamber pressures from 1 to 6 MPa
@@ -63,32 +63,23 @@ C = CEA_Obj( oxName='LOX', fuelName='LH2', pressure_units='Pa', cstar_units='m/s
 # plt.legend()
 # plt.show()
 
-# Current Inputs
-
-MR = 6
-
-pc = 6.1*10**6  # Chamber pressure in Pa  (vinci) 
-
-
 IspArr = []
- 
 
-area_ratios = np.linspace(20, 200, 1000)
+pc = 6.1*10**6  # Chamber pressure in Pa  (vinci)  
 
-#print(C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78))  # Example Isp calculation for a specific area ratio
-#print(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3) #corrected Isp so that if it deviates as much as the RS 25 we can get 450 in reality
-Engine_arr = [['RS-25',20.64*10**6, 6.03, 78, 452.3],['RL10', 4.412*10**6, 5.88, 280, 462],['Vinci', 6.1*10**6, 5.8, 240, 457],['YF-75D', 4.1*10**6, 6.0, 80, 442.6],['YF-79', 4.1*10**6, 6.0, 160, 455.2],['LE-5B', 3.58*10**6, 5, 110, 447], ['LE-9', 10.0*10**6, 5.9, 37, 426]]
+area_ratios = np.linspace(20, 140, 1000)
+
+print(C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78))  # Example Isp calculation for a specific area ratio
+print(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3) #corrected Isp so that if it deviates as much as the RS 25 we can get 450 in reality
+Engine_arr = [['RS-25',20.64*10**6, 6.03, 78]['RL10', 4.412*10**6, 5.88, 280, 462],['Vinci', 6.1*10**6, 5.8, 240, 457],['YF-75D', 4.1*10**6, 6.0, 80, 442.6],['YF-79', 4.1*10**6, 6.0, 160, 455.2],['LE-5B', 3.58*10**6, 5, 110, 447], ['LE-9', 10.0*10**6, 5.9, 37, 426]]
 
 for i in range(len(Engine_arr)):
-    Engine_arr[i].append(C.get_Isp(Pc=Engine_arr[i][1], MR=Engine_arr[i][2], eps=Engine_arr[i][3]))
-    Engine_arr[i].append((Engine_arr[i][-2]-Engine_arr[i][-1])/Engine_arr[i][-2]*100)
+    IspArr.append(C.get_Isp(Pc=Engine_arr[i][1], MR=Engine_arr[i][2], eps=Engine_arr[i][3]))
+    
 
-correction_factor = np.average([Engine_arr[i][-1] for i in range(len(Engine_arr))])
-print(correction_factor)
-
-for e in area_ratios:
-    isp = C.get_Isp(Pc=pc, MR=MR, eps=e)
-    IspArr.append(isp)
+# for e in area_ratios:
+#     isp = C.get_Isp(Pc=pc, MR=MR, eps=e)
+#     IspArr.append(isp)
 
 # plt.plot(area_ratios, IspArr, label='Isp at MR=%.2f' % MR)
 # plt.xlabel('Area Ratio')
@@ -98,12 +89,5 @@ for e in area_ratios:
 # plt.legend()
 # plt.show()
 
-
-#print("The necessary area ratio to achieve 450 seconds of Isp is: %.2f" % (necesarry_eps))
-#Isp_chosen = 450*(1-correction_factor/100)
-
-necesarry_eps = np.interp(450*(1-correction_factor/100), IspArr, area_ratios) #assume we design for 450 s
-isp_theoretical = C.get_Isp(Pc=pc, MR=MR, eps=necesarry_eps)
-
-
+# print("The necessary area ratio to achieve 450 seconds of Isp is: %.2f" % (np.interp(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3, IspArr, area_ratios)))
 
