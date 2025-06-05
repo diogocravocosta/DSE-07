@@ -1,3 +1,9 @@
+"""
+This file contains the ascent simulation for our second stage.
+
+It also represents a beautiful example of a bad code so don't take too much inspiration from it.
+"""
+
 import pandas as pd
 import numpy as np
 import time
