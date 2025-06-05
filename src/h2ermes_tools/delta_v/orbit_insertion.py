@@ -178,9 +178,19 @@ if __name__ == '__main__':
     plt.grid(True)
     plt.show()
 
-
-
     print(trajectory.loc[len(trajectory)-1])
 
     print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
     print('time:', end-start)
+
+    """
+    Given
+    specific_impulse = 450
+    initial_horizontal_velocity = 2280
+    initial_vertical_velocity = 1040
+    initial_altitude = 81700
+    target_orbital_altitude = 200000
+    
+    The delta V with thrust to weight ratio of 0.88 is 5715 m/s with 7.81 degrees offset from flightpath angle.
+    The delta V with thrust to weight ratio of 1.2 is 5630 m/s with 0 degrees offset from flightpath angle.
+    """
