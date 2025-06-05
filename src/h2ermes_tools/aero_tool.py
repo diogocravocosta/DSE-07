@@ -46,6 +46,8 @@ class bluntBody:
                     self.C_x_tilde.append(0)
                     self.C_y_tilde.append(0)
             
+            self.c_l = ((self.C_y + self.C_y_tilde)*np.cos(self.alpha)) - ((self.C_x + self.C_x_tilde)*np.cos(self.alpha))
+            
             self.D_x = 0.5 * self.rho_at * self.vel**2 * np.pi*self.B**2 * (self.C_x + self.C_x_tilde)
             self.L_y = 0.5 * self.rho_at * self.vel**2 * np.pi*self.B**2 * (self.C_y + self.C_y_tilde)
 
@@ -62,10 +64,10 @@ class bluntBody:
     
     def plots(self, mode):
         if mode == 1:
-            plt.plot(self.alpha * 180/np.pi, self.C_x + self.C_x_tilde, label="Cx coefficient", color="blue")
-            plt.plot(self.alpha * 180/np.pi, self.C_y + self.C_y_tilde, label="Cy coefficient", color="red")
-            plt.plot(self.alpha * 180/np.pi, (self.C_y + self.C_y_tilde)/(self.C_x + self.C_x_tilde), label="L/D", color="green")
-            
+            #plt.plot(self.alpha * 180/np.pi, self.C_x + self.C_x_tilde, label="Cx coefficient", color="blue")
+            #plt.plot(self.alpha * 180/np.pi, self.C_y + self.C_y_tilde, label="Cy coefficient", color="red")
+            #plt.plot(self.alpha * 180/np.pi, (self.C_y + self.C_y_tilde)/(self.C_x + self.C_x_tilde), label="L/D", color="green")
+            plt.plot(self.alpha * 180/np.pi, self.c_l, label="C_l coefficient", color="red")
             #plt.plot(self.alpha * 180/np.pi, self.D_x, label = "Drag force", color = "black")
             #plt.plot(self.alpha * 180/np.pi, self.L_y, label = "Lift force", color = "black")
 
@@ -134,8 +136,8 @@ if __name__ == "__main__":
     c = 2 # arc height of blunt nose
     vel = 4000 #test velocity
     rho_at = 3.31E-04 #test atmosphere
-    Rc = 2.92 #min radius of cone
-    a = 14 #length of cone
+    Rc = B/100 #min radius of cone
+    a = 23 #length of cone
     vels = [1000,2000,3000,4000,5000,6000,7000]
     rho_atmos = [0.1, 0.5, 0.7, 0.8, 0.9, 1.1, 1.5]
     aoa = 30 * np.pi/180
