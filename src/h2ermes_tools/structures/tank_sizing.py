@@ -65,55 +65,6 @@ def tank_overall_dimensions():
         print(f"For {ratio_radius=}, {phi[i]=}:\n{R[i]=}\n{r[i]=}\n{h[i]=}\n")
     print(sols)
 
-
-from scipy.optimize import fsolve
-
-def calculate_tank_length_LOX(volume, radius_ratio, phi_deg, R):
-    phi = np.radians(phi_deg)
-    r = radius_ratio * R
-    h = (R - r) / np.tan(phi)
-
-    def volume_equation(h_):
-        V_frustum = (np.pi / 3) * h_ * (r**2 + r * R + R**2)
-        V_hemispheres = (2/3) * np.pi * (R**3 + r**3)
-        return V_frustum + V_hemispheres - volume
-
-    # Optionally solve for h if volume doesn't match
-    h = fsolve(volume_equation, h)[0]
-    total_length = h + R + r
-    return h, R, r, total_length
-
-
-def calculate_tank_length_LH2(volume, radius_ratio, phi_deg, r):
-    phi = np.radians(phi_deg)
-    R = r / radius_ratio
-    h = (R - r) / np.tan(phi)
-
-    def volume_equation(h_):
-        V_frustum = (np.pi / 3) * h_ * (r**2 + r * R + R**2)
-        V_hemispheres = (2/3) * np.pi * (R**3 + r**3)
-        return V_frustum + V_hemispheres - volume
-
-    h = fsolve(volume_equation, h)[0]
-    total_length = h + r + R
-    return h, R, r, total_length
-
-# LOX tank
-lox_volume = 2.5  # m³
-lox_ratio = 0.9
-lox_phi = 10  # degrees
-h_LOX, R_LOX, r_LOX, L_LOX = calculate_tank_length_LOX(LOX_volume, lox_ratio, lox_phi, R)
-print("The height is: " + str(h_LOX))
-print("The R is: " + str(R_LOX))
-print("The r is: " + str(r_LOX))
-# LH2 tank
-lh2_volume = 6.0  # m³
-lh2_ratio = 0.5
-lh2_phi = 10  # degrees
-h_LH2, R_LH2, r_LH2, L_LH2 = calculate_tank_length_LH2(LH2_volume, lh2_ratio, lh2_phi, r_LOX)
-print("The height is: " + str(h_LH2))
-print("The R is: " + str(R_LH2))
-print("The r is: " + str(r_LH2))
 def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R):
     # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
     # V_total = pi/3 * h (r^2 + r*R + R^2)
