@@ -11,7 +11,8 @@ import rainflow
 #--------------------------------------------------------
 #Main Input Parameters
 #--------------------------------------------------------
-g_0 = 9.81
+#Constants Temperature
+g_0 = 9.81 # m/s^2, gravitational acceleration
 T_lh2 = 20 #K
 T_space=4 #K, temperature in space
 T_ambient_earth = 300 #K
@@ -22,36 +23,49 @@ delta_T_reentry = 150-T_lh2 #K, temperature difference during re-entry, will be 
 delta_T_space = T_lh2 - T_space
 delta_T_h2 = T_gh2 - T_lh2
 delta_T_ext = T_gh2_ext - T_lh2
-p_vent = 10**6 # Pa, pressure at which tank is vented. Taken from boil-off file
-fuel_mass = 42000 # kg, later import from dictionary in main branch
-t = 0.007 # m, tank thickness later import from tank sizing file in final sizing.
+
+# Geometry Properties
+phi = 20 # degrees, conical head angle, later import from tank sizing file in final sizing.
+r_small = 2.492 # m, radius of the small end of the tank, later import from tank sizing file in final sizing.
+tank_radius =r_small# 5 # m, tank radius, later import from tank sizing file in final sizing.
 tank_length = 14 # m, later import from tank sizing file in final sizing.
-thrust_engines = 2.13*10**6 # N, thrust of engines, later import from dictionary in main branch.
-fuel_reentry_LH2 = 3000 #kg, fuel mass during re-entry
-dry_mass = 30000 # kg, dry mass of the tank, later import from tank sizing file in final sizing.
-launch_mass = 200000# kg, total launch mass
-thrust_engines = 7.9 * (dry_mass+15000)*g_0
-da_dn = []
-a_crack = [] # to store crack growth
-a = 0.002 # initial crack size in m
-count = 0
+t = 0.007 # m, tank thickness later import from tank sizing file in final sizing.
+
+# Material Properties
 ss_E = 200e9  # Pa, steel
 ss_rho = 7850 # kg/m3, steel
 ss_alpha_expansion = 1.5e-6 #1/K
 ss_sigma_f = 600e6 # Pa, fatigue strength of steel
 ss_fatigue_m = 3
+
+# Mass Inputs
+fuel_reentry_LH2 = 3000 #kg, fuel mass during re-entry
+dry_mass = 30000 # kg, dry mass of the tank, later import from tank sizing file in final sizing.
+launch_mass = 200000# kg, total launch mass
+fuel_mass = 42000 # kg, later import from dictionary in main branch
+m_payload = 15500
+
+# Forces
+thrust_engines = 7.9 * (dry_mass+m_payload)*g_0# N, thrust of engines, later import from dictionary in main branch.
 g_reentry = 8
-g_launch = 6
+g_launch = 6 
+
+# Crack Growth Parameters
+da_dn = [] # initialize da/dn as an empty list
+a_crack = [] # to store crack growth
+a = 0.002 # initial crack size in m
+count = 0
+
+# Pressure Inputs
 p_launch_tank = 10**5
 p_dock_vent =3*10**5
-phi = 20 # degrees, conical head angle, later import from tank sizing file in final sizing.
-r_small = 2.492 # m, radius of the small end of the tank, later import from tank sizing file in final sizing.
-tank_radius =r_small# 5 # m, tank radius, later import from tank sizing file in final sizing.
+p_vent = 10**6 # Pa, pressure at which tank is vented. Taken from boil-off file
+
+# Conditions
 plot = True
 crack_cond = True
-#--------------------------------------------------------
+
 #Extrapolated parameters to apply paris law - 
-#--------------------------------------------------------
 paris_coeff_C = 5.131*10**(-14) # m/cycle
 paris_exp_m = 7.02 # dimensionless
 

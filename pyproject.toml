@@ -6,13 +6,13 @@ authors = [
     { name = "Jiri Kovar", email = "j.kovar@student.tudelft.nl" },
 ]
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
     "cython>=3.1.0",
     "marimo>=0.13.6",
     "matplotlib>=3.10.1",
-    "numpy>=2.2.5",
+    "numpy>=1.25.1",
     "pandas>=2.2.3",
     "pyfluids>=2.8.0",
     "tqdm>=4.67.1",

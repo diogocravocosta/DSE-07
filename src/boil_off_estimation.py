@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
-
+import pytest
 #------------------------------------------------
 #Input parameters
 #------------------------------------------------
@@ -134,7 +134,6 @@ n1 = P1*V1/T1/R
 m_vap_h2_1 = n1 * h2_nm/1000  # kg, mass of vaporized hydrogen
 n2 = V2*n1/V1
 m_vap_h2_2 = n2 * h2_nm/1000  # kg, mass of vaporized hydrogen after first stage
-
 mass_boil_off_launch = m_vap_h2_2 - m_vap_h2_1  # kg, mass of hydrogen vaporized during launch
 print(mass_boil_off_launch)
 print("Mass of vaporized hydrogen during launch: ", mass_boil_off_launch, "kg")
@@ -161,7 +160,6 @@ if m_gh2_refuel/m_gh2_orbit<1.01:
     print('Worst case boil off if pressure is held constant: ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar')
 else:
     print('run complex calc on boilfast to get initial and final pressure and temperature')
-
 
 #During re-entry
 ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry)  # Calculate new outer radius based on ullage height 
