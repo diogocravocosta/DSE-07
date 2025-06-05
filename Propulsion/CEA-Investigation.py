@@ -109,37 +109,4 @@ necesarry_eps = np.interp(desired_isp*(1-correction_factor/100), IspArr, area_ra
 isp_theoretical = C.get_Isp(Pc=pc, MR=MR, eps=necesarry_eps)
 
 
-#mixture ratio optimization
-
-struct_ratio = 0.121029372
-deltaV = 7264.29
-payload = 15000
-g0 = 9.81
-
-def calculate_propmass(struct_ratio, Isp, deltaV, payload):
-    mu = np.exp(deltaV/(Isp*g0))
-    prop_mass = payload*((mu-1)*(1-struct_ratio))/(1-mu*struct_ratio)*1.0126
-    return prop_mass
-
-
-mixture_ratios = np.linspace(4, 8, 10000) 
-Isp_list = []
-prop_masses = []
-print(1-correction_factor/100)
-for i in range(len(mixture_ratios)):
-    Isp_new = C.get_Isp(Pc=pc, MR=mixture_ratios[i], eps=necesarry_eps)/((1-correction_factor/100))
-    Isp_list.append(Isp_new)
-    prop_masses.append(calculate_propmass(struct_ratio=struct_ratio, Isp=Isp_new, deltaV=deltaV, payload=payload))
-
-
-
-optimal_index = np.argmin(prop_masses)
-print("Optimal MR is: "+str(mixture_ratios[optimal_index])+" with Isp "+str(Isp_list[optimal_index])+" and propellant mass "+str(np.min(prop_masses)))
-
-plt.plot(mixture_ratios, prop_masses)
-plt.xlabel('Mixture Ratio')
-plt.ylabel('Propellant Mass')
-plt.title('Propelant Mass vs Mixture Ratio')
-plt.grid(True)
-plt.show()
 
