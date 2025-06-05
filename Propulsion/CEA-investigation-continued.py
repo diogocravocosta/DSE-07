@@ -30,7 +30,7 @@ def obtain_cstar(Pc, MR):
 
 
 def obtain_exit_pressure(Pc, MR, eps, frozen=0, frozenAtThroat=0): 
-    pressure_ratio = C.get_PcOvPe(Pc= 6000000, MR=6, eps=eps, frozen=0, frozenAtThroat=0)
+    pressure_ratio = C.get_PcOvPePc(Pc= 6000000, MR=6, eps=eps, frozen=0, frozenAtThroat=0)
     P_exit = Pc / pressure_ratio
     return P_exit
 
