@@ -1,5 +1,4 @@
 import numpy as np
-from Mixture_Ratio_Optimizer import calculate_propmass
 import matplotlib.pyplot as plt
 import math
 
@@ -13,33 +12,29 @@ structural_mass = 20642  # Structural mass in kg
 delta_V_vacuum = 7264.29 # Delta V in vacuum in m/s
 delta_V_sea_level = 250  # Delta V in m/s for landing burn
 structural_mass = 21 #assuming structural mass is constant throughout the mission
+payload_mass = 15000
 #REVISE THIS VALUE
 
 
-def optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0):
+def optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0, structural_mass, delta_V_vacuum, delta_V_sea_level, payload_mass):
     # Filter out negative sea level Isp values
     mask = sea_level_Isp >= 0
     filtered_expansion_ratios = expansion_ratios[mask]
     filtered_vacuum_Isp = vacuum_Isp[mask]
     filtered_sea_level_Isp = sea_level_Isp[mask]
-    #mass ratio for vacuum burn
-    mass_ratio_vacuum = math.exp(delta_V_vacuum / (filtered_vacuum_Isp * g0))
-    #mass ratio for landing burn
-    mass_ratio_landing = math.exp(delta_V_sea_level / (filtered_sea_level_Isp * g0))
-
-
-
-
+    
     total_prop_mass_list = []
 
     # Loop over filtered values and compute total propellant mass
     for i in range(len(filtered_expansion_ratios)):
-        
-
-
-
-
-
+        #mass ratio for vacuum burn
+        mass_ratio_vacuum = math.exp(delta_V_vacuum / (filtered_vacuum_Isp[i] * g0))
+        propellant_mass_vacuum = mass_ratio_vacuum * (payload_mass + structural_mass) - structural_mass - payload_mass
+        print(propellant_mass_vacuum)
+    #mass ratio for landing burn
+        mass_ratio_landing= math.exp(delta_V_sea_level / (filtered_sea_level_Isp[i] * g0))
+        propellant_mass_sea_level = structural_mass * (mass_ratio_landing - 1)
+        print(propellant_mass_sea_level)
         total_mass = propellant_mass_vacuum + propellant_mass_sea_level
         total_prop_mass_list.append(total_mass)
 
@@ -55,5 +50,5 @@ def optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0):
 
     return filtered_expansion_ratios, total_prop_mass_list
 
-print(optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, sigma, structural_mass))
+print(optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0, structural_mass, delta_V_vacuum, delta_V_sea_level, payload_mass))
 
