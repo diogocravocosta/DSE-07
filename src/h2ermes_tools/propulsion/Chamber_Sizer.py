@@ -49,11 +49,11 @@ def exit_geometry(thrust, Isp=Isp, Pc=Pc, MR=MR, eps=eps):
     diameter = (4 * area / np.pi) ** 0.5
     return area, diameter
 
-print("exit pressure is", obtain_exit_pressure(Pc, MR, eps))
-print("exit area is", throat_geometry(thrust, Isp=Isp, Pc=Pc, MR=MR)[0]*eps)
-print("exit diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps))/np.pi)**0.5 * 2)
-print("area of the throat", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR))
-print("throat diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)))/np.pi)**0.5 * 2)
+#print("exit pressure is", obtain_exit_pressure(Pc, MR, eps))
+#print("exit area is", throat_geometry(thrust, Isp=Isp, Pc=Pc, MR=MR)[0]*eps)
+#print("exit diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps))/np.pi)**0.5 * 2)
+#print("area of the throat", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR))
+#print("throat diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)))/np.pi)**0.5 * 2)
 
 def chamber_geometry(thrust, Isp=Isp, Pc=Pc, MR=MR, eps=eps, L_star=0.76):
     #combustion chamber sizing
