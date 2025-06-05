@@ -10,7 +10,7 @@ C = CEA_Obj( oxName='LOX', fuelName='LH2', pressure_units='Pa', cstar_units='m/s
 
 Pc = 6000000
 MR = 6.0
-eps = 80
+eps = 120
 
 Isp = C.get_Isp(Pc, MR, eps=eps)
 thrust = 66700 #in N
@@ -46,37 +46,3 @@ print("exit presssure is", obtain_exit_pressure(Pc, MR, eps))
 print("exit area is", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps)
 print("exit diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)*eps))/np.pi)**0.5 * 2)
 print("area of the throat", area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR))
-print("throat diameter is", (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)))/np.pi)**0.5 * 2)
-
-#combustion chamber sizing
-#historical characteristic length between 0.76 to 1.02 m, lower more aggressive, higher more conservative (not really physical limits)
-
-#select 0.76 m for now
-a_t = area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)
-D_t = (((area_throat(thrust, Isp=Isp, Pc=Pc, MR=MR)))/np.pi)**0.5 * 2
-L_star = 0.76  # m
-v_c = L_star*a_t
-print(v_c)
-
-#mach in the chamber between 0.1 and 0.6, 0.1 to be conservative
-
-gamma = C.get_Chamber_MolWt_gamma(Pc=Pc, MR=MR, eps=eps)[-1]
-chamber_contraction_ratio = 8*(D_t*100)**-0.6+1.25 #statistical relation #1/mach *((2/(gamma+1)*(1+(gamma-1)/2*mach**2))**((gamma+1)/(2*(gamma-1))))
-combustion_length = L_star / chamber_contraction_ratio
-combustion_area = a_t * chamber_contraction_ratio
-
-
-#lc/dc ratios from 0.5 to 2.5
-
-D_c = np.sqrt(4*combustion_area/np.pi)
-#print(D_c)
-#print(combustion_area)
-#print(combustion_length)
-#print(combustion_length/ (np.sqrt(4*combustion_area/np.pi)))
-
-D_e = np.sqrt(4*eps*a_t/np.pi)
-
-#80% bell nozzle used
-l_f = 0.8
-
-print(chamber_contraction_ratio)
