@@ -230,3 +230,11 @@ if __name__ == '__main__':
 
     known_data = {'delta_v': [6210, 5937, 5810, 5739, 5673, 5645, 5629, 5618, 5610],
                   'thrust_to_weight_ratio': [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],}
+
+    plt.plot(known_data['thrust_to_weight_ratio'], known_data['delta_v'], marker='x', label='Known Data')
+    plt.xlabel('Thrust to Weight Ratio')
+    plt.ylabel('Delta V [m/s]')
+    plt.title('Delta V vs Thrust to Weight Ratio')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
