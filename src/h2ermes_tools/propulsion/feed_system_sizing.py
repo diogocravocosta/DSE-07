@@ -1,6 +1,6 @@
 import numpy as np
 
-mass_flow = 15.2 #in kg/s
+mass_flow = mass_flow #in kg/s
 velocity_propellant = 10 #m/s
 propellant_density = 70.85 #kg/m^3
 head_loss_coefficient= 1.2 #takes non-reversible pressure losses into account, 1.2 for radiused edges of injector inlet, 1.7 for sharp edges
