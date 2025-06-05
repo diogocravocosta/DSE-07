@@ -7,7 +7,6 @@ def test_energy():
     altitude = 2e5
     expected_energy = -30297373.76 # manually calculated
 
-    # np.testing.assert_almost_equal(helpers.calculate_circular_orbit_energy(altitude), expected_energy)
     assert helpers.calculate_circular_orbit_energy(altitude) == pytest.approx(expected_energy, rel=1e-3)
 
 def test_delta_V():
