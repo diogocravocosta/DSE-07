@@ -236,8 +236,6 @@ if __name__ == '__main__':
     plt.grid(True)
     plt.show()
 
-
-
     print(trajectory.loc[len(trajectory)-1])
 
     print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
