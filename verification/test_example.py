@@ -3,8 +3,8 @@
 import pytest
 import numpy.testing as npt
 
-from src.example import dot_product
-from src.example import Cylinder
+from h2ermes_tools.example import dot_product
+from h2ermes_tools.example import Cylinder
 
 def test_dot_product1():
     vec1 = [1, 2, 3]
