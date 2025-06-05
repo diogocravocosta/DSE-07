@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.optimize import fsolve
 materials_properties = {
     "Annealed 304L Stainless Steel": {
         "density": 7800,
@@ -19,8 +19,8 @@ tank_diameter = 7
 payload_mass = 15000
 thrust_engines = 2129573.909
 
-LH2_pressure = 1000 * safety_factor_pressure * 1000  # kPa (10bar)
-LOX_pressure = 270 * 2 * 1000  # kPa (2.7 bar)
+LH2_pressure = 1000 * safety_factor_pressure * 1000  # Pa (10bar)
+LOX_pressure = 270 * 2 * 1000  # Pa (2.7 bar)
 
 LH2_boiloff_margin = 1.1  # 10% ullage
 LOX_boiloff_margin = 1.0143 * 1.02  # 3% ullage
@@ -66,25 +66,75 @@ def tank_overall_dimensions():
     print(sols)
 
 
+from scipy.optimize import fsolve
+
+def calculate_tank_length_LOX(volume, radius_ratio, phi_deg, R):
+    phi = np.radians(phi_deg)
+    r = radius_ratio * R
+    h = (R - r) / np.tan(phi)
+
+    def volume_equation(h_):
+        V_frustum = (np.pi / 3) * h_ * (r**2 + r * R + R**2)
+        V_hemispheres = (2/3) * np.pi * (R**3 + r**3)
+        return V_frustum + V_hemispheres - volume
+
+    # Optionally solve for h if volume doesn't match
+    h = fsolve(volume_equation, h)[0]
+    total_length = h + R + r
+    return h, R, r, total_length
+
+
+def calculate_tank_length_LH2(volume, radius_ratio, phi_deg, r):
+    phi = np.radians(phi_deg)
+    R = r / radius_ratio
+    h = (R - r) / np.tan(phi)
+
+    def volume_equation(h_):
+        V_frustum = (np.pi / 3) * h_ * (r**2 + r * R + R**2)
+        V_hemispheres = (2/3) * np.pi * (R**3 + r**3)
+        return V_frustum + V_hemispheres - volume
+
+    h = fsolve(volume_equation, h)[0]
+    total_length = h + r + R
+    return h, R, r, total_length
+
+# LOX tank
+lox_volume = 2.5  # m³
+lox_ratio = 0.9
+lox_phi = 10  # degrees
+h_LOX, R_LOX, r_LOX, L_LOX = calculate_tank_length_LOX(LOX_volume, lox_ratio, lox_phi, R)
+print("The height is: " + str(h_LOX))
+print("The R is: " + str(R_LOX))
+print("The r is: " + str(r_LOX))
+# LH2 tank
+lh2_volume = 6.0  # m³
+lh2_ratio = 0.5
+lh2_phi = 10  # degrees
+h_LH2, R_LH2, r_LH2, L_LH2 = calculate_tank_length_LH2(LH2_volume, lh2_ratio, lh2_phi, r_LOX)
+print("The height is: " + str(h_LH2))
+print("The R is: " + str(R_LH2))
+print("The r is: " + str(r_LH2))
 def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R):
     # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
     # V_total = pi/3 * h (r^2 + r*R + R^2)
     # R = ((volume*3*np.tan(phi))/(np.pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio**2)))**(1/3)
     # length = ((1-radius_ratio) * R)/np.tan(phi)
     phi = phi / 180 * np.pi
-    r = radius_ratio * R
-    length = volume / (np.pi / 3 * (R**2 + r * R + r**2))
-    return length, R, r
+    r_1 = radius_ratio * R
+    length = (3*volume - 2*np.pi*R + 2*np.pi*r_1) / (np.pi * (R**2 + r_1 * R + r_1**2))
+    total_length = length + R
+    return length, R, r_1
 
 
 def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, LOX_radius):
     # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
     # V_total = pi/3 * h * (r^2 + r*R + R^2)
     phi = phi / 180 * np.pi
-    R = LOX_radius
+    R_1 = LOX_radius
     r = radius_ratio * R
-    length = volume / (np.pi / 3 * (R**2 + r * R + r**2))
-    return length, R, r
+    length = (3*volume - 2*np.pi*r**3 - 2*np.pi*R_1**3) / (np.pi * (R_1**2 + r * R_1 + r**2))
+    total_length = length + r+ R_1
+    return length, R_1, r
 
 
 def calculate_tank_thickness(
@@ -104,9 +154,11 @@ def calculate_tank_thickness(
     average_radius = (R + r) / (2 * np.cos(phi))
     max_thickness = 0.1  # 10 cm limit
     t = 0.001  # Start with 1 mm
+
     t_press = (propellant_pressure / 6894.76 * R) / (
         np.cos(phi) * (strength * 0.85 - propellant_pressure / 6894.76)
     )  # Pressure vessel design
+
     while t < max_thickness:
         # axial stress due to the launch acceleration
         V = np.pi * r * tank_length * t
@@ -117,16 +169,15 @@ def calculate_tank_thickness(
 
         # Combined Loading
         N_axial = np.cos(phi) * thrust - np.sin(phi) * 7800 * V * 2 * 9.81
-        M_bend = 7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * (t**2 / 2)
-        M_cr_bend = (0.33 + 0.1) * (2 * np.pi * E * r * t**2 * np.cos(phi) ** 2) / (
-            3 * (1 - 0.33**2)
-        ) + np.pi * r**3 * propellant_pressure / 2
-        P_cr_axial = (0.33 + 0.1) * (2 * np.pi * E * t**2 * np.cos(phi) ** 2) / (
-            3 * (1 - 0.33**2)
-        ) + np.pi * r**2 * propellant_pressure
-        p_cr = (0.92 * E * 0.75) / (
-            (tank_length / average_radius) * (average_radius / t) ** (5 / 2)
-        )
+        M_bend = 7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * tank_length/2#(t**2 / 2)
+
+        M_cr_bend = (0.33/(3 * (1 - 0.33**2)) + 0.1) * (2 * np.pi * E * r * t**2 * np.cos(phi) ** 2) + np.pi * r**3 * propellant_pressure / 2
+
+
+        P_cr_axial = (0.33/(3 * (1 - 0.33**2)) + 0.1) * (2 * np.pi * E * t**2 * np.cos(phi) ** 2) + np.pi * r**2 * propellant_pressure
+
+
+        p_cr = (0.92 * E * 0.75) / ((tank_length / average_radius) * (average_radius / t) ** (5 / 2)) #in N
         interaction = safety_factor * (N_axial / P_cr_axial + M_bend / M_cr_bend)
 
         if interaction <= 1.0:
@@ -178,7 +229,7 @@ strength = materials_properties[material]["strength"]  # Pa
 young_modulus = materials_properties[material]["young modulus"]  # Pa
 
 tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX(
-    "LOX", LOX_volume, radius_ratio, phi, R
+    "LOX", LOX_volume, 0.9, phi, R
 )
 print("LOX Tank Length: " + str(tank_length_LOX))
 print("LOX Tank Bottom Diameter: " + str(R_LOX * 2))
