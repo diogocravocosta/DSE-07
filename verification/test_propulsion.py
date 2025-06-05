@@ -65,10 +65,10 @@ def test_filtering_behavior():
     
     assert np.all(filtered_ratios == np.array([10, 30]))  # Should remove index 1
 
-
+@pytest.fixture
 def mock_cea():
     """Mock the CEA_Obj class and its methods."""
-    with patch('your_module.CEA_Obj') as MockCEA:
+    with patch('h2ermes_tools.propulsion.Mixture_Ratio_Optimizer.CEA_Obj') as MockCEA:
         mock = MagicMock()
         mock.get_Cstar.return_value = 1580
         mock.get_PcOvPe.return_value = 120
