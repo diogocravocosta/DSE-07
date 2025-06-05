@@ -107,10 +107,11 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
         energy = velocity**2/2 - cn.gravitational_parameter/past_r
 
         if (enable_terminal_guidance
+                and throttle > 0
                 and target_orbital_altitude
                 and abs(past_r - (cn.earth_radius + target_orbital_altitude))/(cn.earth_radius + target_orbital_altitude) < 0.05
                 and velocity > target_orbit_velocity * 0.9
-                and throttle > 0):
+                ):
             # Terminal guidance
             target_r_double_dot = -past_r_dot / 10
             try:
@@ -124,6 +125,8 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
             pitch_angle = max(pitch_angle, 0)  # Don't pitch below horizontal
         elif guidance == 'vertical':
             pitch_angle = np.pi/2
+        else:
+            raise ValueError(f"Unknown guidance scheme: {guidance}")
 
         vertical_acceleration = -cn.gravitational_parameter / past_r ** 2 + past_tw * cn.g_0 * np.sin(pitch_angle)
         r_double_dot = vertical_acceleration + past_r * past_theta_dot ** 2
@@ -170,6 +173,29 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
 
     return pd.DataFrame(data, columns=states)
 
+"""
+Given
+specific_impulse = 450
+initial_horizontal_velocity = 2280
+initial_vertical_velocity = 1040
+initial_altitude = 81700
+
+All of the following use terminal guidance enabled
+
+The delta V is 6210 m/s with thrust to weight ratio of 0.6 and 26.5 degrees offset from gravity turn guidance.
+The delta V is 5937 m/s with thrust to weight ratio of 0.7 and 17 degrees offset from gravity turn guidance.
+The delta V is 5810 m/s with thrust to weight ratio of 0.8 and 11 degrees offset from gravity turn guidance.
+The delta V is 5739 m/s with thrust to weight ratio of 0.9 and 6.5 degrees offset from gravity turn guidance.
+The delta V is 5673 m/s with thrust to weight ratio of 1.0 and 3.7 degrees offset from gravity turn guidance.
+The delta V is 5645 m/s with thrust to weight ratio of 1.1 and 1.5 degrees offset from gravity turn guidance.
+The delta V is 5629 m/s with thrust to weight ratio of 1.2 and 0 degrees offset from gravity turn guidance.
+The delta V is 5618 m/s with thrust to weight ratio of 1.3 and -1.5 degrees offset from gravity turn guidance.
+The delta V is 5610 m/s with thrust to weight ratio of 1.4 and -3.5 degrees offset from gravity turn guidance.
+"""
+
+delta_v_twr_relation = {'delta_v'               : [6210, 5937, 5810, 5739, 5673, 5645, 5629, 5618, 5610],
+                        'thrust_to_weight_ratio': [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4], }
+
 if __name__ == '__main__':
 
     start = time.time()
@@ -214,30 +240,7 @@ if __name__ == '__main__':
     print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
     print('time:', end-start)
 
-    """
-    Given
-    specific_impulse = 450
-    initial_horizontal_velocity = 2280
-    initial_vertical_velocity = 1040
-    initial_altitude = 81700
-    
-    All of the following use terminal guidance enabled
-    
-    The delta V is 6210 m/s with thrust to weight ratio of 0.6 and 26.5 degrees offset from gravity turn guidance.
-    The delta V is 5937 m/s with thrust to weight ratio of 0.7 and 17 degrees offset from gravity turn guidance.
-    The delta V is 5810 m/s with thrust to weight ratio of 0.8 and 11 degrees offset from gravity turn guidance.
-    The delta V is 5739 m/s with thrust to weight ratio of 0.9 and 6.5 degrees offset from gravity turn guidance.
-    The delta V is 5673 m/s with thrust to weight ratio of 1.0 and 3.7 degrees offset from gravity turn guidance.
-    The delta V is 5645 m/s with thrust to weight ratio of 1.1 and 1.5 degrees offset from gravity turn guidance.
-    The delta V is 5629 m/s with thrust to weight ratio of 1.2 and 0 degrees offset from gravity turn guidance.
-    The delta V is 5618 m/s with thrust to weight ratio of 1.3 and -1.5 degrees offset from gravity turn guidance.
-    The delta V is 5610 m/s with thrust to weight ratio of 1.4 and -3.5 degrees offset from gravity turn guidance.
-    """
-
-    known_data = {'delta_v': [6210, 5937, 5810, 5739, 5673, 5645, 5629, 5618, 5610],
-                  'thrust_to_weight_ratio': [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],}
-
-    plt.plot(known_data['thrust_to_weight_ratio'], known_data['delta_v'], marker='x', label='Known Data')
+    plt.plot(delta_v_twr_relation['thrust_to_weight_ratio'], delta_v_twr_relation['delta_v'], marker='x', label='Known Data')
     plt.xlabel('Thrust to Weight Ratio')
     plt.ylabel('Delta V [m/s]')
     plt.title('Delta V vs Thrust to Weight Ratio')
