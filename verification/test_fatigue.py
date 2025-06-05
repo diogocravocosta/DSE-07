@@ -1,6 +1,6 @@
 import pytest
 import numpy.testing as npt
-import src.fatigue_calculation_tool as fct
+import h2ermes_tools.fatigue_calculation_tool as fct
 
 
 def test_mechanical_stress():
