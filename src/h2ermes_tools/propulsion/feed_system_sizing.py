@@ -17,3 +17,5 @@ propellant_channel_area, propellant_channel_diameter = obtain_size_propellant_ch
 # Print the results
 print(f"Propellant Channel Area: {propellant_channel_area:.6f} m^2")
 print(f"Propellant Channel Diameter: {propellant_channel_diameter:.6f} m")
+
+

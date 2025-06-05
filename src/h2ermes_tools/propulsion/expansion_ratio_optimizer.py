@@ -50,5 +50,7 @@ def optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0, st
 
     return filtered_expansion_ratios, total_prop_mass_list
 
-print(optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0, structural_mass, delta_V_vacuum, delta_V_sea_level, payload_mass))
+
+if __name__ == "__main__":
+    print(optimize_expansion_ratio(expansion_ratios, vacuum_Isp, sea_level_Isp, g0, structural_mass, delta_V_vacuum, delta_V_sea_level, payload_mass))
 
