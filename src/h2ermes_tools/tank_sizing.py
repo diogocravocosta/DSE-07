@@ -6,7 +6,7 @@ class TankSizer:
         self.volume = volume
         self.taper = taper
 
-        self.print = True
+        self.print = False
 
         self.find_configs()
 
@@ -49,3 +49,5 @@ class TankSizer:
 
 if __name__ == '__main__':
     ts = TankSizer(619, taper=0.1)
+
+    print(ts.r_top)

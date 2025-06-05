@@ -1,6 +1,11 @@
 #imports 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from tank_sizing import TankSizer
+import csv
+import pandas as pd
+import os
 
 class BluntBody:
     '''
@@ -36,8 +41,8 @@ class BluntBody:
         self.mass = mass
 
         #Calculated geometry 
-        self.sphere_radius = (2*self.cone_max_radius)**2 / (8*self.cone_length) + self.cone_length/2 #Radius of the hemisphere (base spherical base of the blunt body)
-        assert self.sphere_radius >= self.cone_max_radius, "Hemisphere radiys is too small, sphereRadius must be >= coneMaxRadius"
+        self.sphere_radius = (2*self.cone_max_radius)**2 / (8*self.base_arc_height) + self.base_arc_height/2 #Radius of the hemisphere (base spherical base of the blunt body)
+        assert self.sphere_radius >= self.cone_max_radius, "Hemisphere radius is too small, sphereRadius must be >= coneMaxRadius"
         self.mu_b = np.acos((self.sphere_radius - self.base_arc_height)/self.sphere_radius) #half arc angle of hemisphere
         self.alpha_max = np.pi/2 - self.mu_b #maximum angle of attack before requiring numerical integration
         self.cone_half_angle = np.arctan(self.cone_max_radius / ((self.cone_max_radius*self.cone_length) / (self.cone_max_radius-self.cone_min_radius))) #cone half angle
@@ -45,6 +50,7 @@ class BluntBody:
     def compute_aerodynamics(self, mode):
         '''
         Function: Computes the aerodynamic coefficients
+
         Mode 1: Computes aerodynamic coefficients for a range of angle of attacks
         Mode 2: Computes axial and normal force and thus the drag and lift forces over a range of velocities and densities
 
@@ -57,12 +63,14 @@ class BluntBody:
             rho_str = angle for tangential incidence at the cone
             c_l = lift coefficients
             c_d = drag coefficients
+            lift_over_drag = L/D force ratio
+            normal_over_axial = N/A force ratio
         '''
         if mode == 1:
             '''
             calculating axial and normal coefficients
             '''
-            self.aoa_all = np.linspace(0, self.alpha_max , 100)
+            self.aoa_all = np.linspace(0.1 * np.pi/180, self.alpha_max , 100)
             self.c_x_cap = 0.5 * (np.sin(self.aoa_all)**2) * (np.sin(self.mu_b)**2) + \
             (1 + np.cos(self.mu_b)**2) * (np.cos(self.aoa_all)**2)
             self.c_y_cap = np.sin(self.aoa_all) * np.cos(self.aoa_all) * (np.sin(self.mu_b)**2)
@@ -102,11 +110,11 @@ class BluntBody:
             #plt.plot(self.aoa_all * 180/np.pi, self.c_y_cap + self.c_y_cone, label = "normal force coeff", color = "blue")
             #plt.plot(self.aoa_all * 180/np.pi, self.c_x_cap + self.c_x_cone, label = "axial force coeff", color = "red")
             #plt.plot(self.aoa_all * 180/np.pi, self.normal_over_axial, label = "normal / axial", color = "green")
-            plt.plot(self.aoa_all * 180/np.pi, self.lift_over_drag, label="lift over drag", color = 'red')
-            plt.plot(self.aoa_all * 180/np.pi, self.c_l, label="lift coefficient", color = 'green')
-            plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
-            plt.legend()
-            plt.show()
+            # plt.plot(self.aoa_all * 180/np.pi, self.lift_over_drag, label="lift over drag", color = 'red')
+            # plt.plot(self.aoa_all * 180/np.pi, self.c_l, label="lift coefficient", color = 'green')
+            # plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
+            # plt.legend()
+            # plt.show()
 
     def draw_geometry(self):
         '''
@@ -162,46 +170,149 @@ class BluntBody:
 
         plt.show()
 
+    
+    def stability(self, file_name, mode):
+        '''
+        Function: To assess stability of a geometry
+        Input: Requires CSV file output from RASAero 
+
+        Mode 1: Considers the default output from RASAero
+        Mode 2: Considers the "Run Test" output from RASAero for a specific angle of attack
+        
+        Variables:
+            cl_alpha = cl-alpha slope
+            cmq_cmadot = stability coefficients
+            moment_inertia = moment of inertia
+            radius_gyration = radius of gyration
+        '''
+        self.moment_inertia = 231368.0069
+        self.radius_gyration = np.sqrt(self.moment_inertia / self.mass)
+                                       
+        if mode == 1:
+            current_dir = os.path.dirname(__file__)
+            data_path = os.path.join(current_dir, '..', 'data', file_name)
+            data_path = os.path.abspath(data_path)
+            print("Resolved path:", data_path)
+            data = pd.read_csv(data_path)
+
+            data_alpha_0 = data[data["Alpha"] == 0]
+            data_alpha_2 = data[data["Alpha"] == 2]
+            data_alpha_4 = data[data["Alpha"] == 4]
+
+            cl_alpha = np.array((data_alpha_4["CL"]) / 4)
+
+            cmq_cmadot = (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * cl_alpha
+            print(cmq_cmadot)
+            #print(np.array(data_alpha_0["Mach"]) )
+            plt.plot(np.array(data_alpha_4["Mach"]) , cmq_cmadot, label='stability')
+            plt.legend()
+            plt.show()
+    
+    def optimisation(self):
+        '''
+        Function: Runs a bunch of stuff to visualise the impact of changing certain geometries
+        '''
+
+        '''
+        Analysing effect of taper ratios 
+        '''
+        max_ld = []
+        max_ld_aoa = []
+        taper_ratios = np.arange(0, 0.98, 0.01)
+        volume = 619
+        for t in taper_ratios:
+            print("current taper ratio", t)
+            ts = TankSizer(volume, taper = t)
+            cone_length = ts.h
+            cone_max_radius = ts.r_bottom
+            cone_min_radius = ts.r_top
+            base_arc_height = 2
+            mass = 28000
+
+            body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
+            body.compute_aerodynamics(mode = 1)
+            max_ld_index = np.argmax(body.lift_over_drag)
+            max_ld.append(body.lift_over_drag[max_ld_index])
+            max_ld_aoa.append(body.aoa_all[max_ld_index])
+
+        x = taper_ratios
+        y = np.array(max_ld_aoa) * 180/np.pi
+        z = np.array(max_ld)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(x, y, z, cmap="viridis")
+
+        ax.set_xlabel('Taper Ratios')
+        ax.set_ylabel('Angle of attack')
+        ax.set_zlabel('L/D')
+
+        plt.show()
+
+        '''
+        Analysing effect of sphericity of base
+        '''
+        cone_length = 15
+        cone_max_radius = 5
+        cone_min_radius = 1
+        mass = 28000
+        max_ld = []
+        max_ld_aoa = []
+        sphericity_radius = np.linspace(0.1, cone_max_radius, 100)
+        for s in sphericity_radius:
+            base_arc_height = s
+            body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
+            body.compute_aerodynamics(mode = 1)
+            max_ld_index = np.argmax(body.lift_over_drag)
+            max_ld.append(body.lift_over_drag[max_ld_index])
+            max_ld_aoa.append(body.aoa_all[max_ld_index])
+
+        x = sphericity_radius
+        y = np.array(max_ld_aoa) * 180/np.pi
+        z = np.array(max_ld)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(x, y, z, cmap="viridis")
+
+        ax.set_xlabel('Base arc height')
+        ax.set_ylabel('Angle of attack')
+        ax.set_zlabel('L/D')
+
+        plt.show()
+
+
+
+
 if __name__ == "__main__":
     #CURRENT DIMENSIONS
-    # cone_length = 13.95
-    # cone_max_radius = 4.95
-    # cone_min_radius = 2.46
-    # base_arc_height = 2
-    # mass = 28000
-
     cone_length = 13.95
-    cone_max_radius = 5.5
+    cone_max_radius = 4.95
     cone_min_radius = 2.46
     base_arc_height = 2
     mass = 28000
 
-    # cone_length = 24.5
-    # cone_max_radius = 4.95
-    # cone_min_radius = 4.95/100
-    # base_arc_height = 2
-    # mass = 28000
 
-    #APOLLO CAPSULE
-    # cone_length = 2.662
-    # cone_max_radius = 1.956
-    # cone_min_radius = 0.01
-    # base_arc_height = 0.5
-    # mass = 28000
+    # #APOLLO CAPSULE
+    # # cone_length = 2.662
+    # # cone_max_radius = 1.956
+    # # cone_min_radius = 0.01
+    # # base_arc_height = 0.5
+    # # mass = 28000
 
-    body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass
-    )
+    body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
 
     body.draw_geometry()
 
     body.compute_aerodynamics(mode = 1)
 
-    base_surface_area = np.pi * 4.95**2
-    flap_area = (np.pi * cone_max_radius**2) - base_surface_area
-    max_ld_index = np.argmax(body.lift_over_drag)
-    print("maximum l/d = ", body.lift_over_drag[max_ld_index])
-    print("at angle of attack (deg) =", body.aoa_all[max_ld_index] * 180 / np.pi)
-    print("flap area required = ", flap_area)
+    body.stability(mode = 1, file_name = "HermesV1-RASAero.csv")
+
+    body.optimisation()
+
+
+
+
 
                 
                 
