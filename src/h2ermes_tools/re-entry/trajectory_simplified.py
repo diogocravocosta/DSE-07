@@ -12,7 +12,7 @@ class Constants:
     def __init__(self):
         self.g = ct.g_0       # m/s^2
         self.rho_0 = 1.225    # kg/m^3
-        self.R = ct.radius    # meters
+        self.R = ct.earth_radius    # meters
         self.Hs = 7200        # m
 
         self.beta = 1 / self.Hs
@@ -32,7 +32,7 @@ class GlidingEntry:
                  nose_radius=7,
                  lift_drag_ratio = None,
                  lift_parameter = None,
-                 boundary_layer="laminar",
+                 boundary_layer="turbulent",
                  range_to_cover = None
                  ):
         # CONSTANT
@@ -115,19 +115,20 @@ class GlidingEntry:
 
         # dataframe
         self.dataframe = pd.DataFrame({"altitude": self.altitude / 1000,
-                                       "normalized_velocity_ratio": self.normalized_v_ratio,
+                                       "normalized_velocity_ratio": self.normalized_v_ratio * self.v_c,
                                        "loads": self.a,
                                        "deceleration": self.a*9.81,
                                        "heatflux ratio": self.q_normalized,
                                        "heatflux": self.qc,
+                                       "v": self.v
                                        })
 
     def get_velocity(self):
         # CORRECT
-
+        v_c = np.sqrt(self.g * (self.Re + self.altitude))
         normalised_velocity_ratio = np.sqrt(self.lift_parameter / (
-                    0.5 * self.rho_0 * np.exp(-self.beta * self.altitude) * self.v_c ** 2 + self.lift_parameter))
-        v = normalised_velocity_ratio * self.v_c
+                    0.5 * self.rho_0 * np.exp(-self.beta * self.altitude) * v_c ** 2 + self.lift_parameter))
+        v = normalised_velocity_ratio * v_c
         v_min = (1 / self.v_c) * np.sqrt(2 * self.lift_parameter / self.rho_0) * self.v_c
 
         return normalised_velocity_ratio, v, v_min
@@ -189,7 +190,20 @@ class GlidingEntry:
         return qc*1e-3, qc_max*1e-3, normalised_heat_flux
 
 
-glide = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-20,h_0=120,m=30000,S=9,c_d=17,c_l=0.1)
+surface = np.pi * 4.92**2
+
+# glide_1 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=30000,S=surface,c_d= 1.4, c_l =  range_to_cover=3124643)
+
+glide_2 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=20000,S=surface,c_d=1.3,c_l=0.3)
+
+print(glide_2.flight_range_ratio*glide_2.Re, glide_2.lift_drag_ratio, glide_2.lift_parameter, glide_2.qc_max, glide_2.a_max)
 
 
-print(glide.qc_max)
+# glide_high = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=120,m=30000,S=9,c_d=1.2,c_l=1.2, lift_drag_ratio=1)
+#
+plot_1 = glide_2.dataframe.hvplot(x="v", y="altitude")
+# plot_2 = glide_2.dataframe.hvplot(x="v", y="altitude")
+# plot = plot_1 * plot_2
+hvplot.show(plot_1)
+
+
