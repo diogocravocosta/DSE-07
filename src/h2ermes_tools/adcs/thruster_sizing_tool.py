@@ -4,6 +4,7 @@ from h2ermes_tools.variables import mass_vehicle, launch_vehicle_dimensions, MMO
 
 # Constants and parameters for the spacecraft
 vehicle_mass = mass_vehicle.value  # kg
+rcs_dry_mass = 1.48 # kg, Dry mass of the RCS thrusters including valves
 vehicle_shape = "rectangular_prism"  # Shape of the spacecraft (Supposed to be a cone)
 # Spacecraft_dimensions, needs to be imported from constants file
 vehicle_dimensions = launch_vehicle_dimensions.value  # Length, Width, Height in meters
@@ -48,7 +49,7 @@ MMOI_vehicle = MMOI_vehicle.value  # Mass Moment of Inertia (MMOI) of the spacec
 thrusters = {
     "alphard_20": {
         "thrust": 10,  # in N
-        "Isp": 160,  # seconds
+        "Isp": 150, # seconds
         "power": 18,  # in W
         "moment_arm": np.linalg.norm(COM),  # in meters
     },
@@ -434,28 +435,28 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     #         number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["thrust"]
     #     ),
     # }
-    power_thrusters = {
-        # 'alphard_20': number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['power'] + \
-        #               number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['power'] + \
-        #               number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
-        "nammo_220": number_of_thrusters["nammo_220"]["x"]
-        * thrusters["nammo_220"]["power"]
-        + number_of_thrusters["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
-        + number_of_thrusters["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
-        "nammo_220_3": number_of_thrusters["nammo_220_3"]["x"]
-        * thrusters["nammo_220_3"]["power"]
-        + number_of_thrusters["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
-        + number_of_thrusters["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
-        "nammo_220_4": number_of_thrusters["nammo_220_4"]["x"]
-        * thrusters["nammo_220_4"]["power"]
-        + number_of_thrusters["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
-        + number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
-    }
+    # power_thrusters = {
+    #     # 'alphard_20': number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['power'] + \
+    #     #               number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['power'] + \
+    #     #               number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
+    #     "nammo_220": number_of_thrusters["nammo_220"]["x"]
+    #     * thrusters["nammo_220"]["power"]
+    #     + number_of_thrusters["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
+    #     + number_of_thrusters["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
+    #     "nammo_220_3": number_of_thrusters["nammo_220_3"]["x"]
+    #     * thrusters["nammo_220_3"]["power"]
+    #     + number_of_thrusters["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
+    #     + number_of_thrusters["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
+    #     "nammo_220_4": number_of_thrusters["nammo_220_4"]["x"]
+    #     * thrusters["nammo_220_4"]["power"]
+    #     + number_of_thrusters["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
+    #     + number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
+    # }
 
-    return number_of_thrusters, power_thrusters
+    return number_of_thrusters
 
 
-number_of_thrusters, power_thrusters = thruster_sizing(
+number_of_thrusters = thruster_sizing(
     thrusters, ang_acc_max, MMOI_vehicle
 )
 print("Number of thrusters required:", number_of_thrusters)
@@ -661,20 +662,43 @@ print("\nUpdated number of thrusters after reduction:", updated_positions)
 def mass_and_power_estimation(updated_positions, thrusters):
     """
     Function to compute total mass and power consumption of the thrusters.
+    Args:
+        updated_positions (dict): Dictionary containing updated thruster positions and directions.
+        thrusters (dict): Dictionary containing thruster specifications.
+    Returns:
+        total_power(float): Total power consumption of the thrusters in watts.
+        
    """
-    # power_thrusters = {
-    # "nammo_220": ["nammo_220"]["x"]
-    # * thrusters["nammo_220"]["power"]
-    # + number_of_thrusters["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
-    # + number_of_thrusters["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
-    # "nammo_220_3": number_of_thrusters["nammo_220_3"]["x"]
-    # * thrusters["nammo_220_3"]["power"]
-    # + number_of_thrusters["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
-    # + number_of_thrusters["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
-    # "nammo_220_4": number_of_thrusters["nammo_220_4"]["x"]
-    # * thrusters["nammo_220_4"]["power"]
-    # + number_of_thrusters["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
-    # + number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
-    # }
+    total_dry_mass = {
+        "nammo_220": updated_positions["nammo_220"]["x"] * rcs_dry_mass
+        + updated_positions["nammo_220"]["y"] * rcs_dry_mass
+        + updated_positions["nammo_220"]["z"] * rcs_dry_mass,
+        "nammo_220_3": updated_positions["nammo_220_3"]["x"] * rcs_dry_mass
+        + updated_positions["nammo_220_3"]["y"] * rcs_dry_mass
+        + updated_positions["nammo_220_3"]["z"] * rcs_dry_mass,
+        "nammo_220_4": updated_positions["nammo_220_4"]["x"] * rcs_dry_mass
+        + updated_positions["nammo_220_4"]["y"] * rcs_dry_mass
+        + updated_positions["nammo_220_4"]["z"] * rcs_dry_mass,
+    }
+    power_thrusters = {
+    "nammo_220": updated_positions["nammo_220"]["x"]
+    * thrusters["nammo_220"]["power"]
+    + updated_positions["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
+    + updated_positions["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
+    "nammo_220_3": updated_positions["nammo_220_3"]["x"]
+    * thrusters["nammo_220_3"]["power"]
+    + updated_positions["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
+    + updated_positions["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
+    "nammo_220_4": updated_positions["nammo_220_4"]["x"]
+    * thrusters["nammo_220_4"]["power"]
+    + updated_positions["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
+    + updated_positions["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
+    }
+    total_power = sum(power_thrusters.values())  # Total power consumption in W
+    total_dry_mass = sum(total_dry_mass.values())  # Total dry mass in kg
+    return total_power, total_dry_mass
 
+total_power_thrusters, total_dry_mass_thrusters = mass_and_power_estimation(updated_positions, thrusters)
+print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
+print("The total dry mass of the RCS thrusters is: ", total_dry_mass_thrusters, "kg")
 
