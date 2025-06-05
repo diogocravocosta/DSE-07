@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import fsolve
+
 materials_properties = {
     "Annealed 304L Stainless Steel": {
         "density": 7800,
@@ -10,7 +10,7 @@ materials_properties = {
 # Geometry
 R = 5  # m
 radius_ratio = 0.5
-phi = 10
+phi = np.deg2rad(10)  # phi in radians
 
 # Constraints
 safety_factor = 1.5
@@ -65,27 +65,22 @@ def tank_overall_dimensions():
         print(f"For {ratio_radius=}, {phi[i]=}:\n{R[i]=}\n{r[i]=}\n{h[i]=}\n")
     print(sols)
 
+
 def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R):
-    # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
-    # V_total = pi/3 * h (r^2 + r*R + R^2)
-    # R = ((volume*3*np.tan(phi))/(np.pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio**2)))**(1/3)
-    # length = ((1-radius_ratio) * R)/np.tan(phi)
-    phi = phi / 180 * np.pi
-    r_1 = radius_ratio * R
-    length = (3*volume - 2*np.pi*R + 2*np.pi*r_1) / (np.pi * (R**2 + r_1 * R + r_1**2))
-    total_length = length + R
-    return length, R, r_1
+    r = radius_ratio * R
+    h = (3 * volume - 2 * np.pi * R + 2 * np.pi * r) / (np.pi * (R**2 + r * R + r**2))
+    # total_length = h + R
+    return h, R, r
 
 
 def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, LOX_radius):
-    # R = ((V*3*tan(phi))/(pi * (1-radius_ratio) * (1+radius_ratio+radius_ratio^2)))^(1/3)
-    # V_total = pi/3 * h * (r^2 + r*R + R^2)
-    phi = phi / 180 * np.pi
-    R_1 = LOX_radius
+    R = LOX_radius
     r = radius_ratio * R
-    length = (3*volume - 2*np.pi*r**3 - 2*np.pi*R_1**3) / (np.pi * (R_1**2 + r * R_1 + r**2))
-    total_length = length + r+ R_1
-    return length, R_1, r
+    h = (3 * volume - 2 * np.pi * r**3 - 2 * np.pi * R**3) / (
+        np.pi * (R**2 + r * R + r**2)
+    )
+    # total_length = h + r + R
+    return h, R, r
 
 
 def calculate_tank_thickness(
@@ -101,7 +96,6 @@ def calculate_tank_thickness(
     thrust,
     gamma=0.65,
 ):
-    phi = phi / 180 * np.pi
     average_radius = (R + r) / (2 * np.cos(phi))
     max_thickness = 0.1  # 10 cm limit
     t = 0.001  # Start with 1 mm
@@ -113,22 +107,28 @@ def calculate_tank_thickness(
     while t < max_thickness:
         # axial stress due to the launch acceleration
         V = np.pi * r * tank_length * t
-        sigma_axial = (thrust) / (2 * np.pi * R * t * np.cos(phi))  # Roak textbook
+        # sigma_axial = (thrust) / (2 * np.pi * R * t * np.cos(phi))  # Roak textbook
 
         # bending stress due to lateral loads
-        sigma_bend = (7800 * V * 2.2 * 9.81 * (t**2 / 2)) / (t**3 / 12)
+        # sigma_bend = (7800 * V * 2.2 * 9.81 * (t**2 / 2)) / (t**3 / 12)
 
         # Combined Loading
         N_axial = np.cos(phi) * thrust - np.sin(phi) * 7800 * V * 2 * 9.81
-        M_bend = 7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * tank_length/2#(t**2 / 2)
+        M_bend = (
+            7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * tank_length / 2
+        )  # (t**2 / 2)
 
-        M_cr_bend = (0.33/(3 * (1 - 0.33**2)) + 0.1) * (2 * np.pi * E * r * t**2 * np.cos(phi) ** 2) + np.pi * r**3 * propellant_pressure / 2
+        M_cr_bend = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
+            2 * np.pi * E * r * t**2 * np.cos(phi) ** 2
+        ) + np.pi * r**3 * propellant_pressure / 2
 
+        P_cr_axial = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
+            2 * np.pi * E * t**2 * np.cos(phi) ** 2
+        ) + np.pi * r**2 * propellant_pressure
 
-        P_cr_axial = (0.33/(3 * (1 - 0.33**2)) + 0.1) * (2 * np.pi * E * t**2 * np.cos(phi) ** 2) + np.pi * r**2 * propellant_pressure
-
-
-        p_cr = (0.92 * E * 0.75) / ((tank_length / average_radius) * (average_radius / t) ** (5 / 2)) #in N
+        p_cr = (0.92 * E * 0.75) / (
+            (tank_length / average_radius) * (average_radius / t) ** (5 / 2)
+        )  # in N
         interaction = safety_factor * (N_axial / P_cr_axial + M_bend / M_cr_bend)
 
         if interaction <= 1.0:
