@@ -113,11 +113,14 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
                 and velocity > target_orbit_velocity * 0.9
                 ):
             # Terminal guidance
-            target_r_double_dot = -past_r_dot / 10
+            target_r_double_dot = -past_r_dot / 10  # arrest the radial velocity to zero in 10 seconds
             try:
-                target_pitch_angle = np.arcsin((target_r_double_dot - past_r * past_theta_dot ** 2 + cn.gravitational_parameter/past_r**2) / (cn.g_0 * past_tw))
+                target_pitch_angle = np.arcsin(
+                    (target_r_double_dot - past_r * past_theta_dot ** 2 + cn.gravitational_parameter/past_r**2)
+                    / (cn.g_0 * past_tw)
+                ) # Rearranging off the r_double_dot equation to find the pitch angle
             except FloatingPointError:
-                target_pitch_angle = np.pi/2
+                target_pitch_angle = np.pi/2  # set to vertical if value in arcsin is out of bounds
 
             pitch_angle = max(target_pitch_angle, 0) # Don't pitch below horizontal
         elif guidance == 'gravity turn':
