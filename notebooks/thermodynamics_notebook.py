@@ -78,6 +78,7 @@ def _(
     initial_internal_energy = _coolant.internal_energy
     final_internal_energy = _coolant.heating_to_temperature(temperature=target_temperature.value).internal_energy
     specific_heating_energy = final_internal_energy - initial_internal_energy
+    specific_heating_energy
     return (specific_heating_energy,)
 
 
@@ -139,7 +140,7 @@ def _(FluidsList, mo):
     # sliders
     vehicle_dry_mass = mo.ui.slider(10e3, 150e3, 1e3, value=60e3)
     coolant_mass = mo.ui.slider(1e3, 10e3, 1e2, value=5e3)
-    coolant_pressure = mo.ui.slider(1e5, 10e5, 0.1e5, value=1.0e5)
+    coolant_pressure = mo.ui.slider(1e5, 15e5, 0.1e5, value=1.0e5)
     entry_speed = mo.ui.slider(6000, 8000, 10, value=7000)
     heat_soak_fraction = mo.ui.slider(0.0, 1.0, 0.01, value=0.02)
     target_temperature = mo.ui.slider(300, 2000, 100, value=1500)
@@ -476,11 +477,10 @@ def _(Fluid, FluidsList, Input):
     _heating_energy = _final_energy.internal_energy - _initial_energy  # J/kg
 
     # calculate the boiled-off mass
-    _total_heat_flux = 1000  # W/m^2
+    _total_heat_flux = 3000  # W/m^2
     _surface_area = 70.6  # m^2
     _time = 24*3600  # s
     _total_heat = _total_heat_flux * _surface_area * _time  # J
-
     _boiled_off_mass = _total_heat / _heating_energy  # kg
 
     print("Heating energy of hydrogen from 13.8 K to 20 °C:", _heating_energy, "J/kg")

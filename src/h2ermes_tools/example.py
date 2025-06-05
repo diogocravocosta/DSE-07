@@ -2,6 +2,19 @@
 
 import numpy as np
 
+import data.constants as cn
+
+def free_fall_velocity(time: float) -> float:
+    """
+    Calculates free fall velocity after given time
+    Args:
+        time:
+
+    Returns:
+    velocity
+    """
+    return cn.g_0*time
+
 def dot_product(vector1: list[float], vector2: list[float]) -> float:
     """
     Returns sum of element-wise multiplication of two vectors of the same length.
