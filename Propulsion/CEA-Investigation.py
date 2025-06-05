@@ -18,71 +18,24 @@ C = CEA_Obj( oxName='LOX', fuelName='LH2', pressure_units='Pa', cstar_units='m/s
 
 #O_F = 6 # oxidizer to fuel ratio 
 
-#------------------------------------------Mixture ratio exploration -----------------------------------------------------------------------------------------
+area_ratios = np.linspace(20, 100, 10)  # Area ratios from 1 to 100
 
-# area_ratios = np.linspace(20, 140, 10)  # Area ratios from 1 to 100
-
-# Pc = 345000
-
-# for e in area_ratios:
-#     ispArr = []
-#     MR = 1.1
-#     mrArr = []
-#     while MR < 8:
-#         ispArr.append( C(Pc, MR, e ))
-#         mrArr.append(MR)
-#         MR += 0.05
-#     plt.plot(mrArr, ispArr, label='AreaRatio %g, Max ISP %g At MR %g'%(e, np.max(ispArr), np.max(mrArr[np.argmax(ispArr)])) )
-
-# plt.legend(loc='best')
-# plt.grid(True)
-# plt.title( C.desc )
-# plt.xlabel( 'Mixture Ratio' )
-# plt.ylabel( 'Isp ODE (sec)' )
-
-# plt.show()
-
-#------------------------------------------ Assuming a Certain O/F Ratio  -----------------------------------------------------------------------------------------
-
-MR = 6
-#print(C.get_Cstar(Pc=6000000, MR=6.0))
-
-#chamber_pressures = np.linspace(4*10**6, 10*10**6, 10000)  # Chamber pressures from 1 to 6 MPa
-
-
-# c_star_arr = []
-# MR = 6.0
-# for Pc in chamber_pressures:
-#     c_star_arr.append(C.get_Cstar(Pc=Pc, MR=MR))
-
-# plt.plot(chamber_pressures, c_star_arr, label='Cstar at MR=%.2f' % MR)
-# plt.xlabel('Chamber Pressure (Pa)')
-# plt.ylabel('Cstar (m/s)')
-# plt.title('Cstar vs Chamber Pressure for O/F Ratio %.2f' % MR)
-# plt.grid(True)
-# plt.legend()
-# plt.show()
-
-IspArr = []
-
-pc = 6.1*10**6  # Chamber pressure in Pa  (vinci)  
-
-area_ratios = np.linspace(20, 140, 1000)
-
-print(C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78))  # Example Isp calculation for a specific area ratio
-print(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3) #corrected Isp so that if it deviates as much as the RS 25 we can get 450 in reality
+Pc = 600000
 
 for e in area_ratios:
-    isp = C.get_Isp(Pc=pc, MR=MR, eps=e)
-    IspArr.append(isp)
+    ispArr = []
+    MR = 1.1
+    mrArr = []
+    while MR < 8:
+        ispArr.append( C(Pc, MR, e ))
+        mrArr.append(MR)
+        MR += 0.05
+    plt.plot(mrArr, ispArr, label='AreaRatio %g, Max ISP %g At MR %g'%(e, np.max(ispArr), np.max(mrArr[np.argmax(ispArr)])) )
 
-plt.plot(area_ratios, IspArr, label='Isp at MR=%.2f' % MR)
-plt.xlabel('Area Ratio')
-plt.ylabel('Isp (sec)')
-plt.title('Isp vs Area Ratio for O/F Ratio %.2f' % MR)
+plt.legend(loc='best')
 plt.grid(True)
-plt.legend()
+plt.title( C.desc )
+plt.xlabel( 'Mixture Ratio' )
+plt.ylabel( 'Isp ODE (sec)' )
+
 plt.show()
-
-print("The necessary area ratio to achieve 450 seconds of Isp is: %.2f" % (np.interp(450*C.get_Isp(Pc=20.64*10**6, MR=6.03, eps=78)/452.3, IspArr, area_ratios)))
-
