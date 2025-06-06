@@ -17,6 +17,9 @@ COM = np.array(
 )  # Center of mass of the spacecraft in meters
 re_entry_moment = 166000  # Maximum moment during re-entry in Nm
 redundancy_factor = 2  # Redundancy factor for thrusters
+I_sp_thrusters_nammo = 160 # s, Specific impulse of the Nammo thrusters
+g_0 = cn.g_0  # m/s^2, Standard 
+burn_time = 120  # in seconds, Max burn time of the Nammo thrusters
 
 
 
@@ -24,22 +27,6 @@ redundancy_factor = 2  # Redundancy factor for thrusters
 # print("Velocity of the spacecraft at altitude", altitude, "km:", velocity, "m/s")
 
 
-# def space_craft_properties( - Function is useless
-#     vehicle_mass,
-# ):  # MMOI Values from constants file will be used for actual calculations
-#     """
-#     Function to define the spacecraft properties.
-
-#     Returns:
-#         MMOI_vehicle (float): Mass moment of inertia of the spacecraft in kg.
-#     """
-#     # Calculate the mass moment of inertia (MMOI) for a rectangular prism
-#     length, width, height = vehicle_dimensions
-#     Ixx = (1 / 12) * vehicle_mass * (width**2 + height**2)
-#     Iyy = (1 / 12) * vehicle_mass * (length**2 + height**2)
-#     Izz = (1 / 12) * vehicle_mass * (length**2 + width**2)
-#     MMOI_vehicle = np.array([Ixx, Iyy, Izz])
-#     return MMOI_vehicle
 
 
 
@@ -47,27 +34,18 @@ MMOI_vehicle = MMOI_vehicle.value  # Mass Moment of Inertia (MMOI) of the spacec
 # print("Mass Moment of Inertia (MMOI) of the spacecraft:", MMOI_vehicle)
 
 thrusters = {
-    "alphard_20": {
-        "thrust": 10,  # in N
-        "Isp": 150, # seconds
-        "power": 18,  # in W
-        "moment_arm": np.linalg.norm(COM),  # in meters
-    },
     "nammo_220": {  # sea level thrust
         "thrust": 148,  # in N
-        "Isp": 160,  # seconds
         "power": 50,  # in W
         "moment_arm": np.linalg.norm(COM),  # in meters
     },
     "nammo_220_3": {  # nominal vacuum thrust
         "thrust": 220,  # in N
-        "Isp": 160,  # seconds
         "power": 50,  # in W
         "moment_arm": np.linalg.norm(COM),  # in meters
     },
     "nammo_220_4": {  # max vacuum thrust
         "thrust": 250,  # in N
-        "Isp": 160,  # seconds
         "power": 50,  # in W
         "moment_arm": np.linalg.norm(COM),  # in meters
     },
@@ -254,9 +232,7 @@ disturbance_load = np.sum(
 slew_rate = np.deg2rad(3)  # in rad/s
 # average slew rate for low earth orbit spacecraft with similar maneuverability requirements
 
-burn_time = 120  # in seconds, Max burn time of the Nammo thrusters
-
-ang_acc_max = slew_rate / burn_time  # in rad/s^2
+ang_acc_max = slew_rate / (burn_time)  # in rad/s^2
 
 
 
@@ -289,37 +265,43 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
         + disturbance_load
     )  # Torque produced by each thruster in Nm
 
-    # thrust_x_direction_one = torque_produced[0] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the x-direction
+
+    # Number of thrusters required for the nammo_220 engine with nominal sea level thrust
     thrust_x_direction_two = (torque_produced[0] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220"]["moment_arm"]
-    )  # Thrust required in the x-direction for the nammo_220 engine with nominal sea-level thrust
-    thrust_x_direction_three = (torque_produced[0] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220_3"]["moment_arm"]
     )  # Thrust required in the x-direction
-    thrust_x_direction_four = (torque_produced[0] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220_4"]["moment_arm"]
-    )  # Thrust required in the x-direction
-    # thrust_y_direction_one = torque_produced[1] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the y-direction
     thrust_y_direction_two = (torque_produced[1] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220"]["moment_arm"]
     )  # Thrust required in the y-direction
+    thrust_z_direction_two = (torque_produced[2] + re_entry_moment / 3) / (
+    2 * thrusters["nammo_220"]["moment_arm"]
+    )  # Thrust required in the z-direction
+    
+    
+    # Number of thrusters required for the nammo_220_3 engine with nominal vacuum thrust    
+    thrust_x_direction_three = (torque_produced[0] + re_entry_moment / 3) / (
+        2 * thrusters["nammo_220_3"]["moment_arm"]
+    )  # Thrust required in the x-direction
     thrust_y_direction_three = (torque_produced[1] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_3"]["moment_arm"]
     )  # Thrust required in the y-direction
-    thrust_y_direction_four = (torque_produced[1] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220_4"]["moment_arm"]
-    )  # Thrust required in the y-direction
-    # thrust_z_direction_one = torque_produced[2] / (2 * thrusters['alphard_20']['moment_arm']) + disturbance_load  # Thrust required in the z-direction
-    thrust_z_direction_two = (torque_produced[2] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220"]["moment_arm"]
-    )  # Calculate the number of thrusters required for each type
     thrust_z_direction_three = (torque_produced[2] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_3"]["moment_arm"]
     )  # Thrust required in the z-direction
+
+
+    # Number of thrusters required for the nammo_220_4 engine with maximum vacuum thrust
+    thrust_x_direction_four = (torque_produced[0] + re_entry_moment / 3) / (
+        2 * thrusters["nammo_220_4"]["moment_arm"]
+    )  # Thrust required in the x-direction
+    thrust_y_direction_four = (torque_produced[1] + re_entry_moment / 3) / (
+        2 * thrusters["nammo_220_4"]["moment_arm"]
+    )  # Thrust required in the y-direction
     thrust_z_direction_four = (torque_produced[2] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_4"]["moment_arm"]
     )  # Thrust required in the z-direction
 
+    # Calculate the number of thrusters required for each direction and thruster type
     number_of_thrusters["nammo_220"] = {
         "x": np.ceil(
             (
@@ -392,67 +374,6 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
         ),
     }
 
-    # Calculate the moment arm for each thruster type
-    # thruster_moment_arm['alphard_20'] = {
-    #     'x': torque_produced[0] / (number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['thrust']),
-    #     'y': torque_produced[1] / (number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['thrust']),
-    #     'z': torque_produced[2] / (number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['thrust'])
-    # }
-
-    # thruster_moment_arm["nammo_220"] = {
-    #     "x": torque_produced[0]
-    #     / (number_of_thrusters["nammo_220"]["x"] * thrusters["nammo_220"]["thrust"]),
-    #     "y": torque_produced[1]
-    #     / (number_of_thrusters["nammo_220"]["y"] * thrusters["nammo_220"]["thrust"]),
-    #     "z": torque_produced[2]
-    #     / (number_of_thrusters["nammo_220"]["z"] * thrusters["nammo_220"]["thrust"]),
-    # }
-    # thruster_moment_arm["nammo_220_3"] = {
-    #     "x": torque_produced[0]
-    #     / (
-    #         number_of_thrusters["nammo_220_3"]["x"] * thrusters["nammo_220_3"]["thrust"]
-    #     ),
-    #     "y": torque_produced[1]
-    #     / (
-    #         number_of_thrusters["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["thrust"]
-    #     ),
-    #     "z": torque_produced[2]
-    #     / (
-    #         number_of_thrusters["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["thrust"]
-    #     ),
-    # }
-    # thruster_moment_arm["nammo_220_4"] = {
-    #     "x": torque_produced[0]
-    #     / (
-    #         number_of_thrusters["nammo_220_4"]["x"] * thrusters["nammo_220_4"]["thrust"]
-    #     ),
-    #     "y": torque_produced[1]
-    #     / (
-    #         number_of_thrusters["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["thrust"]
-    #     ),
-    #     "z": torque_produced[2]
-    #     / (
-    #         number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["thrust"]
-    #     ),
-    # }
-    # power_thrusters = {
-    #     # 'alphard_20': number_of_thrusters['alphard_20']['x'] * thrusters['alphard_20']['power'] + \
-    #     #               number_of_thrusters['alphard_20']['y'] * thrusters['alphard_20']['power'] + \
-    #     #               number_of_thrusters['alphard_20']['z'] * thrusters['alphard_20']['power'],
-    #     "nammo_220": number_of_thrusters["nammo_220"]["x"]
-    #     * thrusters["nammo_220"]["power"]
-    #     + number_of_thrusters["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
-    #     + number_of_thrusters["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
-    #     "nammo_220_3": number_of_thrusters["nammo_220_3"]["x"]
-    #     * thrusters["nammo_220_3"]["power"]
-    #     + number_of_thrusters["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
-    #     + number_of_thrusters["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
-    #     "nammo_220_4": number_of_thrusters["nammo_220_4"]["x"]
-    #     * thrusters["nammo_220_4"]["power"]
-    #     + number_of_thrusters["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
-    #     + number_of_thrusters["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
-    # }
-
     return number_of_thrusters
 
 
@@ -460,68 +381,6 @@ number_of_thrusters = thruster_sizing(
     thrusters, ang_acc_max, MMOI_vehicle
 )
 print("Number of thrusters required:", number_of_thrusters)
-# print("Moment arm for each thruster type:", thruster_moment_arm["nammo_220_4"])
-# print("Power required for each thruster type:", power_thrusters)
-
-# print("Coordinates of the center of mass of H2ermes: ", COM)
-
-# def thruster_combinations(number_of_thrusters):
-#     """
-#     Function to reduce the number of thrusters for each type and output the updated number of thrusters.
-#     Args:
-#         number_of_thrusters (dict): Dictionary containing the number of thrusters required for each type.
-#         thrusters (dict): Dictionary containing thruster specifications.
-#     Returns:
-#         dict: Updated dictionary containing the number of thrusters required for each type.
-     
-#     """
-    
-#     for thruster_type in number_of_thrusters.keys():
-#         if thruster_type == "nammo_220_3":
-#             # For the nammo_220_3 thruster, reduce
-#             number_of_thrusters[thruster_type]["x"] = (
-#                 number_of_thrusters[thruster_type]["x"] // 3
-#             )
-#             number_of_thrusters[thruster_type]["y"] = ( 
-#                 number_of_thrusters[thruster_type]["y"] // 3
-#             )
-#             number_of_thrusters[thruster_type]["z"] = (
-#                 number_of_thrusters[thruster_type]["z"] // 3 
-#             )
-            
-            
-#         elif thruster_type == "nammo_220_4":
-#             # For the nammo_220_4 thruster, reduce
-#             number_of_thrusters[thruster_type]["x"] = (
-#                 number_of_thrusters[thruster_type]["x"] // 4
-#             )
-#             number_of_thrusters[thruster_type]["y"] = ( 
-#                 number_of_thrusters[thruster_type]["y"] // 4
-#             )
-#             number_of_thrusters[thruster_type]["z"] = ( 
-#                 number_of_thrusters[thruster_type]["z"] // 4
-#             )
-            
-#         elif thruster_type == "nammo_220":
-#             #For other thrusters, divide it by two
-#             number_of_thrusters[thruster_type]["x"] = (
-#                 number_of_thrusters[thruster_type]["x"] // 2
-#             )
-#             number_of_thrusters[thruster_type]["y"] = (
-#                 number_of_thrusters[thruster_type]["y"] // 2
-#             )
-#             number_of_thrusters[thruster_type]["z"] = (
-#                 number_of_thrusters[thruster_type]["z"] // 2
-#             )
-            
-
-# updated_thruster_numbers = thruster_combinations(number_of_thrusters)
-#print(updated_thruster_numbers)
-
-
-
-
-
 
 def get_thruster_positions(COM, thrusters, number_of_thrusters):
     """
@@ -587,7 +446,7 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
                 if i == 0:
                     sign = 1
                     y_offset = sign * moment_arm
-                    z_offset = sign * moment_arm
+                    z_offset = - sign * moment_arm
                 else:
                     # Alternate offsets for symmetry
                     sign = 1 if i % 2 == 0 else -1
@@ -605,7 +464,7 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
             for i in range(n_thrusters_y):
                 if i == 0:
                     sign = 1
-                    x_offset = sign * moment_arm
+                    x_offset = - sign * moment_arm
                     z_offset = sign * moment_arm
                 else:
                     # Alternate offsets for symmetry
@@ -625,12 +484,12 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
                 if i == 0:
                     sign = 1
                     x_offset = sign * moment_arm
-                    y_offset = sign * moment_arm
+                    y_offset = - sign * moment_arm
                 else:
                     # Alternate offsets for symmetry
                     sign = 1 if i % 2 == 0 else -1
                     x_offset = sign * moment_arm
-                    y_offset = sign * moment_arm
+                    y_offset =  sign * moment_arm
                 pos = np.array([x_offset, y_offset, 0])
                 direction = np.array([0, 0, sign])
                 all_positions[thruster_type]["z"].append(
@@ -643,23 +502,24 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
 
 
 all_thruster_positions, updated_positions = get_thruster_positions(COM, thrusters, number_of_thrusters)
+print(updated_positions)
 
-print("\nAll thruster positions:")
-for thruster_type in all_thruster_positions:
-    print(f"\n{thruster_type}:")
-    for axis in ['x', 'y', 'z']:
-        print(f"\n  {axis}-axis thrusters:")
-        for i, thruster in enumerate(all_thruster_positions[thruster_type][axis]):
-            print(f"    Thruster {i+1}:")
-            print(f"      Position: {thruster['position']}")
-            print(f"      Direction: {thruster['direction']}")
+# print("\nAll thruster positions:")
+# for thruster_type in all_thruster_positions:
+#     print(f"\n{thruster_type}:")
+#     for axis in ['x', 'y', 'z']:
+#         print(f"\n  {axis}-axis thrusters:")
+#         for i, thruster in enumerate(all_thruster_positions[thruster_type][axis]):
+#             print(f"    Thruster {i+1}:")
+#             print(f"      Position: {thruster['position']}")
+#             print(f"      Direction: {thruster['direction']}")
 
-print("\nUpdated number of thrusters after reduction:", updated_positions)
-
-
+# print("\nUpdated number of thrusters after reduction:", updated_positions)
 
 
-def mass_and_power_estimation(updated_positions, thrusters):
+
+
+def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_time):
     """
     Function to compute total mass and power consumption of the thrusters.
     Args:
@@ -669,6 +529,7 @@ def mass_and_power_estimation(updated_positions, thrusters):
         total_power(float): Total power consumption of the thrusters in watts.
         
    """
+    #Calculate total dry mass of the thrusters
     total_dry_mass = {
         "nammo_220": updated_positions["nammo_220"]["x"] * rcs_dry_mass
         + updated_positions["nammo_220"]["y"] * rcs_dry_mass
@@ -680,6 +541,35 @@ def mass_and_power_estimation(updated_positions, thrusters):
         + updated_positions["nammo_220_4"]["y"] * rcs_dry_mass
         + updated_positions["nammo_220_4"]["z"] * rcs_dry_mass,
     }
+    #Calculate total propellant mass for each thrust level
+    thrust_nammo_220 = thrusters["nammo_220"]["thrust"]
+    thrust_nammo_220_3 = thrusters["nammo_220_3"]["thrust"]
+    thrust_nammo_220_4 = thrusters["nammo_220_4"]["thrust"]
+    # Propellant mass for each thruster type
+    propellant_mass = {
+        "nammo_220": (updated_positions["nammo_220"]["x"] * thrust_nammo_220
+        + updated_positions["nammo_220"]["y"] * thrust_nammo_220
+        + updated_positions["nammo_220"]["z"] * thrust_nammo_220
+    )* burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+
+       "nammo_220_3":  (updated_positions["nammo_220_3"]["x"] * thrust_nammo_220_3
+        + updated_positions["nammo_220_3"]["y"] * thrust_nammo_220_3
+        + updated_positions["nammo_220_3"]["z"] * thrust_nammo_220_3
+        ) * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+
+        "nammo_220_4": (updated_positions["nammo_220_4"]["x"] * thrust_nammo_220_4
+        + updated_positions["nammo_220_4"]["y"] * thrust_nammo_220_4
+        + updated_positions["nammo_220_4"]["z"] * thrust_nammo_220_4
+         ) * burn_time / (I_sp_thrusters_nammo * g_0)  # in kg
+
+    }
+
+    # Mass calculations for thrusters
+    total_propellant_mass = sum(propellant_mass.values())  
+    print(total_propellant_mass) # Total propellant mass in kg
+    total_dry_mass = sum(total_dry_mass.values())  # Total dry mass in kg
+    total_mass = total_dry_mass + total_propellant_mass  # Total mass in kg
+    #Calculate total power consumption of the thrusters
     power_thrusters = {
     "nammo_220": updated_positions["nammo_220"]["x"]
     * thrusters["nammo_220"]["power"]
@@ -695,10 +585,43 @@ def mass_and_power_estimation(updated_positions, thrusters):
     + updated_positions["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
     }
     total_power = sum(power_thrusters.values())  # Total power consumption in W
-    total_dry_mass = sum(total_dry_mass.values())  # Total dry mass in kg
-    return total_power, total_dry_mass
+    return total_power, total_mass, total_dry_mass, total_propellant_mass
 
-total_power_thrusters, total_dry_mass_thrusters = mass_and_power_estimation(updated_positions, thrusters)
+total_power_thrusters, total_mass_thrusters, total_dry_mass_thrusters, total_prop_mass_thrusters = mass_and_power_estimation(updated_positions, thrusters)
 print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
 print("The total dry mass of the RCS thrusters is: ", total_dry_mass_thrusters, "kg")
+print("The total propellant mass of the RCS thrusters is: ", total_prop_mass_thrusters, "kg")
+print("The total mass of the RCS thrusters is: ", total_mass_thrusters, "kg")
+
+htp_density = 1.1345 #kg/m^3, limiting density at highest inlet temperature of 80 degrees celsius
+
+def acs_tank_design(htp_density, total_prop_mass):
+    tank_pressure = 20e6  # in Pa, 20 bars is the assumed tank pressure
+    Materials = {
+        "Stainless Steel SS304L": 
+                     { 'yield_strength': 215 * 10**6, # in Pa
+                      'density': 7930 # kg/m**3 
+        },
+
+                "Titanium Ti6Al4V Alloy": 
+                    { 'yield_strength': 310 * 10**6, # in Pa
+                    'density': 4430 # kg/m**3
+                }  
+    }
+    
+    total_prop_mass = total_prop_mass_thrusters
+    tank_volume = total_prop_mass / htp_density  # in m^3
+    tank_radius = ((tank_volume / np.pi) * (3/4)) ** (1/3)  # Assuming a spherical tank for simplicity
+    tank_thickness_SS = (tank_pressure * tank_radius)/(Materials['Stainless Steel SS304L']['yield_strength'])  # Using the formula for thin-walled pressure vessels
+    tank_thickness_Ti = (tank_pressure * tank_radius)/(Materials["Titanium Ti6Al4V Alloy"]['yield_strength'])  # Using the formula for thin-walled pressure vessels
+    tank_mass_SS = 4 * np.pi * tank_radius**2 * tank_thickness_SS * Materials['Stainless Steel SS304L']['density']  # Mass of the tank in kg
+    tank_mass_Ti = 4 * np.pi * tank_radius**2 * tank_thickness_Ti * Materials["Titanium Ti6Al4V Alloy"]['density']  # Mass of the tank in kg
+    tank_mass = max(tank_mass_SS, tank_mass_Ti)  # Taking the maximum mass of the tank
+    tank_material = "Titanium Ti6Al4V Alloy" if tank_mass_Ti > tank_mass_SS else "Stainless Steel SS304L"
+    return tank_mass, tank_material
+
+tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
+print("The mass of the ACS tank is: ", tank_mass, "kg")
+print("The material of the ACS tank is: ", tank_material)
+    
 
