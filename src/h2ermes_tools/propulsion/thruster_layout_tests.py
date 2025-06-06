@@ -67,8 +67,8 @@ def sl_vac_thruster_perf(n_sl, n_vac, Isp_sl, Isp_vac, t_sl, t_vac, m_struct, pa
     return m_prop_sl,m_prop_deorbit, m_prop_vac, m_prop_total
 
 if __name__ == "__main__":
-    sea_level = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
-    vacuum = [24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0]
+    sea_level = np.arange(0, 25, 2)  # Number of sea level thrusters
+    vacuum = np.arange(24, -1, -2)  # Number of vacuum thrusters
     Isp_sl = np.array([361.6451, 130.9458])
     Isp_vac = np.array([393.3471, 447.9481])
     t_sl = np.array([61364.9, 19510.9])
