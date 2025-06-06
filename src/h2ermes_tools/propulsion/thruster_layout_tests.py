@@ -53,9 +53,9 @@ def sl_vac_thruster_perf(n_sl, n_vac, Isp_sl, Isp_vac, t_sl, t_vac, m_struct, pa
         
     """
     mdot_sl = t_vac[0]/(Isp_vac[0] * 9.80665)  # kg/s
-    #print("mdot_sl is", mdot_sl)
+    print("mdot_sl is", mdot_sl)
     mdot_vac = t_vac[1]/(Isp_vac[1] * 9.80665)  # kg/s
-    #print("mdot_vac is", mdot_vac)
+    print("mdot_vac is", mdot_vac)
     Isp_compound_sl = ((t_sl[0]*n_sl) + (t_sl[1]*n_vac))/(((mdot_vac*n_vac)+(mdot_sl*n_sl))*9.80665)
     Isp_compound_vac = ((t_vac[0]*n_sl) + (t_vac[1]*n_vac))/(((mdot_vac*n_vac)+(mdot_sl*n_sl))*9.80665)
     # calculate the mass of propellant necessary given a numver of thrusters
@@ -73,8 +73,8 @@ if __name__ == "__main__":
     Isp_vac = np.array([393.3471, 447.9481])
     t_sl = np.array([61364.9, 19510.9])
     t_vac = np.array([66744.2 , 66744.2])
-    #mdot_vac = 15.1937 # kg/s
-    #mdot_sl = 17.3028 # kg/s
+    #mdot_vac = 15.1937 # kg/s 15.193756344148227
+    #mdot_sl = 17.3028 # kg/s 17.30282055269797
     m_struct = 20642.21346 # kg
     payload = 18000 # kg
     delta_v_sl = 500 # m/s
@@ -92,6 +92,7 @@ if __name__ == "__main__":
     print("The total propellant mass is ", sl_vac_thruster_perf(sea_level[np.argmin(m_props)], vacuum[np.argmin(m_props)], Isp_sl, Isp_vac, t_sl, t_vac, m_struct, payload, delta_v_sl, delta_v_vac, delta_v_deorbit)[-1], "kg.")
 
     # Plotting the results
+    print("Total Massflow is ", str(15.193756344148227* vacuum[np.argmin(m_props)] + 17.30282055269797*sea_level[np.argmin(m_props)]), "kg/s")
 
     plt.plot(sea_level, m_props, label='Total Propellant Mass')
     plt.xlabel('Number of Sea Level Thrusters')
