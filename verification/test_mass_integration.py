@@ -9,8 +9,8 @@ def make_mass_integrator():
     integrator.dry_mass = 30_000.0
 
     integrator.payload_mass = 10_000.0
-    integrator.h2_boiloff_mass = 1000
-    integrator.o2_boiloff_mass = 1000
+    integrator.h2_boil_off_mass = 1000
+    integrator.o2_boil_off_mass = 1000
     integrator.h2_power_mass = 225
     integrator.o2_power_mass = 225
     integrator.coolant_mass = 3000.
