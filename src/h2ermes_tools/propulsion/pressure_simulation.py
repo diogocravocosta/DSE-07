@@ -13,20 +13,20 @@ propellant_density = 423
 
 def pressure_profile_propulsion(propellant_density, velocity_propellant, chamber_pressure, tank_pressure):
     # From tank to pump inlet
-    dynamic_pressure_increase = 0.5 * propellant_density * velocity_propellant**2  # in Pa
+    dynamic_pressure_increase = 0.5 * propellant_density * velocity_propellant**2 
     line_losses = 50000  # conservative estimate, in Pa
-    pump_inlet_pressure = tank_pressure - dynamic_pressure_increase - line_losses  # in Pa
+    pump_inlet_pressure = tank_pressure - dynamic_pressure_increase - line_losses  
 
     if pump_inlet_pressure < 0:
         pump_inlet_pressure = 0
 
     # From chamber pressure to pump discharge pressure 
     injector_losses = 0.3 * chamber_pressure  # throttled injector assumption
-    pump_discharge_pressure = chamber_pressure + injector_losses + line_losses  # in Pa
+    pump_discharge_pressure = chamber_pressure + injector_losses + line_losses  
 
-    required_pump_pressure_rise = (pump_discharge_pressure - pump_inlet_pressure) * 1.1  # in Pa
+    required_pump_pressure_rise = (pump_discharge_pressure - pump_inlet_pressure) * 1.1  
 
-    return required_pump_pressure_rise  # in Pa
+    return required_pump_pressure_rise  
 
 
 if __name__ == "__main__":
