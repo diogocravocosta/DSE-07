@@ -90,3 +90,8 @@ class MassIntegrator:
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
+
+    def calculate_dry_masses(self, old_integrator: 'MassIntegrator') -> None:
+        """
+        Calculate the dry masses of the subsystems based on the masses from previous iteration.
+        """
