@@ -103,7 +103,10 @@ def plot_stacked_tanks(top_tank: tuple[float, float, float],
 if __name__ == "__main__":
     # Geometry
     radius_ratio = 0.5
-    top_radius_ratio = 0.8
+    top_radius_ratio = 0.52
+    # for the given volumes,
+    # the top tank is 80% of the middle tank radius with lox on top
+    # the top tank is 52% of the middle tank radius with lh2 on top
     bottom_radius_ratio = radius_ratio / top_radius_ratio
 
     # Tank dimensions
@@ -115,7 +118,7 @@ if __name__ == "__main__":
     lh2_volume = 520 # m^3
     o2_volume = 96 # m^3
 
-    lh2_on_top = False  # Set to True if LH2 tank is on top, False if LOX is on top
+    lh2_on_top = True  # Set to True if LH2 tank is on top, False if LOX is on top
 
     if lh2_on_top:
         top_volume = lh2_volume
