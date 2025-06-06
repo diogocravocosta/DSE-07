@@ -44,25 +44,52 @@ print(
     "-----------------------------------------------------------------------------------------------------------------"
 )
 
-def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R, LH2_radius):
-    r = radius_ratio * LH2_radius
-    elliptical_caps_bottom = (np.pi / 24) * (LH2_radius*2)**3
-    elliptical_caps_top = (np.pi / 24) * (r*2)**3
-    h = (3 * (volume- elliptical_caps_bottom - elliptical_caps_top)) / (np.pi * (LH2_radius**2 + r * LH2_radius + r**2))
-    # total_length = h + R
-    return h, LH2_radius, r
+def calculate_frustrum_tank_length(volume: float,
+                                   top_radius: float,
+                                   bottom_radius: float,
+                                   caps_height_radius_ratio: float) -> float:
+    """
+    Calculate the length of a frustum tank given its volume, top and bottom radius,
+    and the ratio of the height of the caps to the radius.
+    Args:
+        volume:
+        top_radius:
+        bottom_radius:
+        caps_height_radius_ratio:
+
+    Returns:
+        The length of the frustum tank.
+    """
+    bottom_cap_volume = 2/3 * np.pi * bottom_radius**3 * caps_height_radius_ratio
+    top_cap_volume = 2/3 * np.pi * top_radius**3 * caps_height_radius_ratio
+
+    frustum_volume = volume - (bottom_cap_volume + top_cap_volume)
+    if frustum_volume < 0:
+        raise ValueError("Volume is too small for the given caps height ratio.")
+
+    frustum_height = 3 * frustum_volume / (np.pi * (top_radius**2 + bottom_radius**2 + top_radius * bottom_radius))
+    return frustum_height
 
 
-def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, R):
-    R = R
-    r = radius_ratio * R
-    elliptical_caps_bottom = (np.pi / 24) * (R*2)**3
-    elliptical_caps_top = (np.pi / 24) * (r*2)**3
-    h = (3 * (volume - elliptical_caps_bottom + elliptical_caps_top)) / (
-        np.pi * (R**2 + r * R + r**2)
-    )
-    # total_length = h + r + R
-    return h, R, r
+# def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R, LH2_radius):
+#     r = radius_ratio * LH2_radius
+#     elliptical_caps_bottom = (np.pi / 24) * (r*2)**3
+#     elliptical_caps_top = (np.pi / 24) * (r*2)**3
+#     h = (volume - elliptical_caps_bottom - elliptical_caps_top) / (np.pi * r ** 2)
+#     # total_length = h + R
+#     return h, LH2_radius, r
+#
+#
+# def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, R):
+#     R = R
+#     r = radius_ratio * R
+#     elliptical_caps_bottom = (np.pi / 24) * (R*2)**3
+#     elliptical_caps_top = (np.pi / 24) * (r*2)**3
+#     h = (3 * (volume - elliptical_caps_bottom + elliptical_caps_top)) / (
+#         np.pi * (R**2 + r * R + r**2)
+#     )
+#     # total_length = h + r + R
+#     return h, R, r
 
 
 def calculate_tank_thickness(
