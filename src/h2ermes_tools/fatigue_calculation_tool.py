@@ -2,8 +2,7 @@ import numpy as np
 from pathlib import Path
 import sys
 import matplotlib.pyplot as plt
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir.parent))
+
 from data import constants as cs
 from data import material as mat
 
@@ -11,25 +10,33 @@ from data import material as mat
 #Functions for Stress and Crack Growth Calculations
 #--------------------------------------------------------
 
-# Calculates the mechancial stress in the wall of the conical tank for a axial load. takes into account force, r,t and degree of curvature.
 def mechanical_stress(force, radius, t, phi):
+    """
+    Calculates the mechanical stress in the wall of the conical tank for an axial load.
+    Takes into account force, radius, thickness and degree of curvature.
+    """
     sigma_conical = force/(2 * np.pi * radius * t * np.cos(np.radians(phi)))
     return sigma_conical
 
-# Calculates the minimum conical tank wall thickness to not fail for a specified axial load.
-def t_crit_mechanical(force,radius,sigma_fracture,phi):
+def t_crit_mechanical(force, radius, sigma_fracture, phi):
+    """Calculates the minimum conical tank wall thickness to not fail for a specified axial load."""
     t = force /(2 * np.pi * radius * sigma_fracture* np.cos(np.radians(phi)))
     return t
 
-# Calculates the thermal stress in the tank by assuming that the tank is clamped at both ends and then uses mechanical stress formula to see effect of thermal induced stress.
-def thermal_stress(delta_T, young_mod, thermal_expansion_coeff,r,t, phi):
+def thermal_stress(delta_T, young_mod, thermal_expansion_coeff, radius, thickness, phi):
+    """
+    Calculates the thermal stress in the tank by assuming that the tank is clamped at both ends
+    and then uses mechanical stress formula to see effect of thermal induced stress.
+    """
     pressure = delta_T * young_mod * thermal_expansion_coeff
-    force = pressure * 2*np.pi * r * t
-    thermal_stress = mechanical_stress(force, r, t, phi)
+    force = pressure * 2*np.pi * radius * thickness
+    thermal_stress = mechanical_stress(force, radius, thickness, phi)
     return thermal_stress
 
-# Calculates minimum conical tank wall thickness to not fail for a specified delta T and material
-def t_crit_theraml(delta_T, young_mod, thermal_expansion_coeff,r,t, phi, sigma_fracture):
+def t_crit_theraml(delta_T, young_mod, thermal_expansion_coeff, r , t, phi, sigma_fracture):
+    """
+    Calculates minimum conical tank wall thickness to not fail for a specified delta T and material
+    """
     pressure = delta_T * young_mod * thermal_expansion_coeff
     force = pressure * 2*np.pi * r * t
     t = t_crit_mechanical(force,r,sigma_fracture, phi)
@@ -84,8 +91,8 @@ def cycle_launch(stress_cycle, launches):
     return cycle
 
 # Calculates the fatigue life due to paris equation. Also takes into account the thickenss at which failure happens due to 3 separate loading conditions.
-def fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot):
-    t_crit_pressure = t_critical(material.ys, p_vent, phi, tank_radius)
+def fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot):
+    t_crit_pressure = t_critical(material.ys, pressure_vent, phi, tank_radius)
     t_crit_mech = t_crit_mechanical(thrust_engines,tank_radius, material.fs,phi)
     t_crit_thermal = t_crit_theraml(delta_T_reentry, material.E, material.cte, tank_radius, t, phi, material.fs)
     t_crit = max(t_crit_pressure,t_crit_mech, t_crit_thermal)
@@ -125,10 +132,10 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, sf,la
     return Dcount,launches
 
 # The main code is here. This is where both paris and miners cycle estimation is done. Returns true if fatigue is not expected. 
-def fatigue_check(a, t, count, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
+def fatigue_check(a, t, count, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
     # with paris equation - crack growth
     sigma_global_loading = loading_phases()
-    a_crack,count = fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot)
+    a_crack,count = fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot)
 
     #applying miners rule 
     Dcount, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
@@ -143,42 +150,42 @@ def loading_phases():
     # Different phases of mission and their loading conditions
     #------------------------------------------------------------
     # Before launch
-    sigma_thermal_start = thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t_tank, phi) # is valid for this.
-    sigma_pressure_start = pressure_stress(p_launch_tank, tank_radius, t_tank, phi)
-    sigma_axial_start = mechanical_stress(launch_mass*cs.g_0, tank_radius, t_tank, phi)
+    sigma_thermal_start = thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, thickness_tank, phi) # is valid for this.
+    sigma_pressure_start = pressure_stress(pressure_launch_tank, tank_radius, thickness_tank, phi)
+    sigma_axial_start = mechanical_stress(launch_mass*cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_start = sigma_thermal_start + sigma_pressure_start + sigma_axial_start 
 
     # 1st stage max q
     sigma_thermal_maxq = 0 #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi) # is valid for this.
-    sigma_pressure_maxq = pressure_stress(p_launch_tank, tank_radius, t_tank, phi)
-    sigma_axial_maxq = mechanical_stress(launch_mass*g_launch*cs.g_0, tank_radius, t_tank, phi)
+    sigma_pressure_maxq = pressure_stress(pressure_launch_tank, tank_radius, thickness_tank, phi)
+    sigma_axial_maxq = mechanical_stress(launch_mass*g_launch*cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_maxq = sigma_thermal_maxq + sigma_pressure_maxq + sigma_axial_maxq 
 
     # During second stage fire
     sigma_thermal_launch = 0 #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi)
-    sigma_pressure_launch = pressure_stress(p_launch_tank, tank_radius, t_tank, phi)
-    sigma_axial_launch = mechanical_stress(thrust_engines, tank_radius,t_tank, phi)
+    sigma_pressure_launch = pressure_stress(pressure_launch_tank, tank_radius, thickness_tank, phi)
+    sigma_axial_launch = mechanical_stress(thrust_engines, tank_radius,thickness_tank, phi)
     stress_comb_launch = sigma_thermal_launch + sigma_pressure_launch + sigma_axial_launch 
 
     # Orbit - Right before docking
-    sigma_thermal_orbit = thermal_stress(delta_T_h2, material.E, material.cte,tank_radius, t_tank, phi)
-    sigma_pressure_orbit = pressure_stress(p_vent, tank_radius, t_tank, phi)
+    sigma_thermal_orbit = thermal_stress(delta_T_h2, material.E, material.cte,tank_radius, thickness_tank, phi)
+    sigma_pressure_orbit = pressure_stress(pressure_vent, tank_radius, thickness_tank, phi)
     stress_comb_orbit = sigma_thermal_orbit + sigma_pressure_orbit
 
     # Orbit - After docking
-    sigma_thermal_dock = thermal_stress(delta_T_ext, material.E, material.cte,tank_radius, t_tank, phi)
-    sigma_pressure_dock= pressure_stress(p_dock_vent, tank_radius, t_tank, phi)
+    sigma_thermal_dock = thermal_stress(delta_T_ext, material.E, material.cte,tank_radius, thickness_tank, phi)
+    sigma_pressure_dock= pressure_stress(pressure_dock_vent, tank_radius, thickness_tank, phi)
     stress_comb_dock = sigma_thermal_dock + sigma_pressure_dock
 
     # Worst point during re-entry
-    sigma_thermal_reentry = thermal_stress(delta_T_h2,material.E,material.cte,tank_radius, t_tank, phi) 
-    sigma_axial_reentry = mechanical_stress(g_reentry *cs.g_0* dry_mass, tank_radius, t_tank, phi)
-    sigma_pressure_reentry = pressure_stress(p_vent, tank_radius, t_tank, phi)
+    sigma_thermal_reentry = thermal_stress(delta_T_h2,material.E,material.cte,tank_radius, thickness_tank, phi)
+    sigma_axial_reentry = mechanical_stress(g_reentry *cs.g_0* dry_mass, tank_radius, thickness_tank, phi)
+    sigma_pressure_reentry = pressure_stress(pressure_vent, tank_radius, thickness_tank, phi)
     stress_comb_reentry = sigma_thermal_reentry + sigma_pressure_reentry + sigma_axial_reentry
 
     # On launch pad
-    sigma_thermal_launchpad = thermal_stress(delta_T_earth,material.E,material.cte,tank_radius, t_tank, phi) 
-    sigma_axial_launchpad= mechanical_stress(dry_mass*cs.g_0, tank_radius, t_tank, phi)
+    sigma_thermal_launchpad = thermal_stress(delta_T_earth,material.E,material.cte,tank_radius, thickness_tank, phi)
+    sigma_axial_launchpad= mechanical_stress(dry_mass*cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_launchpad = sigma_thermal_launchpad + sigma_axial_launchpad
         
     #------------------------------------------------------------
@@ -205,10 +212,10 @@ def loading_phases():
     print("Maximum stress ratio R pressure: ", R_pressure)
     if plot == True:
         plt.figure(figsize=(8, 5))
-        plt.plot(t_mission, np.array(sigma_pressure_load)/1e6, marker='o', label='Pressure Stress')
-        plt.plot(t_mission, np.array(sigma_thermal_load)/1e6, marker='s', label='Thermal Stress')
-        plt.plot(t_mission, np.array(sigma_mechanical_load)/1e6, marker='^', label='Mechanical Stress')
-        plt.plot(t_mission, np.array(sigma_global_loading)/1e6, marker='x', label='Total Stress')
+        plt.plot(time_mission, np.array(sigma_pressure_load) / 1e6, marker='o', label='Pressure Stress')
+        plt.plot(time_mission, np.array(sigma_thermal_load) / 1e6, marker='s', label='Thermal Stress')
+        plt.plot(time_mission, np.array(sigma_mechanical_load) / 1e6, marker='^', label='Mechanical Stress')
+        plt.plot(time_mission, np.array(sigma_global_loading) / 1e6, marker='x', label='Total Stress')
         plt.xlabel('Mission Time (hours)')
         plt.ylabel('Stress (MPa)')
         plt.title('Pressure, Thermal, Mechanical and Total Stress vs Mission Time')
@@ -234,23 +241,29 @@ if __name__ =="__main__":
     r_small = 2.492 # m, radius of the small end of the tank, later import from tank sizing file in final sizing.
     tank_radius = 5# 5 # m, tank radius, later import from tank sizing file in final sizing.
     tank_length = 14 # m, later import from tank sizing file in final sizing.
-    t_tank = 0.008 # m, tank thickness later import from tank sizing file in final sizing.
+    thickness_tank = 0.008 # m, tank thickness later import from tank sizing file in final sizing.
     
     # Material Properties
 
     # # mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coeffient=material.cte)
-    material = mat.Material(density = 7850,youngs_modulus=200e9,fracture_strength=800e6,yield_strength=500e6,thermal_expansion_coeffient=1.5e-6)
+    material = mat.Material(
+        density = 7850,
+        youngs_modulus=200e9,
+        fracture_strength=800e6,
+        yield_strength=500e6,
+        thermal_expansion_coeffient=1.5e-6
+    )
 
     # Mass Inputs
     fuel_reentry_LH2 = 3000 #kg, fuel mass during re-entry
     dry_mass = 30000 # kg, dry mass of the tank, later import from tank sizing file in final sizing.
     launch_mass = 200000# kg, total launch mass
     fuel_mass = 42000 # kg, later import from dictionary in main branch
-    m_payload = 15500
+    payload_mass = 15500
 
     # Forces and time inputs
-    t_mission = [0,0.1,0.3,18,21,23,24] # hours, mission time points
-    thrust_engines = 7.9 * (dry_mass+m_payload)*cs.g_0# N, thrust of engines, later import from dictionary in main branch.
+    time_mission = [0, 0.1, 0.3, 18, 21, 23, 24] # hours, mission time points
+    thrust_engines = 7.9 * (dry_mass + payload_mass) * cs.g_0# N, thrust of engines, later import from dictionary in main branch.
     g_reentry = 8
     g_launch = 6 
     force_launch = g_launch*cs.g_0*launch_mass 
@@ -263,9 +276,9 @@ if __name__ =="__main__":
     Dcount = 0
 
     # Pressure Inputs
-    p_launch_tank = 1e5
-    p_dock_vent =3e5
-    p_vent = 1e6 # Pa, pressure at which tank is vented. Taken from boil-off file
+    pressure_launch_tank = 1e5
+    pressure_dock_vent =3e5
+    pressure_vent = 1e6 # Pa, pressure at which tank is vented. Taken from boil-off file
 
     # Temperature Inputs
     T_lh2 = 20 #K
@@ -295,7 +308,25 @@ if __name__ =="__main__":
     crack_cond = False
     #--------------------------------------------------------
 
-    fatigue = fatigue_check(a_crack_depth, t_tank, count, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
+    fatigue = fatigue_check(a_crack_depth,
+                            thickness_tank,
+                            count,
+                            paris_coeff_C,
+                            paris_exp_m,
+                            pressure_vent,
+                            phi,
+                            tank_radius,
+                            force_launch,
+                            delta_T_reentry,
+                            material,
+                            plot,
+                            min_launch,
+                            stress_range,
+                            miner_c,
+                            miner_m,
+                            stress_cycle,
+                            safety_fac,
+                            launches)
     
     if fatigue == True:
         print("Fatigue failure not expected due to crack propagation and fracture failure. Update stress range values for more precision.")
