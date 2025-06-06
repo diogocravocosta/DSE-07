@@ -46,8 +46,8 @@ def power_plant_mass(average_power: float, mission_length_days: float, safety_fa
 
     total_oxygen   = daily_oxygen   * mission_length_days * safety_factor
     total_hydrogen = daily_hydrogen * mission_length_days * safety_factor
-    print(total_hydrogen + total_oxygen)
-    print(fuel_cell_mass * number_of_fuel_cells)
+    #print(total_hydrogen + total_oxygen)
+    #print(fuel_cell_mass * number_of_fuel_cells)
     return total_oxygen + total_hydrogen + fuel_cell_mass * number_of_fuel_cells
 
 
