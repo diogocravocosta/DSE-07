@@ -1,6 +1,6 @@
 import numpy as np
 
-from h2ermes_tools.mass_integration import MassIntegrator
+from h2ermes_tools.integration.mass_integration import MassIntegrator
 
 
 def make_mass_integrator():
