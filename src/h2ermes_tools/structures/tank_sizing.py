@@ -1,12 +1,12 @@
 import numpy as np
 
 def calculate_frustum_tank_length(volume: float,
-                                   top_radius: float,
-                                   bottom_radius: float,
-                                   caps_height_radius_ratio: float,
-                                   subtract_bottom_cap: bool,
-                                   subtract_top_cap: bool
-                                   ) -> float:
+                                  top_radius: float,
+                                  bottom_radius: float,
+                                  caps_height_radius_ratio: float,
+                                  subtract_bottom_cap: bool,
+                                  subtract_top_cap: bool
+                                  ) -> float:
     """
     Calculate the length of a frustum tank given its volume, top and bottom radius,
     and the ratio of the height of the caps to the radius.
