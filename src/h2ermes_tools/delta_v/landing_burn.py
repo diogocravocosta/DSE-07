@@ -114,7 +114,28 @@ def landing_burn_with_drag(initial_velocity: float,
     # Convert to a pandas dataframe for easier access
     return pd.DataFrame(data, columns=states)
 
-if __name__ == "__main__":
+def plot_delta_v_vs_twr(velocities: list[float],
+                        thrust_to_weight_ratios: list[float],
+                        ballistic_coefficients: list[float],
+                        specific_impulse: float,):
+    """Plot delta V against thrust-to-weight ratio, split plots by velocity and include multiple lines for ballistic coefficients."""
+
+    for velocity in velocities:
+        for ballistic_coefficient in ballistic_coefficients:
+            delta_vs = []
+            for twr in thrust_to_weight_ratios:
+                df = landing_burn_with_drag(velocity, twr, ballistic_coefficient, specific_impulse)
+                delta_v = delta_v_from_final_mass(df['mass_fraction'].iloc[-1], specific_impulse)
+                delta_vs.append(delta_v)
+            plt.plot(thrust_to_weight_ratios, delta_vs, label=f'BC={ballistic_coefficient} kg/m²')
+        plt.xlabel('Thrust-to-Weight Ratio (T/W)')
+        plt.ylabel('Delta V (m/s)')
+        plt.title(f'Delta V vs Thrust-to-Weight Ratio at {velocity} m/s')
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+def example_usage():
     # Example usage
     initial_velocity = 100  # m/s
     thrust_to_weight_ratio = 2.2  # dimensionless
@@ -139,3 +160,16 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
     plt.show()
+
+
+if __name__ == "__main__":
+    # Example usage of the landing burn calculations
+    # example_usage()
+
+    # Plot delta V vs thrust-to-weight ratio
+    velocities = [100, 200, 400]  # m/s
+    thrust_to_weight_ratios = np.linspace(1.1, 3.0, 20)  # dimensionless
+    ballistic_coefficients = [100, 500, 1000, 2600, float('inf')]  # kg/m²
+    specific_impulse = 360  # seconds
+
+    plot_delta_v_vs_twr(velocities, thrust_to_weight_ratios, ballistic_coefficients, specific_impulse)
