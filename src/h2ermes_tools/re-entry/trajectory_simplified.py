@@ -190,20 +190,20 @@ class GlidingEntry:
         return qc*1e-3, qc_max*1e-3, normalised_heat_flux
 
 
-surface = np.pi * 4.92**2
-
-# glide_1 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=30000,S=surface,c_d= 1.4, c_l =  range_to_cover=3124643)
-
-glide_2 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=20000,S=surface,c_d=1.3,c_l=0.3)
-
-print(glide_2.flight_range_ratio*glide_2.Re, glide_2.lift_drag_ratio, glide_2.lift_parameter, glide_2.qc_max, glide_2.a_max)
-
-
-# glide_high = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=120,m=30000,S=9,c_d=1.2,c_l=1.2, lift_drag_ratio=1)
+# surface = np.pi * 4.92**2
 #
-plot_1 = glide_2.dataframe.hvplot(x="v", y="altitude")
-# plot_2 = glide_2.dataframe.hvplot(x="v", y="altitude")
-# plot = plot_1 * plot_2
-hvplot.show(plot_1)
+# # glide_1 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=30000,S=surface,c_d= 1.4, c_l =  range_to_cover=3124643)
+#
+# glide_2 = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=100,m=20000,S=surface,c_d=1.3,c_l=0.3)
+#
+# print(glide_2.flight_range_ratio*glide_2.Re, glide_2.lift_drag_ratio, glide_2.lift_parameter, glide_2.qc_max, glide_2.a_max)
+#
+#
+# # glide_high = GlidingEntry(planet="Earth", entry_speed=7200,flight_path_angle=-1,h_0=120,m=30000,S=9,c_d=1.2,c_l=1.2, lift_drag_ratio=1)
+# #
+# plot_1 = glide_2.dataframe.hvplot(x="v", y="altitude")
+# # plot_2 = glide_2.dataframe.hvplot(x="v", y="altitude")
+# # plot = plot_1 * plot_2
+# hvplot.show(plot_1)
 
 
