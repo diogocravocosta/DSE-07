@@ -63,6 +63,66 @@ heat_shield_thickness = Variable(
     margin=(1.0, 1.1),
 )
 
+orbit_insertion_delta_v = Variable(
+    name="Orbit Insertion Delta V",
+    value=5800.,
+    unit="m/s",
+    latex_symbol="\Delta V_{oi}",
+    confidence="fair",
+    constraints="must be positive",
+    margin=(0.95, 1.05),
+)
+
+orbit_raising_delta_v = Variable(
+    name="Orbit Raising Delta V",
+    value=114.,
+    unit="m/s",
+    latex_symbol="\Delta V_{or}",
+    confidence="good",
+    constraints="must be positive",
+    margin=(1.0, 1.05),
+)
+
+target_orbit_circularization_delta_v = Variable(
+    name="Target Orbit Circularization Delta V",
+    value=113.,
+    unit="m/s",
+    latex_symbol="\Delta V_{toc}",
+    confidence="good",
+    constraints="must be positive",
+    margin=(1.0, 1.05),
+)
+
+deorbit_delta_v = Variable(
+    name="Deorbit Delta V",
+    value=160.,
+    unit="m/s",
+    latex_symbol="\Delta V_{do}",
+    confidence="good",
+    constraints="must be positive",
+    margin=(1.0, 1.05),
+)
+
+landing_delta_v = Variable(
+    name="Landing Delta V",
+    value=500.,
+    unit="m/s",
+    latex_symbol="\Delta V_{l}",
+    confidence="poor",
+    constraints="must be positive",
+    margin=(0.5, 1.05),
+)
+
+drag_compensation_delta_v = Variable(
+    name="Drag Compensation Delta V",
+    value=30.,
+    unit="m/s",
+    latex_symbol="\Delta V_{dc}",
+    confidence="poor",
+    constraints="must be positive",
+    margin=(0.5, 1.5),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
