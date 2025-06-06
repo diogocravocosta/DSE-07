@@ -436,7 +436,7 @@ total_dry_mass = Variable(
 
 thrust_chamber_sl_mass = Variable(
         name="The mass of a sea level optimized Thrust Chamber",
-        value=20642.21346, #NOT REALISTIC, JUST A PLACEHOLDER
+        value=4.063444786849481, 
         unit="kg",
         latex_symbol="m_{tc_{sl}}",
         confidence="medium, conservative value",
@@ -446,7 +446,7 @@ thrust_chamber_sl_mass = Variable(
 
 thrust_chamber_vac_mass = Variable(
         name="The mass of a vacuum optimized Thrust Chamber",
-        value=20642.21346, #NOT REALISTIC, JUST A PLACEHOLDER
+        value=19.666088892712068, 
         unit="kg",
         latex_symbol="m_{tc_{vac}}",
         confidence="medium, conservative value",
