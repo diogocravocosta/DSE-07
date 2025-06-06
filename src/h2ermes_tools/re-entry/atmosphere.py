@@ -177,11 +177,13 @@ class StandardAtmosphere:
 
         # layer 1 (0 - 11019)
         if self.altitude < 11019:
+            # TODO: add density
             scale = -6.5
             T_final = self.T_0 + scale * ((self.altitude_gp-0) / 1000)
             K = (self.g_0*self.M*1000/(self.R_star*scale))
             p_final = self.p_0 * (self.T_0/(self.T_0 + scale * ((self.altitude_gp-0)/1000)))**K
         else:
+            # TODO: add density
             scale = -6.5
             T_1 = self.T_0 + scale * (11000 / 1000)
             K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -189,22 +191,26 @@ class StandardAtmosphere:
 
             # layer 2 (11019 - 20062)
             if 11019 <= self.altitude < 20062:
+                # TODO: add density
                 scale = 0.0
                 T_final = T_1 + scale * ((self.altitude_gp-11000) / 1000)
                 p_final = p_1 * np.exp(-self.g_0*self.M* (self.altitude_gp-11000)/(self.R_star*T_1))
             elif 20062 <= self.altitude:
+                # TODO: add density
                 scale = 0.0
                 T_2 = T_1 + scale * ((20000- 11000) / 1000)
                 p_2 = p_1 * np.exp(-self.g_0*self.M* (20000-11000)/(self.R_star*T_1))
 
                 # layer 3 (20062 - 32161)
                 if 20062 <= self.altitude < 32161:
+                    # TODO: add density
                     scale = 1.0
                     T_final = T_2 + scale * ((self.altitude_gp-20000) / 1000)
                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                     p_final = p_2 * (T_2 / (T_2 + scale * ((self.altitude_gp - 20000) / 1000))) ** K
 
                 elif 32161 <= self.altitude:
+                    # TODO: add density
                     scale = 1.0
                     T_3 = T_2 + scale * ((32000-20000) / 1000)
                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -212,11 +218,13 @@ class StandardAtmosphere:
 
                     # layer 4 (32161 - 47348)
                     if 32161 <= self.altitude < 47348:
+                        # TODO: add density
                         scale = 2.8
                         T_final = T_3 + scale * ((self.altitude_gp-32000) / 1000)
                         K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                         p_final = p_3 * (T_3 / (T_3 + scale * ((self.altitude_gp - 32000) / 1000))) ** K
                     elif 47348 <= self.altitude:
+                        # TODO: add density
                         scale = 2.8
                         T_4 = T_3 + scale * ((47000 - 32000) / 1000)
                         K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -224,23 +232,27 @@ class StandardAtmosphere:
 
                         # layer 5 (47348 - 51411)
                         if 47348 <= self.altitude < 51411:
+                            # TODO: add density
                             scale = 0.0
                             T_final = T_4 + scale * ((self.altitude_gp-47000) / 1000)
                             p_final = p_4 * np.exp(-self.g_0*self.M* (self.altitude_gp-47000)/(self.R_star*T_4))
 
                         elif 51411 <= self.altitude:
+                            # TODO: add density
                             scale = 0.0
                             T_5 = T_4 + scale * ((51000 - 47000) / 1000)
                             p_5 = p_4 * np.exp(-self.g_0*self.M* (51000-47000)/(self.R_star*T_4))
 
                             # layer 6 (51411 - 71799)
                             if 51411 <= self.altitude < 71799:
+                                # TODO: add density
                                 scale = -2.8
                                 T_final = T_5 + scale * ((self.altitude_gp-51000) / 1000)
                                 K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                                 p_final = p_5 * (T_5 / (T_5 + scale * ((self.altitude_gp - 51000) / 1000))) ** K
 
                             elif 71799 <= self.altitude:
+                                # TODO: add density
                                 scale = -2.8
                                 T_6 = T_5 + scale * ((71000 - 51000) / 1000)
                                 K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -248,11 +260,13 @@ class StandardAtmosphere:
 
                                 # layer 7 (71799 - 86000)
                                 if 71799 <= self.altitude < 86000:
+                                    # TODO: add density
                                     scale = -2.0
                                     T_final = T_6 + scale * ((self.altitude_gp-71000) / 1000)
                                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                                     p_final = p_6 * (T_6 / (T_6 + scale * ((self.altitude_gp - 71000) / 1000))) ** K
                                 elif 86000 <= self.altitude:
+                                    # TODO: add density
                                     scale = -2.0
                                     T_7 = T_6 + scale * ((86000 - 71000) / 1000)
                                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -261,12 +275,14 @@ class StandardAtmosphere:
                                     # layer 8 (86000 - 91000 89716)
                                     if 86000 <= self.altitude < 91000:
                                         # TODO: add pressure
+                                        # TODO: add density
                                         scale = 0.0
                                         T_final = T_7 + scale * ((self.altitude-86000) / 1000)
                                         p_final = p_7 * np.exp(-self.g_0*self.M* ((self.altitude_gp-86000) / 1000)/(self.R_star*T_7))
 
                                     elif 91000 <= self.altitude:
                                         # TODO: add pressure
+                                        # TODO: add density
                                         scale = 0.0
                                         T_8 = T_7 + scale * ((91000 - 86000) / 1000)
                                         p_8 = p_7 * np.exp(-self.g_0*self.M* ((91000 - 86000) / 1000)/(self.R_star*T_7))
@@ -274,12 +290,14 @@ class StandardAtmosphere:
                                         # layer 9 (91000 - 110000)
                                         if 91000 <= self.altitude < 110000:
                                             # TODO: add pressure
+                                            # TODO: add density
                                             T_c = 263.1905
                                             A = -76.3232
                                             a = -19.9429
                                             T_final = T_c + A * (1-((((self.altitude-91000)/1000)/a)**2)) ** 0.5
                                         elif 110000 <= self.altitude:
                                             # TODO: add pressure
+                                            # TODO: add density
                                             T_c = 263.1905
                                             A = -76.3232
                                             a = -19.9429
@@ -288,17 +306,20 @@ class StandardAtmosphere:
                                             # layer 10 (110000 - 120000)
                                             if 110000 <= self.altitude < 120000:
                                                 # TODO: add pressure
+                                                # TODO: add density
                                                 scale = 12.0
                                                 T_final = T_9 + scale * ((self.altitude-110000) / 1000)
 
                                             elif 120000 <= self.altitude:
                                                 # TODO: add pressure
+                                                # TODO: add density
                                                 scale = 12.0
                                                 T_10 = T_9 + scale * ((120000 - 110000) / 1000)
 
                                                 # layer 11 (120000 - 1000000)
                                                 if 120000 <= self.altitude < 1000000:
                                                     # TODO: add pressure
+                                                    # TODO: add density
                                                     lbd = scale / (self.T_inf - T_10)
                                                     xi = ((self.altitude - 120000) * (self.R_0 + 120000) / (self.R_0 + self.altitude))/1000
                                                     T_final = self.T_inf - (self.T_inf - T_10) * np.exp(- lbd * xi)
@@ -370,11 +391,5 @@ class NrlmsiseAtmosphere:
 # plot = df.hvplot(x = 'temp', y = 'h').opts(width = 400, height = 800)
 # hvplot.show(plot)
 
-atm = NrlmsiseAtmosphere(600,
-                         '2026-07-22 22:18:45',
-                         25,
-                         102)
-
-print(atm.atm.T)
 
 

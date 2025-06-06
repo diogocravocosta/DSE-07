@@ -1,8 +1,7 @@
-import pytest
 import numpy.testing as npt
 
 import data.constants as ct
-from h2ermes_tools import atmosphere as atm
+from h2ermes_tools.re-entry import atmosphere as atm
 
 class TestExponentialAtmosphere:
     height = 400
