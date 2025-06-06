@@ -1,49 +1,5 @@
 import numpy as np
 
-materials_properties = {
-    "Annealed 304L Stainless Steel": {
-        "density": 7800,
-        "strength": 1060 * 10**6,
-        "young modulus": 200 * 10**9,
-    },
-}
-# Geometry
-R = 5  # m
-radius_ratio = 0.5
-radius_radio_LOX = 0.5
-phi = np.deg2rad(10)  # phi in radians
-
-# Constraints
-safety_factor = 1.5
-safety_factor_pressure = 2.0
-#tank_diameter = 7
-payload_mass = 15000
-thrust_engines = 2129573.909
-
-LH2_pressure = 1000 * safety_factor_pressure * 1000  # Pa (10bar)
-LOX_pressure = 270 * 2 * 1000  # Pa (2.7 bar)
-
-LH2_boiloff_margin = 1.1  # 10% ullage
-LOX_boiloff_margin = 1.1  # 3% ullage
-
-LH2_density = 77  # kg/m3
-LOX_density = 1340  # kg/m3
-
-structural_mass = 20642.21346
-propellant_mass = 149913.1903
-wet_mass = propellant_mass + structural_mass
-LH2_mass = 1 / 7.0 * propellant_mass + payload_mass
-print("Mass LH2: " + str(LH2_mass) + " kg")
-LOX_mass = 6.0 / 7.0 * propellant_mass
-print("Mass LOX: " + str(LOX_mass) + " kg")
-LH2_volume = LH2_mass / LH2_density * LH2_boiloff_margin
-print("Volume LH2: " + str(LH2_volume) + " m3")
-LOX_volume = LOX_mass / LOX_density #* LOX_boiloff_margin
-print("Volume LOX: " + str(LOX_volume) + " m3")
-print(
-    "-----------------------------------------------------------------------------------------------------------------"
-)
-
 def calculate_frustrum_tank_length(volume: float,
                                    top_radius: float,
                                    bottom_radius: float,
@@ -69,27 +25,6 @@ def calculate_frustrum_tank_length(volume: float,
 
     frustum_height = 3 * frustum_volume / (np.pi * (top_radius**2 + bottom_radius**2 + top_radius * bottom_radius))
     return frustum_height
-
-
-# def calculate_tank_length_LOX(tank_model, volume, radius_ratio, phi, R, LH2_radius):
-#     r = radius_ratio * LH2_radius
-#     elliptical_caps_bottom = (np.pi / 24) * (r*2)**3
-#     elliptical_caps_top = (np.pi / 24) * (r*2)**3
-#     h = (volume - elliptical_caps_bottom - elliptical_caps_top) / (np.pi * r ** 2)
-#     # total_length = h + R
-#     return h, LH2_radius, r
-#
-#
-# def calculate_tank_length_LH2(tank_model, volume, radius_ratio, phi, R):
-#     R = R
-#     r = radius_ratio * R
-#     elliptical_caps_bottom = (np.pi / 24) * (R*2)**3
-#     elliptical_caps_top = (np.pi / 24) * (r*2)**3
-#     h = (3 * (volume - elliptical_caps_bottom + elliptical_caps_top)) / (
-#         np.pi * (R**2 + r * R + r**2)
-#     )
-#     # total_length = h + r + R
-#     return h, R, r
 
 
 def calculate_tank_thickness(
@@ -175,82 +110,126 @@ def check_vibrations(tank_mass, thickness, E, tank_length):
 
 
 ######################################################################################################################
+if __name__ == "__main__":
+    materials_properties = {
+        "Annealed 304L Stainless Steel": {
+            "density"      : 7800,
+            "strength"     : 1060 * 10 ** 6,
+            "young modulus": 200 * 10 ** 9,
+        },
+    }
+    # Geometry
+    R = 5  # m
+    radius_ratio = 0.5
+    radius_radio_LOX = 0.5
+    phi = np.deg2rad(10)  # phi in radians
 
-print(
-    "######################################################################################################"
-)
-print("Results: ")
-# Choose a material
-material = "Annealed 304L Stainless Steel"
+    # Constraints
+    safety_factor = 1.5
+    safety_factor_pressure = 2.0
+    # tank_diameter = 7
+    payload_mass = 15000
+    thrust_engines = 2129573.909
 
-# Access density and strength
-density = materials_properties[material]["density"]  # kg/m^3
-strength = materials_properties[material]["strength"]  # Pa
-young_modulus = materials_properties[material]["young modulus"]  # Pa
+    LH2_pressure = 1000 * safety_factor_pressure * 1000  # Pa (10bar)
+    LOX_pressure = 270 * 2 * 1000  # Pa (2.7 bar)
 
-tank_length_LH2, R_LH2, r_LH2 = calculate_tank_length_LH2(
-    "LH2", LH2_volume, radius_ratio, phi, R
-)
-print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
-print("LH2 Tank Bottom Diameter: " + str(R_LH2 * 2) + " m")
-print("LH2 Tank Top Diameter: " + str(r_LH2 * 2) + " m")
+    LH2_boiloff_margin = 1.1  # 10% ullage
+    LOX_boiloff_margin = 1.1  # 3% ullage
 
-print(
-    "----------------------------------------------------------------------------------------------"
-)
-tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX(
-    "LOX", LOX_volume, radius_radio_LOX, phi, R, r_LH2
-)
-print("LOX Tank Length: " + str(tank_length_LOX) + " m")
-print("LOX Tank Bottom Diameter: " + str(R_LOX * 2) + " m")
-print("LOX Tank Top Diameter: " + str(r_LOX * 2) + " m")
-print(
-    "----------------------------------------------------------------------------------------------"
-)
-print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
-print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
-thickness_LH2 = calculate_tank_thickness(
-    wet_mass,
-    LH2_pressure,
-    LH2_mass,
-    tank_length_LH2,
-    R_LH2,
-    r_LH2,
-    phi,
-    young_modulus,
-    strength,
-    thrust_engines,
-    gamma=0.65,
-)
-print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
-thickness_LOX = calculate_tank_thickness(
-    wet_mass,
-    LOX_pressure,
-    LOX_mass,
-    tank_length_LOX,
-    R_LOX,
-    r_LOX,
-    phi,
-    young_modulus,
-    strength,
-    thrust_engines,
-    gamma=0.65,
-)
-print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
-mass_LH2_tank = calculate_tank_mass(
-    R_LH2, r_LH2, tank_length_LH2, thickness_LH2, density
-)
-print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
-mass_LOX_tank = calculate_tank_mass(
-    R_LOX, r_LOX, tank_length_LOX, thickness_LOX, density
-)
-print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+    LH2_density = 77  # kg/m3
+    LOX_density = 1340  # kg/m3
 
-# tank_overall_dimensions()
-natural_frequency = check_vibrations(
-    mass_LH2_tank, thickness_LH2, young_modulus, tank_length_LH2
-)
-print("Natural Frequency: " + str(natural_frequency) + " Hz")
+    structural_mass = 20642.21346
+    propellant_mass = 149913.1903
+    wet_mass = propellant_mass + structural_mass
+    LH2_mass = 1 / 7.0 * propellant_mass + payload_mass
+    print("Mass LH2: " + str(LH2_mass) + " kg")
+    LOX_mass = 6.0 / 7.0 * propellant_mass
+    print("Mass LOX: " + str(LOX_mass) + " kg")
+    LH2_volume = LH2_mass / LH2_density * LH2_boiloff_margin
+    print("Volume LH2: " + str(LH2_volume) + " m3")
+    LOX_volume = LOX_mass / LOX_density  # * LOX_boiloff_margin
+    print("Volume LOX: " + str(LOX_volume) + " m3")
+    print(
+        "-----------------------------------------------------------------------------------------------------------------"
+    )
+
+    print(
+        "######################################################################################################"
+    )
+    print("Results: ")
+    # Choose a material
+    material = "Annealed 304L Stainless Steel"
+
+    # Access density and strength
+    density = materials_properties[material]["density"]  # kg/m^3
+    strength = materials_properties[material]["strength"]  # Pa
+    young_modulus = materials_properties[material]["young modulus"]  # Pa
+
+    tank_length_LH2, R_LH2, r_LH2 = calculate_tank_length_LH2(
+        "LH2", LH2_volume, radius_ratio, phi, R
+    )
+    print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
+    print("LH2 Tank Bottom Diameter: " + str(R_LH2 * 2) + " m")
+    print("LH2 Tank Top Diameter: " + str(r_LH2 * 2) + " m")
+
+    print(
+        "----------------------------------------------------------------------------------------------"
+    )
+    tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX(
+        "LOX", LOX_volume, radius_radio_LOX, phi, R, r_LH2
+    )
+    print("LOX Tank Length: " + str(tank_length_LOX) + " m")
+    print("LOX Tank Bottom Diameter: " + str(R_LOX * 2) + " m")
+    print("LOX Tank Top Diameter: " + str(r_LOX * 2) + " m")
+    print(
+        "----------------------------------------------------------------------------------------------"
+    )
+    print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
+    print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
+    thickness_LH2 = calculate_tank_thickness(
+        wet_mass,
+        LH2_pressure,
+        LH2_mass,
+        tank_length_LH2,
+        R_LH2,
+        r_LH2,
+        phi,
+        young_modulus,
+        strength,
+        thrust_engines,
+        gamma=0.65,
+    )
+    print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
+    thickness_LOX = calculate_tank_thickness(
+        wet_mass,
+        LOX_pressure,
+        LOX_mass,
+        tank_length_LOX,
+        R_LOX,
+        r_LOX,
+        phi,
+        young_modulus,
+        strength,
+        thrust_engines,
+        gamma=0.65,
+    )
+    print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
+    mass_LH2_tank = calculate_tank_mass(
+        R_LH2, r_LH2, tank_length_LH2, thickness_LH2, density
+    )
+    print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
+    mass_LOX_tank = calculate_tank_mass(
+        R_LOX, r_LOX, tank_length_LOX, thickness_LOX, density
+    )
+    print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+
+    # tank_overall_dimensions()
+    natural_frequency = check_vibrations(
+        mass_LH2_tank, thickness_LH2, young_modulus, tank_length_LH2
+    )
+    print("Natural Frequency: " + str(natural_frequency) + " Hz")
 
 
 def tank_overall_dimensions():
