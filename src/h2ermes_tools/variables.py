@@ -406,7 +406,7 @@ expansion_ratio_sl = Variable(
 
 n_chambers_sl = Variable(
         name="The number of sea level thrust chambers used in the design",
-        value=11,
+        value=12,
         unit="[-]",
         latex_symbol="N_{sl}",
         confidence="Design Parameter, can change",
@@ -416,7 +416,7 @@ n_chambers_sl = Variable(
 
 n_chambers_vac = Variable(
         name="The number of vacuum optimized thrust chambers used in the design",
-        value=13,
+        value=12,
         unit="[-]",
         latex_symbol="N_{vac}",
         confidence="Design Parameter, can change",
