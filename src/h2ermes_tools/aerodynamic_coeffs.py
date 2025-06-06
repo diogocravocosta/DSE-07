@@ -46,13 +46,12 @@ class BluntBody:
         self.mu_b = np.acos((self.sphere_radius - self.base_arc_height)/self.sphere_radius) #half arc angle of hemisphere
         self.alpha_max = np.pi/2 - self.mu_b #maximum angle of attack before requiring numerical integration
         self.cone_half_angle = np.arctan(self.cone_max_radius / ((self.cone_max_radius*self.cone_length) / (self.cone_max_radius-self.cone_min_radius))) #cone half angle
-
-    def compute_aerodynamics(self, mode):
+        self.cap_centroid = self.sphere_radius
+        self.cone_centroid = self.sphere_radius*(1 - np.cos(self.mu_b)) + (self.cone_length - (2*self.cone_length/3*(np.cos(self.cone_half_angle)**2)))
+        
+    def compute_aerodynamics(self):
         '''
         Function: Computes the aerodynamic coefficients
-
-        Mode 1: Computes aerodynamic coefficients for a range of angle of attacks
-        Mode 2: Computes axial and normal force and thus the drag and lift forces over a range of velocities and densities
 
         Variables:
             c_x_cap = axial force coefficient acting on the cap (spherical base of the blunt body)
@@ -66,55 +65,53 @@ class BluntBody:
             lift_over_drag = L/D force ratio
             normal_over_axial = N/A force ratio
         '''
-        if mode == 1:
-            '''
-            calculating axial and normal coefficients
-            '''
-            self.aoa_all = np.linspace(0.1 * np.pi/180, self.alpha_max , 100)
-            self.c_x_cap = 0.5 * (np.sin(self.aoa_all)**2) * (np.sin(self.mu_b)**2) + \
-            (1 + np.cos(self.mu_b)**2) * (np.cos(self.aoa_all)**2)
-            self.c_y_cap = np.sin(self.aoa_all) * np.cos(self.aoa_all) * (np.sin(self.mu_b)**2)
+        '''
+        calculating axial and normal coefficients
+        '''
+        self.aoa_all = np.linspace(0.1 * np.pi/180, self.alpha_max , 100)
+        self.c_x_cap = 0.5 * (np.sin(self.aoa_all)**2) * (np.sin(self.mu_b)**2) + \
+        (1 + np.cos(self.mu_b)**2) * (np.cos(self.aoa_all)**2)
+        self.c_y_cap = np.sin(self.aoa_all) * np.cos(self.aoa_all) * (np.sin(self.mu_b)**2)
 
-            self.c_x_cone = []
-            self.c_y_cone = []
-            for angle in self.aoa_all:
-                rho_str = np.arccos(-1 * np.tan(self.cone_half_angle) / np.tan(angle))
+        self.c_x_cone = []
+        self.c_y_cone = []
+        for angle in self.aoa_all:
+            rho_str = np.arccos(-1 * np.tan(self.cone_half_angle) / np.tan(angle))
 
-                if np.abs(angle) >= self.cone_half_angle:
-                    c_x_cone_1 = -1 * ((np.sin(angle))**2) * ((np.cos(self.cone_half_angle))**2) / np.pi
-                    c_x_cone_2 = (1 + 2*(np.cos(rho_str))**2) * (np.pi - rho_str)
-                    c_x_cone_3 = 3 * np.sin(rho_str) * np.cos(rho_str)
+            if np.abs(angle) >= self.cone_half_angle:
+                c_x_cone_1 = -1 * ((np.sin(angle))**2) * ((np.cos(self.cone_half_angle))**2) / np.pi
+                c_x_cone_2 = (1 + 2*(np.cos(rho_str))**2) * (np.pi - rho_str)
+                c_x_cone_3 = 3 * np.sin(rho_str) * np.cos(rho_str)
 
-                    self.c_x_cone.append(c_x_cone_1 * (c_x_cone_2 + c_x_cone_3))
+                self.c_x_cone.append(c_x_cone_1 * (c_x_cone_2 + c_x_cone_3))
 
-                    c_y_cone_1 = 2 * (((np.sin(angle))**2) * ((np.cos(self.cone_half_angle))**2) / np.pi) * (1 / np.tan(self.cone_half_angle))
-                    c_y_cone_2 = (np.pi - rho_str) * np.cos(rho_str)
-                    c_y_cone_3 = (np.sin(rho_str) / 3) * (2 + (np.cos(rho_str))**2)
-                    self.c_y_cone.append(c_y_cone_1 * (c_y_cone_2 + c_y_cone_3))
-                                            
-                else: 
-                    self.c_x_cone.append(0)
-                    self.c_y_cone.append(0)
+                c_y_cone_1 = 2 * (((np.sin(angle))**2) * ((np.cos(self.cone_half_angle))**2) / np.pi) * (1 / np.tan(self.cone_half_angle))
+                c_y_cone_2 = (np.pi - rho_str) * np.cos(rho_str)
+                c_y_cone_3 = (np.sin(rho_str) / 3) * (2 + (np.cos(rho_str))**2)
+                self.c_y_cone.append(c_y_cone_1 * (c_y_cone_2 + c_y_cone_3))
+                                        
+            else: 
+                self.c_x_cone.append(0)
+                self.c_y_cone.append(0)
+        
+        '''
+        calculating lift and drag coefficients
+        '''
+        self.c_l = (((self.c_y_cap + self.c_y_cone)*np.cos(self.aoa_all)) - ((self.c_x_cap + self.c_x_cone)*np.sin(self.aoa_all))) * -1
+        self.c_d = ((self.c_y_cap + self.c_y_cone)*np.sin(self.aoa_all)) + ((self.c_x_cap + self.c_x_cone)*np.cos(self.aoa_all))
+        self.lift_over_drag = self.c_l / self.c_d
+        self.normal_over_axial = (self.c_y_cap + self.c_y_cone) / (self.c_x_cap + self.c_x_cone)
+        
+    def flight_profile(self, velocities, densities, altitudes, angle_of_attack):
+        '''
+        Function: Plots the lift and drag over the flight profile
+
+        Variables:
+
+        '''
+
             
-            '''
-            calculating lift and drag coefficients
-            '''
-            self.c_l = (((self.c_y_cap + self.c_y_cone)*np.cos(self.aoa_all)) - ((self.c_x_cap + self.c_x_cone)*np.sin(self.aoa_all))) * -1
-            self.c_d = ((self.c_y_cap + self.c_y_cone)*np.sin(self.aoa_all)) + ((self.c_x_cap + self.c_x_cone)*np.cos(self.aoa_all))
-            self.lift_over_drag = self.c_l / self.c_d
-            self.normal_over_axial = (self.c_y_cap + self.c_y_cone) / (self.c_x_cap + self.c_x_cone)
 
-            '''
-            making the plots
-            '''
-            #plt.plot(self.aoa_all * 180/np.pi, self.c_y_cap + self.c_y_cone, label = "normal force coeff", color = "blue")
-            #plt.plot(self.aoa_all * 180/np.pi, self.c_x_cap + self.c_x_cone, label = "axial force coeff", color = "red")
-            #plt.plot(self.aoa_all * 180/np.pi, self.normal_over_axial, label = "normal / axial", color = "green")
-            # plt.plot(self.aoa_all * 180/np.pi, self.lift_over_drag, label="lift over drag", color = 'red')
-            # plt.plot(self.aoa_all * 180/np.pi, self.c_l, label="lift coefficient", color = 'green')
-            # plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
-            # plt.legend()
-            # plt.show()
 
     def draw_geometry(self):
         '''
@@ -170,7 +167,6 @@ class BluntBody:
 
         plt.show()
 
-    
     def stability(self, file_name, mode):
         '''
         Function: To assess stability of a geometry
@@ -185,6 +181,7 @@ class BluntBody:
             moment_inertia = moment of inertia
             radius_gyration = radius of gyration
         '''
+        print("\033[91mVerify that the output file from RASAero is updated for the current geometry\033[0m")
         self.moment_inertia = 231368.0069
         self.radius_gyration = np.sqrt(self.moment_inertia / self.mass)
                                        
@@ -197,18 +194,13 @@ class BluntBody:
 
             data_alpha_0 = data[data["Alpha"] == 0]
             data_alpha_2 = data[data["Alpha"] == 2]
-            data_alpha_4 = data[data["Alpha"] == 4]
+            self.data_alpha_4 = data[data["Alpha"] == 4]
 
-            cl_alpha = np.array((data_alpha_4["CL"]) / 4)
+            self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"]) / 4)
 
-            cmq_cmadot = (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * cl_alpha
-            print(cmq_cmadot)
-            #print(np.array(data_alpha_0["Mach"]) )
-            plt.plot(np.array(data_alpha_4["Mach"]) , cmq_cmadot, label='stability')
-            plt.legend()
-            plt.show()
+            self.cmq_cmadot = (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.cl_alpha_rasaero
     
-    def optimisation(self):
+    def analysis(self):
         '''
         Function: Runs a bunch of stuff to visualise the impact of changing certain geometries
         '''
@@ -221,7 +213,6 @@ class BluntBody:
         taper_ratios = np.arange(0, 0.98, 0.01)
         volume = 619
         for t in taper_ratios:
-            print("current taper ratio", t)
             ts = TankSizer(volume, taper = t)
             cone_length = ts.h
             cone_max_radius = ts.r_bottom
@@ -230,7 +221,7 @@ class BluntBody:
             mass = 28000
 
             body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
-            body.compute_aerodynamics(mode = 1)
+            body.compute_aerodynamics()
             max_ld_index = np.argmax(body.lift_over_drag)
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
@@ -241,7 +232,7 @@ class BluntBody:
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
-        ax.scatter(x, y, z, cmap="viridis")
+        ax.scatter(x, y, z, c=z, cmap="viridis")
 
         ax.set_xlabel('Taper Ratios')
         ax.set_ylabel('Angle of attack')
@@ -252,17 +243,12 @@ class BluntBody:
         '''
         Analysing effect of sphericity of base
         '''
-        cone_length = 15
-        cone_max_radius = 5
-        cone_min_radius = 1
-        mass = 28000
         max_ld = []
         max_ld_aoa = []
         sphericity_radius = np.linspace(0.1, cone_max_radius, 100)
         for s in sphericity_radius:
-            base_arc_height = s
-            body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
-            body.compute_aerodynamics(mode = 1)
+            body = BluntBody(cone_length = 15, cone_max_radius = 5, cone_min_radius = 1, base_arc_height = s, mass = 28000)
+            body.compute_aerodynamics()
             max_ld_index = np.argmax(body.lift_over_drag)
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
@@ -273,7 +259,7 @@ class BluntBody:
 
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
-        ax.scatter(x, y, z, cmap="viridis")
+        ax.scatter(x, y, z, c=z, cmap="viridis")
 
         ax.set_xlabel('Base arc height')
         ax.set_ylabel('Angle of attack')
@@ -281,8 +267,22 @@ class BluntBody:
 
         plt.show()
 
+    def plots(self):
+        '''
+        Aerodynamic coefficient plots
+        '''
+        # plt.plot(self.aoa_all * 180/np.pi, self.c_y_cap + self.c_y_cone, label = "normal force coeff", color = "blue")
+        # plt.plot(self.aoa_all * 180/np.pi, self.c_x_cap + self.c_x_cone, label = "axial force coeff", color = "red")
+        # plt.plot(self.aoa_all * 180/np.pi, self.normal_over_axial, label = "normal / axial", color = "green")
+        plt.plot(self.aoa_all * 180/np.pi, self.lift_over_drag, label="lift over drag", color = 'red')
+        plt.plot(self.aoa_all * 180/np.pi, self.c_l, label="lift coefficient", color = 'green')
+        plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
+        plt.legend()
+        plt.show()
 
-
+        plt.plot(np.array(self.data_alpha_4["Mach"]) , self.cmq_cmadot, label='stability')
+        plt.legend()
+        plt.show()
 
 if __name__ == "__main__":
     #CURRENT DIMENSIONS
@@ -304,11 +304,13 @@ if __name__ == "__main__":
 
     body.draw_geometry()
 
-    body.compute_aerodynamics(mode = 1)
+    body.compute_aerodynamics()
 
     body.stability(mode = 1, file_name = "HermesV1-RASAero.csv")
 
-    body.optimisation()
+    body.plots()
+
+    body.analysis()
 
 
 
