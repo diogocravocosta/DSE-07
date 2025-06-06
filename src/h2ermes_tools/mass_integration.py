@@ -40,8 +40,13 @@ class MassIntegrator:
 
     def calculate_propellant_mass(self) -> None:
         """
-        Calculates the total propellant mass required for the mission.
-        And separately the propellant mass left after undocking.
+        Calculate the total propellant mass required for the mission phases:
+        - Landing
+        - Deorbit
+        - Transfer to depo (circularization and orbit raising)
+        - Orbit insertion
+        The total mass is calculated by summing the dry mass, propellant masses, boiloff masses,
+        payload mass, coolant mass, and power generation masses.
         """
         # start with dry mass
         total_mass = self.dry_mass
@@ -72,8 +77,13 @@ class MassIntegrator:
 
 
     def calculate_hydrogen_oxygen_mass(self) -> None:
-        self.hydrogen_mass = self.propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boiloff_mass + self.coolant_mass + self.h2_power_mass
-        self.oxygen_mass = self.propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boiloff_mass + self.o2_power_mass
+        """
+        Calculate the mass of hydrogen and oxygen in the main and header tanks based on OF ratio.
+        """
+        main_tank_propellant_mass = self.transfer_propellant_mass + self.orbit_insertion_propellant_mass
+
+        self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boiloff_mass + self.coolant_mass + self.h2_power_mass
+        self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boiloff_mass + self.o2_power_mass
 
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here

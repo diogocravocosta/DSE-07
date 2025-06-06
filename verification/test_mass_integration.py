@@ -53,19 +53,20 @@ def test_calculate_propellant_mass():
 def test_calculate_hydrogen_oxygen_mass():
     integrator = make_mass_integrator()
 
-    integrator.propellant_mass = 174051.0321
+    integrator.transfer_propellant_mass = 3720.8679
+    integrator.orbit_insertion_propellant_mass = 163885.6476
     integrator.deorbit_propellant_mass = 1634.4715
     integrator.landing_propellant_mass = 4810.0451
 
-    expected_hydrogen_mass = 29089.43316
-    expected_oxygen_mass = 150411.5989
+    expected_main_hydrogen_mass = 28168.7878
+    expected_main_oxygen_mass = 144887.7275
 
     expected_header_hydrogen_mass = 920.6452
     expected_header_oxygen_mass = 5523.8714
 
     integrator.calculate_hydrogen_oxygen_mass()
 
-    assert np.isclose(integrator.hydrogen_mass, expected_hydrogen_mass, rtol=1e-4)
-    assert np.isclose(integrator.oxygen_mass, expected_oxygen_mass, rtol=1e-4)
+    assert np.isclose(integrator.main_hydrogen_mass, expected_main_hydrogen_mass, rtol=1e-4)
+    assert np.isclose(integrator.main_oxygen_mass, expected_main_oxygen_mass, rtol=1e-4)
     assert np.isclose(integrator.header_hydrogen_mass, expected_header_hydrogen_mass, rtol=1e-4)
     assert np.isclose(integrator.header_oxygen_mass, expected_header_oxygen_mass, rtol=1e-4)
