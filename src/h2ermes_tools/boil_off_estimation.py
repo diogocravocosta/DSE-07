@@ -1,36 +1,64 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 import pytest
 #------------------------------------------------
 #Input parameters
 #------------------------------------------------
-# Boil-off data
-heat_load_data = [40000, 42500, 45000, 47500, 50000, 52500, 55000]  # W
-boil_off_mass = [605, 861, 1470, 1978, 2434, 2855, 3253] #kg
 
+#Hydrogen Parameters
+rho_lh2_20k = 71
+rho_lh2_30K = 50
 #Geometry parameters
 ro = 4.92
 ri = 2.46
 h = 13.95
 phi = np.arctan((ro - ri) / h)  # angle in radians
 
-# Constants
-boltzman = 5.67e-8
-solar_power = 135311.68  # W
-planetary_power = 25795.63  # W
-albedo_power = 13604.74  # W
-
-# Material properties
-emissivity_ss = 0.8
-absorptivity_ss = 0.2
-
 # Mass paramters
+h2_depot = 10500
 m_payload = 15000
 m_h2_reentry = 3000
 h2_nm = 2.016 #g/mol
 total_boil_off = 0
+
+m_prop_h2 = 150000/7
+m_h2_tot = m_prop_h2 + 15500
+m_h2_reentry = 3000
+m_h2_dock = m_h2_reentry + 10500
+
+# Pressure Parameters
+p_vent = 10e6 #pa
+P1= 10**5 #pa
+
+#Temperature parameters
+T_vapor = 75
+T_vapor_refuel = 50
+T_skin_reentry = 200
+T_lh2 = 20
+T_gh2_launch = 20
+
+# Material properties
+emissivity_ss = 0.8
+absorptivity_ss = 0.2
+#------------------------------------------------
+# Constants
+#------------------------------------------------
+boltzman = 5.67e-8
+solar_power = 135311.68  # W
+planetary_power = 25795.63  # W
+albedo_power = 13604.74  # W
+R = 8.314
+a = 0.2453e-6
+b = 0.02651e-3
+h2_nm = 2 #g/mol
+
+# Boil-off data
+heat_load_data = [40000, 42500, 45000, 47500, 50000, 52500, 55000]  # W
+boil_off_mass = [605, 861, 1470, 1978, 2434, 2855, 3253] #kg
+
+# Conditions
+worst_case = False
 
 #------------------------------------------------
 #Functions
@@ -46,9 +74,9 @@ def volume_cone(h,ro,ri):
     return volume, area_proj
 
 # Calculate the new inner radius based on ullage height
-def calculate_cone_param(ro, ri, h, mass):
+def calculate_cone_param(ro, ri, h, mass,rho_lh2):
     vol_cone = volume_cone(h,ro,ri)[0]
-    vol_ullage = vol_cone - mass / 71
+    vol_ullage = vol_cone - mass / rho_lh2
     h_ull = 3
     ro= ri + h_ull * np.tan(phi)
     while volume_cone(h_ull, ro, ri)[0] < vol_ullage:
@@ -61,14 +89,14 @@ def rad_load(T_tank, T_lh2, emissivity,area_gh2):
     q_load = q * area_gh2
     return q_load
 
-def heat_load(solar_power, planetary_power, albedo_power,area, emissivity, absorptivity):
+def heat_load(solar_power, planetary_power, albedo_power,area, emissivity, absorptivity,rho_lh2_20k):
     # Geometry
     incident_area = 7 * 9 + np.pi / 2 * 0.875 * 3.5
     planetary_flux = planetary_power / incident_area * emissivity
     solar_flux = solar_power / incident_area * absorptivity
     albedo_flux = albedo_power / incident_area * absorptivity
 
-    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_payload)  # Calculate new outer radius based on ullage height 
+    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_payload,rho_lh2_20k)  # Calculate new outer radius based on ullage height 
     area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  # Calculate the surface area of the cone with the new outer radius
     q_load = rad_load(150, 20, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
     heat_load = (solar_flux + planetary_flux + albedo_flux) * area + q_load
@@ -102,7 +130,7 @@ def vanderwaals(P, V, R, T, a, b, h2_nm):
     n = 600000
     f = ((P + a * (n / V) ** 2) * (V - n * b)) / (n * R * T)
     iter_count = 0
-    while not (0.999 <= f <= 1.001):
+    while not (0.99 <= f <= 1.01):
         if f < 1:
             n = n -500
         else:
@@ -110,67 +138,79 @@ def vanderwaals(P, V, R, T, a, b, h2_nm):
         f = ((P + a * (n / V) ** 2) * (V - n * b)) / (n * R * T)
         m_gh2 = n * h2_nm / 1000
         iter_count += 1
-        if iter_count > 10000:
+        if iter_count > 1000000:
             raise RuntimeError("Van der Waals solver did not converge")
     return m_gh2
 
 def pres_vanderwaals(n, V, R, T, a, b):
     P = (n * R * T)/(V - n * b) - a * (n / V) ** 2
     return P
+
+def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k):
+    V1_vapor = volume_cone(calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
+    V2_vapor =  volume_cone(calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k)[0], ri)[0]  #m3
+    print(V1_vapor,V2_vapor)
+    n1 = P1*V1_vapor/T1/R
+    m_vap_h2_1 = n1 * h2_nm/1000  # kg, mass of vaporized hydrogen
+    n2 = V2_vapor*n1/V1_vapor
+    m_vap_h2_2 = n2 * h2_nm/1000  # kg, mass of vaporized hydrogen after first stage
+    mass_boil_off_launch = m_vap_h2_2 - m_vap_h2_1 
+    print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3")
+    return mass_boil_off_launch
+
+def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,rho_lh2_20k):
+    area_proj = volume_cone(h, ro, ri)[1]
+    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, emissivity_ss, absorptivity_ss,rho_lh2_20k)
+    boil_off_specific = linear_regression(heat_load_data, boil_off_mass, heat_load_h2go)
+    print("Boil off during orbit (due to external heat sources): ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go,"W")
+    return boil_off_specific
+
+def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock):
+    V1 = volume_cone(calculate_cone_param(ro,ri,h,m_h2_dock,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_dock,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
+    V2 = volume_cone(calculate_cone_param(ro,ri,h,m_h2_reentry,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_reentry,rho_lh2_20k)[0], ri)[0]  #m3
+    P1 = p_vent
+    T1 = T_vapor # K, temperature before refueling (temperature of gh2 during venting. should be ideally reset every iteration)
+    T2 = T_vapor_refuel# K, temperature after refueling (temperature of gh2 after long period of venting. should be ideally reset every iteration)
+    m_gh2_orbit = vanderwaals(P1,V1, R, T1, a, b,h2_nm)
+    nh2 = m_gh2_orbit / h2_nm*1000
+    p = pres_vanderwaals(nh2, V2, R, T2, a, b)
+    m_gh2_refuel = vanderwaals(p,V2, R, T2,a, b,h2_nm)
+
+    print("No boil off is expected in this region as pressure will drop from ",P1/10e5, "bar to ",p/10e5,"bar")
+    m_boiloff_worst_case = vanderwaals(P1,V2, R, T2, a, b,h2_nm) - m_gh2_orbit
+    print(m_gh2_orbit, vanderwaals(P1,V2, R, T2, a, b,h2_nm))
+    print('Worst case boil off if pressure is held constant ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar. The change in mass is ',m_gh2_refuel/m_gh2_orbit)
+
+    return m_boiloff_worst_case
+
+def boiloff_reentry(ro,ri,h,m_h2_reentry,emissivity_ss,T_skin_reentry,T_lh2,rho_lh2_30k):
+    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry,rho_lh2_30k)  # Calculate new outer radius based on ullage height 
+    area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  
+    radiation_load = rad_load(T_skin_reentry, T_lh2, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
+    m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
+
+    print('Boil off in reentry due to tank wall heating up: ',m_boil_off_reentry,'kg for radiation load: ',radiation_load,"W")
+    return m_boil_off_reentry
+
+def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot):
+    # During launch
+    total_boil_off = 0
+    mass_boil_off_launch = boil_off_launch(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k)
+    total_boil_off += mass_boil_off_launch
+
+    # During orbit
+    boil_off_specific = orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,rho_lh2_20k)
+    total_boil_off += boil_off_specific  # kg, total boil-off mass during orbit
+
+    # During Refueling
+    if worst_case == True:
+        m_boiloff_worst_case = boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock)
+        total_boil_off +=  m_boiloff_worst_case
+    print('Total boil off of LH2 is: ',total_boil_off)
+    print('New payload mass is: ',h2_depot+total_boil_off+m_h2_reentry)
+    return total_boil_off
 #------------------------------------------------
 # Calculations
 #------------------------------------------------
-# During 1st stage of launch is assumed to be negligible.
-
-# During Launch
-P1= 10**5
-V1 = volume_cone(calculate_cone_param(ro,ri,h,36000)[1], calculate_cone_param(ro,ri,h,36000)[0], ri)[0]  # Volume of the cone
-V2 =  volume_cone(calculate_cone_param(ro,ri,h,15000)[1], calculate_cone_param(ro,ri,h,15000)[0], ri)[0]  #m3
-P2 = P1 *V1/V2 #pa
-print('p2 is',P2)
-T1 = 20
-T2 = V2/V1 * T1 #K, temperature after first stage
-rhp_gh2 = 0.33 #kg/m3
-R = 8.314  # J/(mol*K), universal gas constant
-n1 = P1*V1/T1/R
-m_vap_h2_1 = n1 * h2_nm/1000  # kg, mass of vaporized hydrogen
-n2 = V2*n1/V1
-m_vap_h2_2 = n2 * h2_nm/1000  # kg, mass of vaporized hydrogen after first stage
-mass_boil_off_launch = m_vap_h2_2 - m_vap_h2_1  # kg, mass of hydrogen vaporized during launch
-print(mass_boil_off_launch)
-print("Mass of vaporized hydrogen during launch: ", mass_boil_off_launch, "kg")
-total_boil_off += mass_boil_off_launch
-
-#During orbit
-vol_cone, area_proj = volume_cone(h, ro, ri)
-heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, emissivity_ss, absorptivity_ss)
-boil_off_specific = linear_regression(heat_load_data, boil_off_mass, heat_load_h2go)
-print("Boil off mass: ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go)
-total_boil_off += boil_off_specific  # kg, total boil-off mass during orbit
-
-# During Refueling
-V1 = volume_cone(calculate_cone_param(ro,ri,h,13500)[1], calculate_cone_param(ro,ri,h,13500)[0], ri)[0]  # Volume of the cone
-V2 = volume_cone(calculate_cone_param(ro,ri,h,3000)[1], calculate_cone_param(ro,ri,h,3000)[0], ri)[0]  #m3
-P1 = 10**6
-T1 = 75 # K, temperature before refueling (temperature of gh2 during venting. should be ideally reset every iteration)
-T2 = 50 # K, temperature after refueling (temperature of gh2 after long period of venting. should be ideally reset every iteration)
-m_gh2_orbit = vanderwaals(P1,V1, R, T1, 0.2453e-6, 0.02651e-3,h2_nm)
-nh2 = m_gh2_orbit / h2_nm*1000
-p = pres_vanderwaals(nh2, V2, R, T2, 0.2453e-6, 0.02651e-3)
-m_gh2_refuel = vanderwaals(p,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm)
-if m_gh2_refuel/m_gh2_orbit<1.01:
-    print("The pressure will decrease which will not cause boil-off. The vapor mass is: ", m_gh2_refuel, "kg")
-    m_boiloff_worst_case = vanderwaals(P1,V2, R, T2, 0.2453e-6, 0.02651e-3,h2_nm) - m_gh2_orbit
-    print('Worst case boil off if pressure is held constant: ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar')
-
-else:
-    print('run complex calc on boilfast to get initial and final pressure and temperature')
-
-
-#During re-entry
-ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry)  # Calculate new outer radius based on ullage height 
-area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  
-radiation_load = rad_load(200, 20, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
-m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
-# can be left as is and can be ignored.
-print('Total boil off mass of LH2 is: ',total_boil_off)
+if __name__ =='__main__':
+    total_boil_off = total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
