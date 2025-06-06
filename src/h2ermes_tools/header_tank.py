@@ -7,6 +7,3 @@ sys.path.append(str(current_dir.parent))
 from data import constants as cs
 from data import material as mat
 
-def fairing_geometry(n,L):
-    x = np.linspace(0, L, 1000)
-    
