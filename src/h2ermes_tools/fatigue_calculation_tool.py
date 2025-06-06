@@ -34,7 +34,8 @@ def pressure_stress(Pressure_vapor,radius_tank,thickness, phi):
     """
     Calculates the stress caused by the pressure inside a conical tank. 
     """
-    conical_stress = Pressure_vapor /0.85*(radius_tank /thickness/np.cos(np.radians(phi))/0.85+1/6894.76) # Conical stress formula
+    # Conical stress formula
+    conical_stress = Pressure_vapor /0.85*(radius_tank /thickness/np.cos(np.radians(phi))/0.85+1/6894.76)
     return conical_stress
 
 def crack_growth(paris_coeff_C, paris_exp_m, sigma_max, sigma_min, Y_geometry_factor, a_crack_depth):
@@ -93,22 +94,41 @@ def cycle_launch(stress_cycle, launches):
         cycle[i] = stress_cycle[i]*launches
     return cycle
 
-def fatigue_paris_estimation(a_crack_depth, thickness, count, sigma_global_loading, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot):
+def fatigue_paris_estimation(
+        a_crack_depth,
+        thickness,
+        count,
+        sigma_global_loading,
+        paris_coeff_C,
+        paris_exp_m,
+        pressure_vent,
+        phi,
+        tank_radius,
+        thrust_engines,
+        delta_T_reentry,
+        material,
+        plot):
     """
-    Calculates the fatigue life due to paris equation. Also takes into account the thickenss at which failure happens due to 3 separate loading conditions.
+    Calculates the fatigue life due to paris equation.
+    Also takes into account the thickness at which failure happens due to 3 separate loading conditions.
     """
     thickness_crit_pressure = t_critical(material.ys, pressure_vent, phi, tank_radius)
     thickness_crit_mech = t_crit_mechanical(thrust_engines,tank_radius, material.fs,phi)
     thickness_crit = max(thickness_crit_pressure,thickness_crit_mech)
 
     if thickness-thickness_crit<0:
-        t = thickness_crit + 0.002
+        thickness = thickness_crit + 0.002
 
-    while a<t-thickness_crit:
+    while a_crack_depth<thickness-thickness_crit:
         Y_geometry_factor = y_calculation(a_crack_depth, thickness)  # Calculate Y factor based on current crack size
-        da_dn = crack_growth(paris_coeff_C, paris_exp_m, max(sigma_global_loading), min(sigma_global_loading), Y_geometry_factor, a_crack_depth) 
+        da_dn = crack_growth(paris_coeff_C,
+                             paris_exp_m,
+                             max(sigma_global_loading),
+                             min(sigma_global_loading),
+                             Y_geometry_factor,
+                             a_crack_depth)
         count += 1
-        a += da_dn 
+        a_crack_depth += da_dn
         a_crack.append(a_crack_depth) 
         if count > 100000:
             print('no point to worry')
@@ -128,7 +148,8 @@ def fatigue_paris_estimation(a_crack_depth, thickness, count, sigma_global_loadi
 
 def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches):
     """
-    Calculates the fatigue life due to Miners cycle. Takes into account a safety factor and a conservative number of launches.
+    Calculates the fatigue life due to Miners cycle.
+    Takes into account a safety factor and a conservative number of launches.
     """
     damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches)
     while damage>1:
@@ -137,13 +158,44 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safet
     print('Damage count is ', damage, launches)
     return damage,launches
 
-def fatigue_check(a_crack_depth, thickness, count, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
+def fatigue_check(a_crack_depth,
+                  thickness,
+                  count,
+                  paris_coeff_C,
+                  paris_exp_m,
+                  pressure_vent,
+                  phi,
+                  tank_radius,
+                  force_launch,
+                  delta_T_reentry,
+                  material,
+                  plot,
+                  min_launch,
+                  stress_range,
+                  miner_c,
+                  miner_m,
+                  stress_cycle,
+                  safety_fac,
+                  launches):
     """
-    The main code is here. This is where both paris and miners cycle estimation is done. Returns true if fatigue is not expected. 
+    The main code is here. This is where both paris and miners cycle estimation is done.
+    Returns true if fatigue is not expected.
     """
     # with paris equation - crack growth
     sigma_global_loading = loading_phases()
-    a_crack,count = fatigue_paris_estimation(a_crack_depth, thickness, count, sigma_global_loading, paris_coeff_C, paris_exp_m, pressure_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot)
+    a_crack, count = fatigue_paris_estimation(
+        a_crack_depth,
+        thickness,
+        count,
+        sigma_global_loading,
+        paris_coeff_C,
+        paris_exp_m,
+        pressure_vent,
+        phi,
+        tank_radius,
+        thrust_engines,
+        delta_T_reentry,
+        material,plot)
 
     #applying miners rule 
     damage, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
@@ -154,7 +206,8 @@ def fatigue_check(a_crack_depth, thickness, count, paris_coeff_C, paris_exp_m, p
 
 def loading_phases(): 
     """
-    Calculates the loading conditions for different phases in the mission. Also calculates the individual load ratios for the different conditions (thermal, pressure, mechanical).
+    Calculates the loading conditions for different phases in the mission.
+    Also calculates the individual load ratios for the different conditions (thermal, pressure, mechanical).
     """
     #------------------------------------------------------------
     # Different phases of mission and their loading conditions
@@ -220,7 +273,7 @@ def loading_phases():
     sigma_pressure_load = [sigma_pressure_start, sigma_pressure_maxq, sigma_pressure_launch, sigma_pressure_orbit, sigma_pressure_dock, sigma_pressure_reentry, 0]
     R_load_ratio_pressure = R_calculation(sigma_pressure_load)
     print("Maximum stress ratio R pressure: ", R_load_ratio_pressure)
-    if plot == True:
+    if plot is True:
         plt.figure(figsize=(8, 5))
         plt.plot(time_mission, np.array(sigma_pressure_load) / 1e6, marker='o', label='Pressure Stress')
         plt.plot(time_mission, np.array(sigma_thermal_load) / 1e6, marker='s', label='Thermal Stress')
@@ -253,19 +306,19 @@ if __name__ =="__main__":
     
     # Material Properties
 
-    # # mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coeffient=material.cte)
+    # # mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coefficient=material.cte)
     material = mat.Material(
         density = 7850,
         youngs_modulus=200e9,
         fracture_strength=800e6,
         yield_strength=500e6,
-        thermal_expansion_coeffient=1.5e-6
+        thermal_expansion_coefficient=1.5e-6
     )
 
     # Mass Inputs
-    fuel_reentry_LH2 = 3000 #kg, fuel mass during re-entry
+    fuel_reentry_LH2 = 3000 # kg, fuel mass during re-entry
     dry_mass = 30000 # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
-    launch_mass = 200000# kg, total launch mass to be corrected
+    launch_mass = 200000 # kg, total launch mass to be corrected
     payload_mass = 15500
 
     # Forces and time inputs
@@ -293,7 +346,7 @@ if __name__ =="__main__":
     T_space=4 #K, temperature in space
     T_ambient_earth = 300 #K
     T_gh2 = 150 #K Temperature of gaseous hydrogen
-    T_gh2_ext = 200 #K temperature of gaseous hydrogen at etreme
+    T_gh2_ext = 200 #K temperature of gaseous hydrogen at extreme
     delta_T_earth = T_ambient_earth - T_lh2 
     delta_T_tank = T_gh2 - T_lh2
     delta_T_tank_extreme = T_gh2_ext - T_lh2
@@ -334,7 +387,8 @@ if __name__ =="__main__":
                             safety_factor,
                             launches)
     
-    if fatigue == True:
-        print("Fatigue failure not expected due to crack propagation and fracture failure. Update stress range values for more precision.")
+    if fatigue is True:
+        print("Fatigue failure not expected due to crack propagation and fracture failure. "
+              "Update stress range values for more precision.")
     else:
         print("!Warning! = Fatigue failure expected. Please increase thickness")
