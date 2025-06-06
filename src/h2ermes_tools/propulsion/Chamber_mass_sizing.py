@@ -103,3 +103,5 @@ def engine_mass(r_throat, r_chamber, t_wall, theta_cc, l_cc, rho_material, rho_m
     
     return m_cc + m_n
 
+if __name__ == "__main__":
+    

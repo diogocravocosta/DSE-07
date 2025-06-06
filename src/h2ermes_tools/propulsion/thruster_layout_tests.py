@@ -67,8 +67,8 @@ def sl_vac_thruster_perf(n_sl, n_vac, Isp_sl, Isp_vac, t_sl, t_vac, m_struct, pa
     return m_prop_sl,m_prop_deorbit, m_prop_vac, m_prop_total
 
 if __name__ == "__main__":
-    sea_level = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
-    vacuum = [23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1]
+    sea_level = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+    vacuum = [24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0]
     Isp_sl = np.array([361.6451, 130.9458])
     Isp_vac = np.array([393.3471, 447.9481])
     t_sl = np.array([61364.9, 19510.9])
@@ -100,4 +100,13 @@ if __name__ == "__main__":
     plt.title('Total Propellant Mass vs Number of Sea Level Thrusters')
     plt.grid()
     plt.legend()
+    
+    # Add annotation
+    min_index = np.argmin(m_props)
+    plt.annotate(f'Min Prop Mass:\n{sea_level[min_index]} SL, {vacuum[min_index]} Vac',
+                 xy=(sea_level[min_index], m_props[min_index]),
+                 xytext=(sea_level[min_index] + 1, m_props[min_index] + 1000),  # Adjust text position as needed
+                 arrowprops=dict(facecolor='black', shrink=0.05),
+                 )
+
     plt.show()
