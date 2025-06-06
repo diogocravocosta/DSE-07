@@ -12,7 +12,7 @@ def lb_to_kg(lb: float) -> float:
     return lb * 0.45359237
 
 
-def power_plant_mass(average_power: float, mission_length_days: float, safety_factor: float) -> float:
+def power_plant_mass(average_power: float, mission_length_days: float, safety_factor: float) -> tuple[float, float]:
     """
     From the mission length and average power usage, calculates total reactant consumption of the fuel cells.
     Adds this to the mass of the 2 fuel cells for the combined mass power-producing equipment.
@@ -48,10 +48,10 @@ def power_plant_mass(average_power: float, mission_length_days: float, safety_fa
     total_hydrogen = daily_hydrogen * mission_length_days * safety_factor
     #print(total_hydrogen + total_oxygen)
     #print(fuel_cell_mass * number_of_fuel_cells)
-    return total_oxygen + total_hydrogen + fuel_cell_mass * number_of_fuel_cells
+    return total_oxygen + total_hydrogen, fuel_cell_mass * number_of_fuel_cells
 
 
 if __name__ == "__main__":
     our_power = 3573 # W
-
-    print(power_plant_mass(average_power=our_power, mission_length_days=2, safety_factor=1))
+    mass_reactant, mass_cell = power_plant_mass(average_power=our_power, mission_length_days=2, safety_factor=1)
+    print(mass_reactant + mass_cell)
