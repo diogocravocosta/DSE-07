@@ -120,8 +120,8 @@ if __name__ == "__main__":
     }
     # Geometry
     R = 5  # m
-    radius_ratio = 0.5
-    radius_radio_LOX = 0.5
+    radius_ratio = np.sqrt(0.5)
+    cap_height_radius_ratio = 0.5  # ratio of the height of the caps to the radius
     phi = np.deg2rad(10)  # phi in radians
 
     # Constraints
@@ -167,9 +167,10 @@ if __name__ == "__main__":
     strength = materials_properties[material]["strength"]  # Pa
     young_modulus = materials_properties[material]["young modulus"]  # Pa
 
-    tank_length_LH2, R_LH2, r_LH2 = calculate_tank_length_LH2(
-        "LH2", LH2_volume, radius_ratio, phi, R
-    )
+    tank_length_LH2, R_LH2, r_LH2 = calculate_frustrum_tank_length(LH2_volume,
+                                                                   R*radius_ratio,
+                                                                   R,
+                                                                   cap_height_radius_ratio)
     print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
     print("LH2 Tank Bottom Diameter: " + str(R_LH2 * 2) + " m")
     print("LH2 Tank Top Diameter: " + str(r_LH2 * 2) + " m")
@@ -177,9 +178,10 @@ if __name__ == "__main__":
     print(
         "----------------------------------------------------------------------------------------------"
     )
-    tank_length_LOX, R_LOX, r_LOX = calculate_tank_length_LOX(
-        "LOX", LOX_volume, radius_radio_LOX, phi, R, r_LH2
-    )
+    tank_length_LOX, R_LOX, r_LOX = calculate_frustrum_tank_length(LOX_volume,
+                                                                   R*radius_ratio**2,
+                                                                   R*radius_ratio,
+                                                                   cap_height_radius_ratio)
     print("LOX Tank Length: " + str(tank_length_LOX) + " m")
     print("LOX Tank Bottom Diameter: " + str(R_LOX * 2) + " m")
     print("LOX Tank Top Diameter: " + str(r_LOX * 2) + " m")
