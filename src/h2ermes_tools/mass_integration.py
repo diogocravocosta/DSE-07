@@ -9,6 +9,8 @@ class MassIntegrator:
 
     dry_mass: float in kg
 
+    gross_mass: float in kg
+
     propellant_mass: float, mass of propellant used for primary propulsion in kg
         landing_propellant_mass: float, mass of propellant used for landing in kg
         deorbit_propellant_mass: float, mass of propellant used for deorbit in kg
@@ -68,7 +70,7 @@ class MassIntegrator:
 
         # calculate and add propellant mass for orbit insertion
         self.orbit_insertion_propellant_mass = (np.exp(self.orbit_insertion_delta_v / (self.vacuum_isp * cn.g_0)) - 1) * total_mass
-        self.total_mass = total_mass + self.orbit_insertion_propellant_mass
+        self.gross_mass = total_mass + self.orbit_insertion_propellant_mass
 
         self.propellant_mass = (self.landing_propellant_mass
                                 + self.deorbit_propellant_mass
