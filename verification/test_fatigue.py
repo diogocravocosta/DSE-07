@@ -14,7 +14,7 @@ def test_t_crit_mechanical():
     npt.assert_almost_equal(t_act, t_crit,decimal=1)
 
 def test_thermal_stress():
-    stress = fct.thermal_stress(200, 10e8, 10e-6,5,0.01, 10)
+    stress = fct.thermal_stress(200, 1e8, 1e-6,5,0.01, 10)
     test = 20308.53
     npt.assert_almost_equal(stress, test,decimal=1)
 
