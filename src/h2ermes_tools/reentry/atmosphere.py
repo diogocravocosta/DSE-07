@@ -339,7 +339,7 @@ class NrlmsiseAtmosphere:
         # radius of earth
         self.Re = ct.earth_radius         # m
         # height
-        self.altitude = altitude * 1000      # m
+        self.altitude = altitude # km
         self.time = time # UTC
         self.latitude = latitude
         self.longitude = longitude
@@ -355,7 +355,7 @@ class NrlmsiseAtmosphere:
         self.sw_data = self.space_weather_data()
 
         # calculations
-        self.atm = self.atmosphere()
+        self.T_nrl, self.rho_nrl = self.atmosphere()
 
     def space_weather_data(self):
         # download space weather file
@@ -372,7 +372,7 @@ class NrlmsiseAtmosphere:
         T = nrl00.T
         rho = nrl00.rho
 
-        return nrl00
+        return T, rho
 
 
 # TEST
