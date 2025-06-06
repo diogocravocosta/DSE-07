@@ -275,7 +275,7 @@ theta_cn_vac = Variable(
 
 
 diameter_exit_sl = Variable(
-        name="Diameter of the Exit for Seal Level Optimized Combustion Chambers",
+        name="Diameter of the Exit for Sea Level Optimized Combustion Chambers",
         value=0.25833,
         unit="m",
         latex_symbol="D_{e_{sl}}",
