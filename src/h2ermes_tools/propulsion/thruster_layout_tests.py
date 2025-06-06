@@ -56,7 +56,7 @@ def sl_vac_thruster_perf(n_sl, n_vac, Isp_sl, Isp_vac, t_sl, t_vac, m_struct, pa
     print("mdot_sl is", mdot_sl)
     mdot_vac = t_vac[1]/(Isp_vac[1] * 9.80665)  # kg/s
     print("mdot_vac is", mdot_vac)
-    Isp_compound_sl = ((t_sl[0]*n_sl) + (t_sl[1]*n_vac))/(((mdot_vac*n_vac)+(mdot_sl*n_sl))*9.80665)
+    Isp_compound_sl = Isp_sl[0] #((t_sl[0]*n_sl) + (t_sl[1]*n_vac))/(((mdot_vac*n_vac)+(mdot_sl*n_sl))*9.80665)
     Isp_compound_vac = ((t_vac[0]*n_sl) + (t_vac[1]*n_vac))/(((mdot_vac*n_vac)+(mdot_sl*n_sl))*9.80665)
     # calculate the mass of propellant necessary given a numver of thrusters
     m_prop_sl = mprop_calc(delta_v_sl, Isp_compound_sl, m_struct)
