@@ -21,6 +21,7 @@ class Material:
         yield_strength (float): Yield strength [Pa].
         roughness_height (float): Effective roughness height [m].
         fracture_strength (float): Fracture strength [Pa].
+        absorptivity (float): absorptivity [-]
     """
 
     def __init__(
@@ -37,7 +38,8 @@ class Material:
         ultimate_strength=None,
         yield_strength=None,
         roughness_height=None,
-        fracture_strength=None
+        fracture_strength=None,
+        absorptivity = None
     ):
         """
         Initialize a Material instance with its properties.
@@ -55,6 +57,7 @@ class Material:
         self.ys = yield_strength
         self.Ra = roughness_height
         self.fs = fracture_strength
+        self.abs = absorptivity
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """

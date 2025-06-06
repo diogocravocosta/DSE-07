@@ -84,10 +84,10 @@ def cycle_launch(stress_cycle, launches):
     return cycle
 
 # Calculates the fatigue life due to paris equation. Also takes into account the thickenss at which failure happens due to 3 separate loading conditions.
-def fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, thrust_engines, delta_T_reentry,ss_yield,plot,material.E):
-    t_crit_pressure = t_critical(ss_yield, p_vent, phi, tank_radius)
-    t_crit_mech = t_crit_mechanical(thrust_engines,tank_radius, ss_sigma_f,phi)
-    t_crit_thermal = t_crit_theraml(delta_T_reentry, material.E, material.cte, tank_radius, t, phi, ss_sigma_f)
+def fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot):
+    t_crit_pressure = t_critical(material.ys, p_vent, phi, tank_radius)
+    t_crit_mech = t_crit_mechanical(thrust_engines,tank_radius, material.fs,phi)
+    t_crit_thermal = t_crit_theraml(delta_T_reentry, material.E, material.cte, tank_radius, t, phi, material.fs)
     t_crit = max(t_crit_pressure,t_crit_mech, t_crit_thermal)
 
     if t-t_crit<0:
@@ -125,10 +125,10 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, sf,la
     return Dcount,launches
 
 # The main code is here. This is where both paris and miners cycle estimation is done. Returns true if fatigue is not expected. 
-def fatigue_check(a, t, count, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
+def fatigue_check(a, t, count, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
     # with paris equation - crack growth
     sigma_global_loading = loading_phases()
-    a_crack,count = fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot)
+    a_crack,count = fatigue_paris_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, thrust_engines, delta_T_reentry, material,plot)
 
     #applying miners rule 
     Dcount, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
@@ -239,13 +239,7 @@ if __name__ =="__main__":
     # Material Properties
 
     # # mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coeffient=material.cte)
-    material = mat.Material('testmaterial', 0, 0, 7850, 0, 0, 200e9, 1.5e-6, 0, 500e6, 0)
-    # material.E = 200e9  # Pa, steel
-    # material.rho = 7850 # kg/m3, steel
-    # material.cte = 1.5e-6 #1/K
-    ss_sigma_f = 800e6 # Pa, fatigue strength of steel
-    ss_yield = 500e6
-    
+    material = mat.Material(density = 7850,youngs_modulus=200e9,fracture_strength=800e6,yield_strength=500e6,thermal_expansion_coeffient=1.5e-6)
 
     # Mass Inputs
     fuel_reentry_LH2 = 3000 #kg, fuel mass during re-entry
@@ -301,7 +295,7 @@ if __name__ =="__main__":
     crack_cond = False
     #--------------------------------------------------------
 
-    fatigue = fatigue_check(a_crack_depth, t_tank, count, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
+    fatigue = fatigue_check(a_crack_depth, t_tank, count, paris_coeff_C, paris_exp_m, p_vent, phi, tank_radius, force_launch, delta_T_reentry,material,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
     
     if fatigue == True:
         print("Fatigue failure not expected due to crack propagation and fracture failure. Update stress range values for more precision.")

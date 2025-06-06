@@ -2,63 +2,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import pytest
-#------------------------------------------------
-#Input parameters
-#------------------------------------------------
-
-#Hydrogen Parameters
-rho_lh2_20k = 71
-rho_lh2_30K = 50
-#Geometry parameters
-ro = 4.92
-ri = 2.46
-h = 13.95
-phi = np.arctan((ro - ri) / h)  # angle in radians
-
-# Mass paramters
-h2_depot = 10500
-m_payload = 15000
-m_h2_reentry = 3000
-h2_nm = 2.016 #g/mol
-total_boil_off = 0
-
-m_prop_h2 = 150000/7
-m_h2_tot = m_prop_h2 + 15500
-m_h2_reentry = 3000
-m_h2_dock = m_h2_reentry + 10500
-
-# Pressure Parameters
-p_vent = 10e6 #pa
-P1= 10**5 #pa
-
-#Temperature parameters
-T_vapor = 75
-T_vapor_refuel = 50
-T_skin_reentry = 200
-T_lh2 = 20
-T_gh2_launch = 20
-
-# Material properties
-emissivity_ss = 0.8
-absorptivity_ss = 0.2
-#------------------------------------------------
-# Constants
-#------------------------------------------------
-boltzman = 5.67e-8
-solar_power = 135311.68  # W
-planetary_power = 25795.63  # W
-albedo_power = 13604.74  # W
-R = 8.314
-a = 0.2453e-6
-b = 0.02651e-3
-h2_nm = 2 #g/mol
-
-# Boil-off data
-heat_load_data = [40000, 42500, 45000, 47500, 50000, 52500, 55000]  # W
-boil_off_mass = [605, 861, 1470, 1978, 2434, 2855, 3253] #kg
-
-# Conditions
-worst_case = False
+from data import material as mat
 
 #------------------------------------------------
 #Functions
@@ -84,21 +28,21 @@ def calculate_cone_param(ro, ri, h, mass,rho_lh2):
         h_ull = h_ull + 0.1  # Increment ullage height until the volume condition is met
     return ro, h_ull
 
-def rad_load(T_tank, T_lh2, emissivity,area_gh2):
-    q = emissivity *boltzman*(T_tank**4-T_lh2**4)
+def rad_load(T_tank, T_lh2, material,area_gh2):
+    q = material.eps *boltzman*(T_tank**4-T_lh2**4)
     q_load = q * area_gh2
     return q_load
 
-def heat_load(solar_power, planetary_power, albedo_power,area, emissivity, absorptivity,rho_lh2_20k):
+def heat_load(solar_power, planetary_power, albedo_power,area, material,rho_lh2_20k):
     # Geometry
     incident_area = 7 * 9 + np.pi / 2 * 0.875 * 3.5
-    planetary_flux = planetary_power / incident_area * emissivity
-    solar_flux = solar_power / incident_area * absorptivity
-    albedo_flux = albedo_power / incident_area * absorptivity
+    planetary_flux = planetary_power / incident_area * material.eps
+    solar_flux = solar_power / incident_area * material.abs
+    albedo_flux = albedo_power / incident_area * material.abs
 
     ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_payload,rho_lh2_20k)  # Calculate new outer radius based on ullage height 
     area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  # Calculate the surface area of the cone with the new outer radius
-    q_load = rad_load(150, 20, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
+    q_load = rad_load(150, 20, material,area_gh2)  # Example temperatures in Kelvin
     heat_load = (solar_flux + planetary_flux + albedo_flux) * area + q_load
     return heat_load
 
@@ -158,9 +102,9 @@ def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k):
     print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3")
     return mass_boil_off_launch
 
-def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,rho_lh2_20k):
+def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, material, heat_load_data, boil_off_mass,rho_lh2_20k):
     area_proj = volume_cone(h, ro, ri)[1]
-    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, emissivity_ss, absorptivity_ss,rho_lh2_20k)
+    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, material,rho_lh2_20k)
     boil_off_specific = linear_regression(heat_load_data, boil_off_mass, heat_load_h2go)
     print("Boil off during orbit (due to external heat sources): ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go,"W")
     return boil_off_specific
@@ -183,23 +127,23 @@ def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m
 
     return m_boiloff_worst_case
 
-def boiloff_reentry(ro,ri,h,m_h2_reentry,emissivity_ss,T_skin_reentry,T_lh2,rho_lh2_30k):
+def boiloff_reentry(ro,ri,h,m_h2_reentry,material,T_skin_reentry,T_lh2,rho_lh2_30k):
     ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry,rho_lh2_30k)  # Calculate new outer radius based on ullage height 
     area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  
-    radiation_load = rad_load(T_skin_reentry, T_lh2, emissivity_ss,area_gh2)  # Example temperatures in Kelvin
+    radiation_load = rad_load(T_skin_reentry, T_lh2, material,area_gh2)  # Example temperatures in Kelvin
     m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
 
     print('Boil off in reentry due to tank wall heating up: ',m_boil_off_reentry,'kg for radiation load: ',radiation_load,"W")
     return m_boil_off_reentry
 
-def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot):
+def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot):
     # During launch
     total_boil_off = 0
     mass_boil_off_launch = boil_off_launch(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k)
     total_boil_off += mass_boil_off_launch
 
     # During orbit
-    boil_off_specific = orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,rho_lh2_20k)
+    boil_off_specific = orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,rho_lh2_20k)
     total_boil_off += boil_off_specific  # kg, total boil-off mass during orbit
 
     # During Refueling
@@ -213,4 +157,63 @@ def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,s
 # Calculations
 #------------------------------------------------
 if __name__ =='__main__':
-    total_boil_off = total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,emissivity_ss, absorptivity_ss, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
+    #------------------------------------------------
+    #Input parameters
+    #------------------------------------------------
+
+    #Hydrogen Parameters
+    rho_lh2_20k = 71
+    rho_lh2_30K = 50
+
+    #Geometry parameters
+    ro = 4.92
+    ri = 2.46
+    h = 13.95
+    phi = np.arctan((ro - ri) / h)  # angle in radians
+
+    # Mass paramters
+    h2_depot = 10500
+    m_payload = 15000
+    m_h2_reentry = 3000
+    h2_nm = 2.016 #g/mol
+    total_boil_off = 0
+
+    m_prop_h2 = 150000/7
+    m_h2_tot = m_prop_h2 + 15500
+    m_h2_reentry = 3000
+    m_h2_dock = m_h2_reentry + 10500
+
+    # Pressure Parameters
+    p_vent = 10e6 #pa
+    P1= 10**5 #pa
+
+    #Temperature parameters
+    T_vapor = 75
+    T_vapor_refuel = 50
+    T_skin_reentry = 200
+    T_lh2 = 20
+    T_gh2_launch = 20
+
+    # Material properties
+    material = mat.Material(absorptivity=0.2,emissivity=0.8)
+
+    #------------------------------------------------
+    # Constants
+    #------------------------------------------------
+    boltzman = 5.67e-8
+    solar_power = 135311.68  # W
+    planetary_power = 25795.63  # W
+    albedo_power = 13604.74  # W
+    R = 8.314
+    a = 0.2453e-6
+    b = 0.02651e-3
+    h2_nm = 2 #g/mol
+
+    # Boil-off data
+    heat_load_data = [40000, 42500, 45000, 47500, 50000, 52500, 55000]  # W
+    boil_off_mass = [605, 861, 1470, 1978, 2434, 2855, 3253] #kg
+
+    # Conditions
+    worst_case = False
+
+    total_boil_off = total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
