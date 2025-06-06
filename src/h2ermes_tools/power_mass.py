@@ -54,4 +54,4 @@ def power_plant_mass(average_power: float, mission_length_days: float, safety_fa
 if __name__ == "__main__":
     our_power = 3573 # W
 
-    print(power_plant_mass(average_power=our_power, mission_length_days=2, safety_factor=2))
+    print(power_plant_mass(average_power=our_power, mission_length_days=2, safety_factor=1))

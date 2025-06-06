@@ -1,4 +1,4 @@
-from src.h2ermes_tools.power_mass import power_plant_mass, lb_to_kg
+from h2ermes_tools.power_mass import power_plant_mass, lb_to_kg
 import pytest
 
 def test_power():
