@@ -27,6 +27,7 @@ delta_T_h2 = T_gh2 - T_lh2
 delta_T_ext = T_gh2_ext - T_lh2
 launches = 40
 safety_fac = 1.4
+min_launch = 25
 
 # Geometry Properties
 phi = 20 # degrees, conical head angle, later import from tank sizing file in final sizing.
@@ -55,6 +56,7 @@ t_mission = [0,0.1,0.3,18,21,23,24] # hours, mission time points
 thrust_engines = 7.9 * (dry_mass+m_payload)*g_0# N, thrust of engines, later import from dictionary in main branch.
 g_reentry = 8
 g_launch = 6 
+force_launch = g_launch*g_0*launch_mass 
 
 # Crack Growth Parameters
 da_dn = [] # initialize da/dn as an empty list
@@ -184,6 +186,16 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, sf,la
     print('Dcount minimum is ', Dcount, launches)
     return Dcount,launches
 
+def fatigue_check(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches):
+    # with paris equation - crack growth
+    a_crack,count = fatigue_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot)
+
+    #applying miners rule 
+    Dcount, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
+    if Dcount<1 and count>min_launch:
+        return True
+    else:
+        return False
 #------------------------------------------------------------
 # Different phases of mission and their loading conditions
 #------------------------------------------------------------
@@ -270,8 +282,12 @@ if plot == True:
 #------------------------------------------------------------
 
 # with paris equation - crack growth
-a_crack,count = fatigue_estimation(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, g_launch*g_0*launch_mass, delta_T_reentry,ss_yield,plot)
+if __name__ =="__main__":
+    # with paris equation - crack growth
+    fatigue = fatigue_check(a, t, count, sigma_global_loading, paris_coeff_C, paris_exp_m, ss_sigma_f, p_vent, phi, tank_radius, force_launch, delta_T_reentry,ss_yield,plot,min_launch,stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
+    if fatigue == True:
+        print("Fatigue failure not expected due to crack propagation and fracture failure. Update stress range values for more precision.")
+    else:
+        print("!Warning! = Fatigue failure expected. Please increase thickness")
 
-#applying miners rule 
-Dcount, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_fac,launches)
 
