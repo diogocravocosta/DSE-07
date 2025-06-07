@@ -380,7 +380,7 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
 number_of_thrusters = thruster_sizing(
     thrusters, ang_acc_max, MMOI_vehicle
 )
-print("Number of thrusters required:", number_of_thrusters)
+# print("Number of thrusters required:", number_of_thrusters)
 
 def get_thruster_positions(COM, thrusters, number_of_thrusters):
     """
@@ -502,7 +502,7 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
 
 
 all_thruster_positions, updated_positions = get_thruster_positions(COM, thrusters, number_of_thrusters)
-print(updated_positions)
+# print(updated_positions)
 
 # print("\nAll thruster positions:")
 # for thruster_type in all_thruster_positions:
@@ -566,7 +566,7 @@ def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_tim
 
     # Mass calculations for thrusters
     total_propellant_mass = sum(propellant_mass.values())  
-    print(total_propellant_mass) # Total propellant mass in kg
+    # print(total_propellant_mass) # Total propellant mass in kg
     total_dry_mass = sum(total_dry_mass.values())  # Total dry mass in kg
     total_mass = total_dry_mass + total_propellant_mass  # Total mass in kg
     #Calculate total power consumption of the thrusters
@@ -588,15 +588,15 @@ def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_tim
     return total_power, total_mass, total_dry_mass, total_propellant_mass
 
 total_power_thrusters, total_mass_thrusters, total_dry_mass_thrusters, total_prop_mass_thrusters = mass_and_power_estimation(updated_positions, thrusters)
-print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
-print("The total dry mass of the RCS thrusters is: ", total_dry_mass_thrusters, "kg")
-print("The total propellant mass of the RCS thrusters is: ", total_prop_mass_thrusters, "kg")
-print("The total mass of the RCS thrusters is: ", total_mass_thrusters, "kg")
+# print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
+# print("The total dry mass of the RCS thrusters is: ", total_dry_mass_thrusters, "kg")
+# print("The total propellant mass of the RCS thrusters is: ", total_prop_mass_thrusters, "kg")
+# print("The total mass of the RCS thrusters is: ", total_mass_thrusters, "kg")
 
-htp_density = 1.1345 #kg/m^3, limiting density at highest inlet temperature of 80 degrees celsius
+htp_density = 1134.5 #kg/m^3, limiting density at highest inlet temperature of 80 degrees celsius
 
 def acs_tank_design(htp_density, total_prop_mass):
-    tank_pressure = 20e6  # in Pa, 20 bars is the assumed tank pressure
+    tank_pressure = 5e6  # in Pa, 20 bars is the assumed tank pressure
     Materials = {
         "Stainless Steel SS304L": 
                      { 'yield_strength': 215 * 10**6, # in Pa
@@ -610,14 +610,16 @@ def acs_tank_design(htp_density, total_prop_mass):
     }
     
     total_prop_mass = total_prop_mass_thrusters
+    print(total_prop_mass)
     tank_volume = total_prop_mass / htp_density  # in m^3
     tank_radius = ((tank_volume / np.pi) * (3/4)) ** (1/3)  # Assuming a spherical tank for simplicity
     tank_thickness_SS = (tank_pressure * tank_radius)/(Materials['Stainless Steel SS304L']['yield_strength'])  # Using the formula for thin-walled pressure vessels
     tank_thickness_Ti = (tank_pressure * tank_radius)/(Materials["Titanium Ti6Al4V Alloy"]['yield_strength'])  # Using the formula for thin-walled pressure vessels
+    print(tank_thickness_SS, tank_thickness_Ti)
     tank_mass_SS = 4 * np.pi * tank_radius**2 * tank_thickness_SS * Materials['Stainless Steel SS304L']['density']  # Mass of the tank in kg
     tank_mass_Ti = 4 * np.pi * tank_radius**2 * tank_thickness_Ti * Materials["Titanium Ti6Al4V Alloy"]['density']  # Mass of the tank in kg
-    tank_mass = max(tank_mass_SS, tank_mass_Ti)  # Taking the maximum mass of the tank
-    tank_material = "Titanium Ti6Al4V Alloy" if tank_mass_Ti > tank_mass_SS else "Stainless Steel SS304L"
+    tank_mass = min(tank_mass_SS, tank_mass_Ti)  # Taking the maximum mass of the tank
+    tank_material = "Titanium Ti6Al4V Alloy" if tank_mass_Ti < tank_mass_SS else "Stainless Steel SS304L"
     return tank_mass, tank_material
 
 tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
