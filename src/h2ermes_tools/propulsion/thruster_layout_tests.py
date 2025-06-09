@@ -75,15 +75,15 @@ if __name__ == "__main__":
     vacuum = np.arange(24, -1, -2)  # Number of vacuum thrusters
     Isp_sl = np.array([361.6451, 130.9458])
     Isp_vac = np.array([393.3471, 447.9481])
-    t_sl = np.array([61364.9, 19510.9])
-    t_vac = np.array([66744.2 , 66744.2])
-    #mdot_vac = 15.1937 # kg/s 15.193756344148227
-    #mdot_sl = 17.3028 # kg/s 17.30282055269797
     m_struct = 20642.21346 # kg
     payload = 18000 # kg
-    delta_v_sl = 500 # m/s
-    delta_v_vac = 5800+114+113+30 # m/s
-    delta_v_deorbit = 160 # m/s
+    t_sl = t_w_list_landing*m_struct # np.array([61364.9, 19510.9])
+    t_vac = t_w_list_vacuum*(m_struct+payload+(185555.4038-20642.21346)) #np.array([66744.2 , 66744.2])
+    #mdot_vac = 15.1937 # kg/s 15.193756344148227
+    #mdot_sl = 17.3028 # kg/s 17.30282055269797
+    #delta_v_sl = 500 # m/s
+    #delta_v_vac = 5800+114+113+30 # m/s
+    #delta_v_deorbit = 160 # m/s
     m_props = []
     for i in range(len(sea_level)):
         m_props.append(sl_vac_thruster_perf(sea_level[i], vacuum[i], Isp_sl, Isp_vac, t_sl, t_vac, m_struct, payload, delta_v_sl, delta_v_vac, delta_v_deorbit)[-1])
