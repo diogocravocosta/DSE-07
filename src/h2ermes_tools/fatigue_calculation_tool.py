@@ -15,11 +15,6 @@ def mechanical_stress(force, radius, thickness, phi):
     sigma_conical = force/(2 * np.pi * radius * thickness * np.cos(np.radians(phi)))
     return sigma_conical
 
-def t_crit_mechanical(force, radius, sigma_fracture, phi):
-    """Calculates the minimum conical tank wall thickness to not fail for a specified axial load."""
-    t = force /(2 * np.pi * radius * sigma_fracture* np.cos(np.radians(phi)))
-    return t
-
 def thermal_stress(delta_T, young_mod, thermal_expansion_coeff, phi):
     """
     Calculates the thermal stress in the tank by assuming that the tank is clamped at both ends
@@ -29,7 +24,7 @@ def thermal_stress(delta_T, young_mod, thermal_expansion_coeff, phi):
     thermal_stress = stress/ np.cos(np.radians(phi))
     return thermal_stress
 
-def pressure_stress(Pressure_vapor,radius_tank,thickness_tank, phi):
+#def pressure_stress(Pressure_vapor,radius_tank,thickness_tank, phi):
     """
     Calculates the stress caused by the pressure inside a conical tank. 
     """
@@ -38,6 +33,9 @@ def pressure_stress(Pressure_vapor,radius_tank,thickness_tank, phi):
     return conical_stress
 
 def nasa_pressure_combined_load_stress(material, thickness_tank, phi, radius_small, pressure_tank):
+    """
+    Formula to calculate the critical load in conical tank formulated by NASA and then getting stress in walls by using mechanical stress formula
+    """
     gamma = 0.33
     delta_gamma = 0.12
     mu = 0.4 # GET EXACT VALUE
@@ -105,6 +103,9 @@ def cycle_launch(stress_cycle, launches):
     return cycle
 
 def critical_crack_depth_calc(material, Y_geometry_factor, sigma_max):
+    """
+    Calculates the thickness at which a crack will propagate by taking into account max applied sigma and material toughness.
+    """
     critical_crack_depth = (material.Kic / (Y_geometry_factor *sigma_max*1e-6))**2 /np.pi
     return critical_crack_depth
 
@@ -175,48 +176,6 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safet
     print('Damage count is:', damage,". Expected number of launches:", launches)
     return damage,launches
 
-def minimum_thickness_paris_growth(thickness_tank,a_crack_depth):
-    condition = True
-    count = 0
-    sigma_thermal_orbit = thermal_stress(delta_T_tank, material.E, material.cte, phi)
-    sigma_thermal_launchpad = thermal_stress(delta_T_earth,material.E,material.cte, phi)
-    thickness_crit_pressure = t_critical(material.ys, pressure_vent, phi, tank_radius)
-    print("critical thickness is: ", thickness_crit_pressure)
-
-    while condition == True:
-        sigma_pressure_orbit = pressure_stress(pressure_vent, tank_radius, thickness_tank, phi)
-        stress_comb_orbit = sigma_thermal_orbit + sigma_pressure_orbit
-        sigma_max = stress_comb_orbit
-        sigma_axial_launchpad= mechanical_stress(dry_mass*cs.g_0, tank_radius, thickness_tank, phi)
-        stress_comb_launchpad = sigma_thermal_launchpad + sigma_axial_launchpad
-        sigma_min = stress_comb_launchpad
-
-
-
-        while a_crack_depth < thickness_tank - thickness_crit_pressure:
-            Y_geometry_factor = y_calculation(a_crack_depth, thickness_tank)  # Calculate Y factor based on current crack size
-            da_dn = crack_growth(paris_coeff_C,
-                                paris_exp_m,
-                                sigma_max,
-                                sigma_min,
-                                Y_geometry_factor,
-                                a_crack_depth)
-            count = count+ 1
-            a_crack_depth = a_crack_depth + da_dn
-            if count >200:
-                break
-
-        if count>200:
-            count = 0
-            a_crack_depth = 0
-            thickness_tank = thickness_tank -0.00005
-        else:
-            print("calculated count is: ", count,thickness_tank)
-            condition = False
-    print('New calculated thickness is: ',thickness_tank, 'failure thickness is: ',thickness_crit_pressure)
-
-    return thickness_tank
-
 def loading_phases(): 
     """
     Calculates the loading conditions for different phases in the mission.
@@ -248,7 +207,6 @@ def loading_phases():
     sigma_thermal_orbit = thermal_stress(delta_T_tank, material.E, material.cte, phi)
     sigma_pressure_orbit =nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius, pressure_vent) 
     stress_comb_orbit = sigma_thermal_orbit + sigma_pressure_orbit
-    print('test: ',sigma_pressure_orbit)
 
     # Orbit - After docking
     sigma_thermal_dock = thermal_stress(delta_T_tank_extreme, material.E, material.cte,phi)
