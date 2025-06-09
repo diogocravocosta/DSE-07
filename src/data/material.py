@@ -20,7 +20,7 @@ class Material:
         ultimate_strength (float): Ultimate strength [Pa].
         yield_strength (float): Yield strength [Pa].
         roughness_height (float): Effective roughness height [m].
-        fracture_strength (float): Fracture strength [Pa].
+        fracture_toughness (float): Fracture strength [MPa m^0.5].
         absorptivity (float): absorptivity [-]
     """
 
@@ -38,7 +38,7 @@ class Material:
         ultimate_strength=None,
         yield_strength=None,
         roughness_height=None,
-        fracture_strength=None,
+        fracture_toughness=None,
         absorptivity = None
     ):
         """
@@ -56,7 +56,7 @@ class Material:
         self.uts = ultimate_strength
         self.ys = yield_strength
         self.Ra = roughness_height
-        self.fs = fracture_strength
+        self.Kic = fracture_toughness
         self.abs = absorptivity
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):

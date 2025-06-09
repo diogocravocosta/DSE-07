@@ -14,7 +14,7 @@ def sa_cone(ro,ri,h):
 
 def volume_cone(h,ro,ri):
     volume = (1 / 3) * np.pi * h * (ro ** 2 + ro * ri + ri ** 2)
-    area_proj = (ro + ri)*h/2
+    area_proj = (ro + ri)*h
     return volume, area_proj
 
 # Calculate the new inner radius based on ullage height
@@ -166,10 +166,10 @@ if __name__ =='__main__':
     rho_lh2_30K = 50
 
     #Geometry parameters
-    ro = 4.92
-    ri = 2.46
-    h = 13.95
-    phi = np.arctan((ro - ri) / h)  # angle in radians
+    ro = 5
+    ri = 7.07/2
+    phi = 10  # angle in degrees
+    h = (ro-ri)/np.tan(np.degrees(phi))
 
     # Mass paramters
     h2_depot = 10500
