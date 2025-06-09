@@ -268,9 +268,10 @@ class StandardAtmosphere:
                                 elif 86000 <= self.altitude:
                                     # TODO: add density
                                     scale = -2.0
-                                    T_7 = T_6 + scale * ((86000 - 71000) / 1000)
+                                    T_7_0 = T_6 + scale * ((84852 - 71000) / 1000)
+                                    T_7 = T_7_0 * 0.999579
                                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
-                                    p_7 = p_6 * (T_6 / (T_6 + scale * ((86000 - 71000) / 1000))) ** K
+                                    p_7 = p_6 * (T_6 / (T_6 + scale * ((84852 - 71000) / 1000))) ** K
 
                                     # layer 8 (86000 - 91000 89716)
                                     if 86000 <= self.altitude < 91000:
@@ -323,8 +324,8 @@ class StandardAtmosphere:
                                                     lbd = scale / (self.T_inf - T_10)
                                                     xi = ((self.altitude - 120000) * (self.R_0 + 120000) / (self.R_0 + self.altitude))/1000
                                                     T_final = self.T_inf - (self.T_inf - T_10) * np.exp(- lbd * xi)
-        print(T_final, p_final)
-        return T_final, p_final
+        #print(T_final, p_final)
+        return T_final
 
 class NrlmsiseAtmosphere:
     def __init__(self,
@@ -375,6 +376,9 @@ class NrlmsiseAtmosphere:
         return T, rho
 
 
+
+atmos = StandardAtmosphere(89)
+print(atmos.T_std)
 # TEST
 # temps = []
 # hs = []
