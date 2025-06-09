@@ -276,6 +276,7 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     thrust_z_direction_two = (torque_produced[2] + re_entry_moment / 3) / (
     2 * thrusters["nammo_220"]["moment_arm"]
     )  # Thrust required in the z-direction
+    print("Thrust in x, y, and z directions for nammo_220 are: ", thrust_x_direction_two, thrust_y_direction_two, thrust_z_direction_two, "N")
     
     
     # Number of thrusters required for the nammo_220_3 engine with nominal vacuum thrust    
@@ -288,7 +289,7 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     thrust_z_direction_three = (torque_produced[2] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_3"]["moment_arm"]
     )  # Thrust required in the z-direction
-
+    print("Thrust in x, y, and z directions for nammo_220_3 are: ", thrust_x_direction_three, thrust_y_direction_three, thrust_z_direction_three, "N")
 
     # Number of thrusters required for the nammo_220_4 engine with maximum vacuum thrust
     thrust_x_direction_four = (torque_produced[0] + re_entry_moment / 3) / (
@@ -300,6 +301,7 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
     thrust_z_direction_four = (torque_produced[2] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_4"]["moment_arm"]
     )  # Thrust required in the z-direction
+    print("Thrust in x, y, and z directions for nammo_220_4 are: ", thrust_x_direction_four, thrust_y_direction_four, thrust_z_direction_four, "N")
 
     # Calculate the number of thrusters required for each direction and thruster type
     number_of_thrusters["nammo_220"] = {
@@ -610,12 +612,10 @@ def acs_tank_design(htp_density, total_prop_mass):
     }
     
     total_prop_mass = total_prop_mass_thrusters
-    print(total_prop_mass)
     tank_volume = total_prop_mass / htp_density  # in m^3
     tank_radius = ((tank_volume / np.pi) * (3/4)) ** (1/3)  # Assuming a spherical tank for simplicity
     tank_thickness_SS = (tank_pressure * tank_radius)/(Materials['Stainless Steel SS304L']['yield_strength'])  # Using the formula for thin-walled pressure vessels
     tank_thickness_Ti = (tank_pressure * tank_radius)/(Materials["Titanium Ti6Al4V Alloy"]['yield_strength'])  # Using the formula for thin-walled pressure vessels
-    print(tank_thickness_SS, tank_thickness_Ti)
     tank_mass_SS = 4 * np.pi * tank_radius**2 * tank_thickness_SS * Materials['Stainless Steel SS304L']['density']  # Mass of the tank in kg
     tank_mass_Ti = 4 * np.pi * tank_radius**2 * tank_thickness_Ti * Materials["Titanium Ti6Al4V Alloy"]['density']  # Mass of the tank in kg
     tank_mass = min(tank_mass_SS, tank_mass_Ti)  # Taking the maximum mass of the tank
@@ -623,7 +623,7 @@ def acs_tank_design(htp_density, total_prop_mass):
     return tank_mass, tank_material
 
 tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
-print("The mass of the ACS tank is: ", tank_mass, "kg")
-print("The material of the ACS tank is: ", tank_material)
+# print("The mass of the ACS tank is: ", tank_mass, "kg")
+# print("The material of the ACS tank is: ", tank_material)
     
 
