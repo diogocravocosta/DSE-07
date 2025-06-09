@@ -123,95 +123,6 @@ drag_compensation_delta_v = Variable(
     margin=(0.5, 1.5),
 )
 
-engine_chamber_pressure = Variable(
-        name="Engine Chamber Pressure",
-        value=6100000.0,
-        unit="Pa",
-        latex_symbol="P_{c}",
-        confidence="design parameter, should not change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-diameter_combustion_chamber_sl = Variable(
-        name="Diameter of the Combustion Chamber for Seal Level Optimized Combustion Chambers",
-        value=0.17038,
-        unit="m",
-        latex_symbol="D_{cc_{sl}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-diameter_combustion_chamber_vac = Variable(
-        name="Diameter of the Combustion Chamber for Vacuum Optimized Combustion Chambers",
-        value=0.15966,
-        unit="m",
-        latex_symbol="D_{cc_{vac}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-UTS_Inconel_718 = Variable(
-        name="Ultimate Tensile Strength of Inconel 718, the material used for the combustion chambers, at 900 k, the max temperature for the inner walls in the firebolt design report",
-        value=1151424468,
-        unit="Pa",
-        latex_symbol="\sigma_{UTS_{Inconel718}}",
-        confidence="good, depends on treatment",
-        constraints="only positive values",
-        margin=(0.95, 1.05),
-    )
-
-density_Inconel_718 = Variable(
-        name="Desnity of Inconel 718, the material used for the combustion chambers, at 900 k, the max temperature for the inner walls in the firebolt design report",
-        value=8220.9316989,
-        unit="Kg/m^3",
-        latex_symbol="\rho_{Inconel718}",
-        confidence="good, depends on treatment",
-        constraints="only positive values",
-        margin=(1.0, 1.01),
-    )
-
-diameter_throat_sl = Variable(
-        name="Diameter of the Throat for Seal Level Optimized Combustion Chambers",
-        value=0.09133,
-        unit="m",
-        latex_symbol="D_{t_{sl}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-diameter_throat_vac = Variable(
-        name="Diameter of the Throat for Vacuum Optimized Combustion Chambers",
-        value=0.08559,
-        unit="m",
-        latex_symbol="D_{t_{vac}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-contraction_angle_combustion_chamber_vac = Variable(
-        name="The contraction angle of the combustion chamber for vacuum optimized combustion chambers",
-        value=0.5235988, #basically 30 degrees in radians
-        unit="Rad",
-        latex_symbol="\theta_{cc_{vac}}",
-        confidence="good, design parameter",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
-
-contraction_angle_combustion_chamber_sl = Variable(
-        name="The contraction angle of the combustion chamber for sea level optimized combustion chambers",
-        value=0.5235988, #basically 30 degrees in radians
-        unit="Rad",
-        latex_symbol="\theta_{cc_{sl}}",
-        confidence="good, design parameter",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
 
 length_combustion_chamber_sl = Variable(
         name="Length of the Combustion Chamber for Seal Level Optimized Combustion Chambers",
@@ -253,25 +164,7 @@ length_nozzle_vac = Variable(
         margin=(1.0, 1.0),
     )
 
-theta_cn_sl = Variable(
-        name="Half Angle of the nozzle for Seal Level Optimized Combustion Chambers",
-        value=0.40544,
-        unit="Rad",
-        latex_symbol="\theta_{cn_{sl}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
 
-theta_cn_vac = Variable(
-        name="Half Angle of the nozzle for Vacuum Optimized Combustion Chambers",
-        value=0.670381,
-        unit="Rad",
-        latex_symbol="\theta_{cn_{vac}}",
-        confidence="good, design can change",
-        constraints="only positive values",
-        margin=(1.0, 1.0),
-    )
 
 
 diameter_exit_sl = Variable(
@@ -454,15 +347,6 @@ thrust_chamber_vac_mass = Variable(
         margin=(0.8, 1.2),
     )
 
-l_star = Variable(
-        name="Thrust Chamber Characteristic Length",
-        value=1.02,
-        unit="m",
-        latex_symbol="L*",
-        confidence="design parameter, most conservative for liquid hydrogen",
-        constraints="only positive values",
-        margin=(0.8, 1.2),
-    )
 
 if __name__ == "__main__":
     # Example of how to create a variable
