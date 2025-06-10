@@ -41,7 +41,7 @@ class TestTrajectory:
                                             self.C_L)
 
         assert expected_trajectory.planet == test_trajectory.planet
-        assert expected_trajectory.g == test_trajectory.g
+        assert expected_trajectory.g_0 == test_trajectory.g_0
         assert expected_trajectory.rho_0 == test_trajectory.rho_0
         assert expected_trajectory.R == test_trajectory.R
         assert expected_trajectory.scale_height == test_trajectory.scale_height

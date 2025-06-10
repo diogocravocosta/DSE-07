@@ -17,6 +17,10 @@ class GlidingEntry:
                  vehicle_surface,
                  C_D,
                  C_L,
+                 latitude_0,
+                 longitude_0,
+                 lift_parameter = None,
+                 atmosphere = "exponential"
 #                 entry_speed,
 #                 flight_path_angle,
 #                 c_l,
@@ -30,17 +34,20 @@ class GlidingEntry:
         # CONSTANTS
         # planetary
         self.planet = planet
-        self.g, self.rho_0, self.R, self.scale_height, self.m = self.get_constants()
+        self.g_0, self.rho_0, self.R_e, self.scale_height, self.m = self.get_constants()
 
         self.beta = 1 / self.scale_height
         self.c_star = 1.1097e8
 
         # flight dynamics TODO
+        self.altitude = altitude * 1000  # m
+        self.alt_array = np.arange(0, self.altitude+1)
+        self.longitude = longitude_0
+        self.latitude = latitude_0
 #         self.entry_speed = entry_speed  # m/s
 #         self.entry_flight_path_angle = flight_path_angle  # deg
 #         self.entry_flight_path_angle_rad = np.radians(self.entry_flight_path_angle)  # rad
-        self.altitude = altitude * 1000  # m
-#
+
         # geometry
         self.mass = vehicle_mass
         self.S = vehicle_surface
@@ -63,23 +70,24 @@ class GlidingEntry:
 #             self.lift_drag_ratio = lift_drag_ratio
 #
         # CALCULATIONS
-        self.circular_velocity_0 = np.sqrt(self.g * (self.R + self.altitude))
-#         self.altitude = np.linspace(self.h_0 * 1000, 0, 10000)       # m
+        self.circular_velocity_0 = np.sqrt(self.g_0 * (self.R_e + self.altitude))
 
-#
 #         if range_to_cover is None:
 #             self.lift_drag_ratio = self.lift_drag_ratio
 #         else:
 #             self.lift_drag_ratio = -2 * ((range_to_cover/self.Re)/(np.log(1-(self.entry_speed**2/self.v_c**2))))
-#
+
         # atmosphere TODO
-#         self.rho = self.rho_0 * np.exp(-self.beta * self.altitude)
-#
+        # self.atmosphere = self.rho_0 * np.exp(-self.beta * self.altitude)
+        self.atmosphere_model = atmosphere
+        self.atmosphere = self.get_atmosphere()
+
+
         # lift parameter
-#         if lift_parameter is None:
-#             self.lift_parameter = (self.mass * self.g) / (self.S * self.c_l)
-#         else:
-#             self.lift_parameter = lift_parameter
+        if lift_parameter is None:
+            self.lift_parameter = (self.mass * self.g_0) / (self.S * self.C_D)
+        else:
+            self.lift_parameter = lift_parameter
 #
         # normalized velocity ratio TODO
 #         self.normalized_v_ratio, self.v, self.v_min = self.get_velocity()
@@ -140,15 +148,44 @@ class GlidingEntry:
     def equations_of_motion(self, h, V, gamma):
         # calculations
         rho = atm.Atmosphere(h).rho_exp
-        circular_velocity = np.sqrt(self.g * (self.R + h * 1000))
+        circular_velocity = np.sqrt(self.g_0 * (self.R + h * 1000))
 
         # equations
-        dV_dt = (- 0.5 * self.C_D * rho * V**2 * self.S - self.mass * self.g * np.sin(gamma)) / self.mass
-        dgamma_dt = (0.5 * self.C_L * rho * V**2 * self.S - self.mass * self.g * np.sin(gamma) * (1 - (V/circular_velocity)**2))/(self.mass * V)
+        dV_dt = (- 0.5 * self.C_D * rho * V**2 * self.S - self.mass * self.g_0 * np.sin(gamma)) / self.mass
+        dgamma_dt = (0.5 * self.C_L * rho * V**2 * self.S - self.mass * self.g_0 * np.sin(gamma) * (1 - (V/circular_velocity)**2))/(self.mass * V)
         dh_dt = V * np.sin(gamma)
 
+    def get_atmosphere(self):
+        dfs = []
+        for i in self.alt_array:
+            height = i / 1000
+            if self.atmosphere_model == "exponential":
+                atmos = atm.ExponentialAtmosphere(height)
+                density = atmos.rho_exp
+            elif self.atmosphere_model == "standard":
+                atmos = atm.StandardAtmosphere(height)
+                density = atmos.rho_std
+            elif self.atmosphere_model == "nrlmsise-00":
+                atmos = atm.NrlmsiseAtmosphere(height,
+                                               time = "2025-07-01 22:18:45",
+                                               latitude = self.latitude,
+                                               longitude = self.longitude)
+                density = atmos.rho_std
+            else:
+                raise ValueError("atmosphere_model must be either 'exponential' or 'standard' or 'nrlmsise-00'")
+            df = pd.DataFrame({'height': height, 'density': density})
+            dfs.append(df)
+
+        density_dataframe = pd.concat(dfs)
+
+        return density_dataframe
+
+
     def circular_velocity(self):
-        v_c = np.sqrt()
+        circular_velocity = self.circular_velocity_0 * np.sqrt(1 / (1 + self.altitude /  self.R_e))
+
+        return circular_velocity
+
 
 
 #     def get_velocity(self):
@@ -233,5 +270,11 @@ class GlidingEntry:
 # # # plot_2 = glide_2.dataframe.hvplot(x="v", y="altitude")
 # # # plot = plot_1 * plot_2
 # # hvplot.show(plot_1)
-#
-#
+glide = GlidingEntry(planet="earth",
+                     altitude = 20,
+                     vehicle_mass=2000,
+                     vehicle_surface=10,
+                     C_D = 1.4,
+                     C_L = 0.3)
+
+print(glide.alt_array)
