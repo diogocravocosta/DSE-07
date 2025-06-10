@@ -108,8 +108,8 @@ if __name__ == "__main__":
         t_w_vac_all = float(np.round(t_vac_all / ((assumed_mtot)*9.81),1))
         t_w_sl_only = float(np.round(t_sl_only / ((m_struct + payload)*9.81),1))
         t_w_vac_only = float(np.round(t_vac_only / ((assumed_mtot)*9.81),1))
-        if sea_level[i] == 8:
-            print(t_w_sl_all, t_w_vac_all, t_w_sl_only, t_w_vac_only)
+        #if sea_level[i] == 8:
+        #   print(t_w_sl_all, t_w_vac_all, t_w_sl_only, t_w_vac_only)
         if np.any(np.isclose(t_w_sl_all, t_w_list_landing, atol=1e-08)) and np.any(np.isclose(t_w_vac_all, t_w_list_vacuum, atol=1e-08)) and np.any(np.isclose(t_w_sl_only, t_w_list_landing, atol=1e-08)) and np.any(np.isclose(t_w_vac_only, t_w_list_vacuum, atol=1e-08)):
             lst_n.append(sea_level[i])
             delta_v_sl_all = delta_v_list_landing[np.argmin(np.abs(t_w_list_landing - t_w_sl_all))]
