@@ -15,25 +15,31 @@ class Material:
         specific_heat (float): Specific heat [J/kg/K].
         poisson_ratio (float): Poisson's ratio.
         youngs_modulus (float): Young's modulus [Pa].
-        thermal_expansion_coeffient (float): Thermal expansion coefficient [1/K].
+        thermal_expansion_coefficient (float): Thermal expansion coefficient [1/K].
         emissivity (float): Thermal emissivity.
         ultimate_strength (float): Ultimate strength [Pa].
+        yield_strength (float): Yield strength [Pa].
         roughness_height (float): Effective roughness height [m].
+        fracture_toughness (float): Fracture strength [MPa m^0.5].
+        absorptivity (float): absorptivity [-]
     """
 
     def __init__(
         self,
-        name,
-        thermal_diffusivity,
-        thermal_conductivity,
-        density,
-        specific_heat,
-        poisson_ratio,
-        youngs_modulus,
-        thermal_expansion_coeffient,
-        emissivity,
-        ultimate_strength,
-        roughness_height,
+        name=None,
+        thermal_diffusivity=None,
+        thermal_conductivity=None,
+        density=None,
+        specific_heat=None,
+        poisson_ratio=None,
+        youngs_modulus=None,
+        thermal_expansion_coefficient=None,
+        emissivity=None,
+        ultimate_strength=None,
+        yield_strength=None,
+        roughness_height=None,
+        fracture_toughness=None,
+        absorptivity = None
     ):
         """
         Initialize a Material instance with its properties.
@@ -45,10 +51,13 @@ class Material:
         self.Cp = specific_heat
         self.nu = poisson_ratio
         self.E = youngs_modulus
-        self.cte = thermal_expansion_coeffient
+        self.cte = thermal_expansion_coefficient
         self.eps = emissivity
         self.uts = ultimate_strength
+        self.ys = yield_strength
         self.Ra = roughness_height
+        self.Kic = fracture_toughness
+        self.abs = absorptivity
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """
