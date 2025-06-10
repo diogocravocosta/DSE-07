@@ -1,0 +1,15 @@
+name = "SS310"
+description = """
+Stainless steel 310 is a high-temperature alloy with excellent oxidation
+resistance and good strength at elevated temperatures. It is often used in
+furnace applications, heat exchangers, and other high-temperature environments.
+"""
+specific_heat = 500                     # J/kg/K at 500 C (roughly)
+density = 7900                          # kg/m^3 at 500 C (roughly)
+poisson_ratio = 0.3                     # -
+youngs_modulus = 200e9                  # Pa
+thermal_expansion_coefficient = 15.9e-6 # 1/K
+ultimate_strength = 500e6               # Pa (roughly)
+emissivity = 0.9                        #  -
+roughness_height = 0.9e-5               # m
+maximum_temperature = 1423.15           # K

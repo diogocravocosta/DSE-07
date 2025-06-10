@@ -1,0 +1,12 @@
+name = "SS304"
+description = "Austenitic stainless steel with good corrosion resistance and weldability."
+thermal_conductivity = 16.2             # W/m/K at 500 C (typical: 16.2 W/m/K at 500°C)
+specific_heat = 500                     # J/kg/K at 500 C (typical: 500 J/kg/K at 500°C)
+density = 8000                          # kg/m^3 (typical: 8000 kg/m^3)
+poisson_ratio = 0.29                    # - (typical: 0.29)
+youngs_modulus = 193e9                  # Pa (typical: 193 GPa)
+thermal_expansion_coefficient = 17.2e-6 # 1/K (typical: 17.2e-6 1/K)
+ultimate_strength = 505e6               # Pa (typical: 505 MPa)
+emissivity = 0.59                       # - (typical: 0.59 for oxidized surface)
+roughness_height = 0.5e-5               # m (typical: 0.5e-5 m)
+maximum_temperature = 1198.15           # K (typical: ~1350°C = 1623.15 K)
