@@ -149,7 +149,7 @@ class StandardAtmosphere:
                 g: the gravitational acceleration
 
         """
-        g = self.g_0 * (self.R_0 / (self.R_0 + self.altitude))
+        g = self.g_0 * (self.R_0 / (self.R_0 + self.altitude))**2
 
         return g
 

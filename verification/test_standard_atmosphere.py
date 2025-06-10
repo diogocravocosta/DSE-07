@@ -54,9 +54,9 @@ class TestStandardAtmosphere:
         atmosphere.g = atmosphere.gravitational_acceleration_std()
 
         # to calculate expected_gravitational_acceleration use: g0  / (1 + h / Re)**2 with h and Re in meters
-        expected_gravitational_acceleration = 9.226097114
+        expected_gravitational_acceleration = 8.6799
 
-        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration)
+        npt.assert_almost_equal(atmosphere.g, expected_gravitational_acceleration, decimal=4)
 
     def test_all_temperatures(self):
         atm_dict = {10: 223.252,
