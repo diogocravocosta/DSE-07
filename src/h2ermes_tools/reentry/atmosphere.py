@@ -279,7 +279,7 @@ class StandardAtmosphere:
                                         # TODO: add density
                                         scale = 0.0
                                         T_final = T_7 + scale * ((self.altitude-86000) / 1000)
-                                        p_final = number_densities_sum * boltzmann * T_final
+                                        # p_final = number_densities_sum * boltzmann * T_final
 
                                     elif 91000 <= self.altitude:
                                         # TODO: add pressure
@@ -295,7 +295,7 @@ class StandardAtmosphere:
                                             A = -76.3232
                                             a = -19.9429
                                             T_final = T_c + A * (1-((((self.altitude-91000)/1000)/a)**2)) ** 0.5
-                                            p_final = number_densities_sum * boltzmann * T_final
+                                            # p_final = number_densities_sum * boltzmann * T_final
 
                                         elif 110000 <= self.altitude:
                                             # TODO: add pressure
@@ -311,7 +311,7 @@ class StandardAtmosphere:
                                                 # TODO: add density
                                                 scale = 12.0
                                                 T_final = T_9 + scale * ((self.altitude-110000) / 1000)
-                                                p_final = number_densities_sum * boltzmann * T_final
+                                                # p_final = number_densities_sum * boltzmann * T_final
 
                                             elif 120000 <= self.altitude:
                                                 # TODO: add pressure
@@ -326,12 +326,83 @@ class StandardAtmosphere:
                                                     lbd = scale / (self.T_inf - T_10)
                                                     xi = ((self.altitude - 120000) * (self.R_0 + 120000) / (self.R_0 + self.altitude))/1000
                                                     T_final = self.T_inf - (self.T_inf - T_10) * np.exp(- lbd * xi)
-                                                    p_final = number_densities_sum * boltzmann * T_final
+                                                    # p_final = number_densities_sum * boltzmann * T_final
         #print(T_final, p_final)
         return T_final, p_final
 
+    def interpolate_molecular_mass(self, height):
+        # geometric altitude in km
+        Z = [
+            0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
+            105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195,
+            200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290, 295,
+            300, 305, 310, 315, 320, 325, 330, 335, 340, 345, 350, 355, 360, 365, 370, 375, 380, 385, 390, 395,
+            400, 405, 410, 415, 420, 425, 430, 435, 440, 445, 450, 455, 460, 465, 470, 475, 480, 485, 490, 495,
+            500, 505, 510, 515, 520, 525, 530, 535, 540, 545, 550, 555, 560, 565, 570, 575, 580, 585, 590, 595,
+            600, 605, 610, 615, 620, 625, 630, 635, 640, 645, 650, 655, 660, 665, 670, 675, 680, 685, 690, 695,
+            700, 705, 710, 715, 720, 725, 730, 735, 740, 745, 750, 755, 760, 765, 770, 775, 780, 785, 790, 795,
+            800, 805, 810, 815, 820, 825, 830, 835, 840, 845, 850, 855, 860, 865, 870, 875, 880, 885, 890, 895,
+            900, 905, 910, 915, 920, 925, 930, 935, 940, 945, 950, 955, 960, 965, 970, 975, 980, 985, 990, 995, 1000
+        ]
+
+        # molecular mass
+        M = [
+            28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.964,
+            28.964, 28.964, 28.964, 28.964, 28.964, 28.964, 28.906, 28.734,
+            28.4, 27.881, 27.267, 26.681, 26.205, 25.802, 25.437, 25.09, 24.753, 24.422, 24.1, 23.791, 23.49, 23.192,
+            22.9, 22.616, 22.34, 22.072, 21.81, 21.552, 21.3, 21.056, 20.82, 20.591, 20.37, 20.156, 19.949, 19.749,
+            19.556, 19.369, 19.19, 19.017, 18.85, 18.69, 18.536, 18.388, 18.246, 18.109, 17.978, 17.851, 17.73, 17.613,
+            17.501, 17.393, 17.289, 17.188, 17.091, 16.998, 16.907, 16.82, 16.735, 16.652, 16.572, 16.493, 16.417,
+            16.341, 16.267, 16.195, 16.122, 16.051, 15.98, 15.909, 15.838, 15.767, 15.695, 15.623, 15.55, 15.476,
+            15.401, 15.324, 15.246, 15.166, 15.083, 14.999, 14.912, 14.823, 14.731, 14.636, 14.537, 14.435, 14.33,
+            14.221, 14.108, 13.992, 13.871, 13.748, 13.621, 13.49, 13.356, 13.219, 13.079, 12.935, 12.788, 12.639,
+            12.486, 12.33, 12.172, 12.01, 11.846, 11.679, 11.51, 11.338, 11.164, 10.988, 10.81, 10.631, 10.451, 10.27,
+            10.089, 9.908, 9.727, 9.547, 9.367, 9.189, 9.012, 8.837, 8.664, 8.494, 8.326, 8.161, 8.0, 7.842, 7.688,
+            7.538, 7.391, 7.248, 7.109, 6.973, 6.841, 6.712, 6.588, 6.466, 6.349, 6.235, 6.125, 6.018, 5.915, 5.816,
+            5.72, 5.628, 5.54, 5.455, 5.374, 5.296, 5.222, 5.15, 5.082, 5.017, 4.955, 4.895, 4.839, 4.784, 4.733, 4.684,
+            4.637, 4.593, 4.55, 4.51, 4.471, 4.435, 4.4, 4.367, 4.335, 4.305, 4.276, 4.249, 4.222, 4.197, 4.173, 4.15,
+            4.128, 4.107, 4.086, 4.067, 4.047, 4.029, 4.01, 3.992, 3.975, 3.957, 3.94
+        ]
+
+        molecular_mass = np.interp(height, Z, M)
+        return molecular_mass
+
     def get_number_densities(self, height, temperature_7, temperature_final):
         number_densities_sum = 0
+
+        molecular_dictionary = {"N2":
+                                    {"number_density_86": 1.129794 * 10**20},
+                                "O":
+                                    {"number_density_86": 8.600000 * 10**16},
+                                "O2":
+                                    {"number_density_86": 3.030898 * 10**19},
+                                "Ar":
+                                    {"number_density_86": 1.351400 * 10**18},
+                                "He":
+                                    {"number_density_86": 7.581730 * 10**14}}
+
+
+        # number density N2
+        if height > 100:
+            M = self.M
+        else:
+            M = self.interpolate_molecular_mass(height)
+
+        # number density N2
+        c1_N2 = get_coefficient_
+        N2_number_density = molecular_dictionary["N2"]["number_density_86"] * (temperature_7/temperature_final) * np.exp(- M * self.g * (height * 1000 - 86000) / (self.R_star * temperature_final))
+
+        # number density O
+
+        # number density O2
+
+        # number density Ar
+
+        # number density He
+
+        def get_coefficient_1(number_density_7):
+            c1 = number_density_7 * temperature_7 / temperature_final
+            return c1
         return number_densities_sum
 
 class NrlmsiseAtmosphere:
