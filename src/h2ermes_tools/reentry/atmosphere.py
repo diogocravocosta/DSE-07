@@ -2,7 +2,6 @@
 import numpy as np
 import math
 import pandas as pd
-import hvplot.pandas
 from pyatmos import download_sw_nrlmsise00,read_sw_nrlmsise00
 from pyatmos import nrlmsise00
 from scipy.interpolate import CubicSpline
