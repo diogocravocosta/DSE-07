@@ -347,6 +347,35 @@ thrust_chamber_vac_mass = Variable(
         margin=(0.8, 1.2),
     )
 
+mass_flow_main = Variable(
+        name="Mass Flow of the Main Engine, including all of the Thrust Chambers",
+        value=514.4880, 
+        unit="kg/s",
+        latex_symbol="\dot{m}_{main}",
+        confidence="result of other parameters, can change",
+        constraints="only positive values",
+        margin=(0.8, 1.2),
+    )
+
+t_w_sl = Variable(
+        name="Thrust to Weight Ratio of the Vehicle during the start of the Landing Burn (only SL engines firing)",
+        value=1.6, 
+        unit="[-]",
+        latex_symbol="T/W_{sl}",
+        confidence="Result of Analysis, set value, will not change",
+        constraints="only positive values",
+        margin=(1, 1),
+    )
+
+t_w_vac = Variable(
+        name="Thrust to Weight Ratio of the Vehicle during the start of the Vacuum Burn (SL and Vac engines firing)",
+        value=1.2, 
+        unit="[-]",
+        latex_symbol="T/W_{vac}",
+        confidence="Result of Analysis, set value, will not change",
+        constraints="only positive values",
+        margin=(1, 1),
+    )
 
 if __name__ == "__main__":
     # Example of how to create a variable
