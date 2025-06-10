@@ -27,6 +27,7 @@ dependencies = [
     "pyfluids>=2.8.0",
     "tqdm>=4.67.1",
     "scipy>=1.15.3",
+    "pyatmos>=1.2.7"
 ]
 optional-dependencies = { dev = [
         "ruff>=0.11.12",
