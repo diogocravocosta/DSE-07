@@ -1,6 +1,7 @@
 import numpy as np
 
 import data.constants as cn
+import h2ermes_tools.integration.dummy_dry_mass as dds
 
 
 class MassIntegrator:
@@ -91,7 +92,17 @@ class MassIntegrator:
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
 
-    def calculate_dry_masses(self, old_integrator: 'MassIntegrator') -> None:
+    def calculate_dummy_dry_masses(self, old_integrator: 'MassIntegrator') -> None:
         """
         Calculate the dry masses of the subsystems based on the masses from previous iteration.
         """
+        self.acs_propellant_mass = dds.acs_propellant_mass(old_integrator.gross_mass)
+
+        self.subsystem_dry_masses = {
+            "main_tank": dds.main_tank_mass(old_integrator.main_hydrogen_mass + old_integrator.main_oxygen_mass),
+            "header_tank": dds.header_tank_mass(old_integrator.header_hydrogen_mass + old_integrator.header_oxygen_mass),
+            "landing_legs": dds.landing_leg_mass(old_integrator.dry_mass),
+            "acs": dds.acs_dry_mass(self.acs_propellant_mass),
+        }
+
+        self.dry_mass = sum(self.subsystem_dry_masses.values())
