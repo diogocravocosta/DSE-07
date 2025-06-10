@@ -75,37 +75,50 @@ class TestStandardAtmosphere:
         for height, expected_temp in atm_dict.items():
             atmosphere = self.make_test_atmosphere(height)
             atmosphere.altitude_gp = atmosphere.geopotential_altitude()
-            temperature = atmosphere.atmosphere()
+            temperature, pressure = atmosphere.atmosphere()
 
             expected_temperature = expected_temp
 
             npt.assert_almost_equal(temperature, expected_temperature, decimal=2)
 
 
-    def test_all_pressure(self):
-        atm_dict = {10: 223.252,
-                    15: 216.65,
-                    25: 221.552,
-                    35: 236.513,
-                    49: 270.65,
-                    60: 247.021,
-                    75: 208.399,
-                    89: 186.87,
-                    100: 195.08,
-                    115: 300.00,
-                    200: 854.56,
-                    900: 1000.00}
+    def test_all_pressures(self):
+        atm_dict = {10: 26499,
+                    15: 12111,
+                    25: 2549.2,
+                    35: 574.59,
+                    49: 90.336,
+                    60: 21.958,
+                    75: 2.3881,
+                    # 89: 0.21919,
+                    # 100: 0.032011,
+                    # 115: 0.0040096,
+                    # 200: 0.000084736,
+                    # 900: 0.000000010873
+                    }
 
-    def test_all_densities(self):
-        atm_dict = {10: 223.252,
-                    15: 216.65,
-                    25: 221.552,
-                    35: 236.513,
-                    49: 270.65,
-                    60: 247.021,
-                    75: 208.399,
-                    89: 186.87,
-                    100: 195.08,
-                    115: 300.00,
-                    200: 854.56,
-                    900: 1000.00}
+        for height, expected_p in atm_dict.items():
+            atmosphere = self.make_test_atmosphere(height)
+            atmosphere.altitude_gp = atmosphere.geopotential_altitude()
+            temperature, pressure = atmosphere.atmosphere()
+
+            expected_pressure = expected_p
+
+            npt.assert_almost_equal(pressure, expected_pressure, decimal=0)
+
+
+
+
+    # def test_all_densities(self):
+    #     atm_dict = {10: 223.252,
+    #                 15: 216.65,
+    #                 25: 221.552,
+    #                 35: 236.513,
+    #                 49: 270.65,
+    #                 60: 247.021,
+    #                 75: 208.399,
+    #                 89: 186.87,
+    #                 100: 195.08,
+    #                 115: 300.00,
+    #                 200: 854.56,
+    #                 900: 1000.00}

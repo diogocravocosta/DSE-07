@@ -17,3 +17,4 @@ pressure_sea_level = 101325
 R_star = 8314.32            # J/(kmol K), universal gas constant
 molecular_mass = 28.9644    # kg/kmol, molecular mass of Earth's atmosphere
 gamma = 1.4
+boltzmann_constant = 1.380622 * 10**(-23) # N m / K

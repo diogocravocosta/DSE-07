@@ -279,14 +279,13 @@ class StandardAtmosphere:
                                         # TODO: add density
                                         scale = 0.0
                                         T_final = T_7 + scale * ((self.altitude-86000) / 1000)
-                                        p_final = p_7 * np.exp(-self.g_0*self.M* ((self.altitude_gp-86000) / 1000)/(self.R_star*T_7))
+                                        p_final = number_densities_sum * boltzmann * T_final
 
                                     elif 91000 <= self.altitude:
                                         # TODO: add pressure
                                         # TODO: add density
                                         scale = 0.0
                                         T_8 = T_7 + scale * ((91000 - 86000) / 1000)
-                                        p_8 = p_7 * np.exp(-self.g_0*self.M* ((91000 - 86000) / 1000)/(self.R_star*T_7))
 
                                         # layer 9 (91000 - 110000)
                                         if 91000 <= self.altitude < 110000:
@@ -296,6 +295,8 @@ class StandardAtmosphere:
                                             A = -76.3232
                                             a = -19.9429
                                             T_final = T_c + A * (1-((((self.altitude-91000)/1000)/a)**2)) ** 0.5
+                                            p_final = number_densities_sum * boltzmann * T_final
+
                                         elif 110000 <= self.altitude:
                                             # TODO: add pressure
                                             # TODO: add density
@@ -310,6 +311,7 @@ class StandardAtmosphere:
                                                 # TODO: add density
                                                 scale = 12.0
                                                 T_final = T_9 + scale * ((self.altitude-110000) / 1000)
+                                                p_final = number_densities_sum * boltzmann * T_final
 
                                             elif 120000 <= self.altitude:
                                                 # TODO: add pressure
@@ -324,8 +326,13 @@ class StandardAtmosphere:
                                                     lbd = scale / (self.T_inf - T_10)
                                                     xi = ((self.altitude - 120000) * (self.R_0 + 120000) / (self.R_0 + self.altitude))/1000
                                                     T_final = self.T_inf - (self.T_inf - T_10) * np.exp(- lbd * xi)
+                                                    p_final = number_densities_sum * boltzmann * T_final
         #print(T_final, p_final)
-        return T_final
+        return T_final, p_final
+
+    def get_number_densities(self, height, temperature_7, temperature_final):
+        number_densities_sum = 0
+        return number_densities_sum
 
 class NrlmsiseAtmosphere:
     def __init__(self,
@@ -375,10 +382,6 @@ class NrlmsiseAtmosphere:
 
         return T, rho
 
-
-
-atmos = StandardAtmosphere(89)
-print(atmos.T_std)
 # TEST
 # temps = []
 # hs = []
