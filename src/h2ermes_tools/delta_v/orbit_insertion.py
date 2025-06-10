@@ -1,3 +1,9 @@
+"""
+This file contains the ascent simulation for our second stage.
+
+It also represents a beautiful example of a bad code so don't take too much inspiration from it.
+"""
+
 import pandas as pd
 import numpy as np
 import time
@@ -5,6 +11,8 @@ import matplotlib.pyplot as plt
 
 import data.constants as cn
 import h2ermes_tools.delta_v.helpers as hv
+
+np.seterr(all='raise')  # Raise exceptions for all numpy errors to catch them
 
 def simulate_ascent(initial_thrust_to_weight_ratio: float,
                     specific_impulse: float,
@@ -14,12 +22,16 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
                     timestep: float = 1.,
                     simulation_time:float = 600,
                     target_orbital_altitude: float|None = None,
-                    guidance: str = 'gravity turn',) -> pd.DataFrame:
+                    guidance: str = 'gravity turn',
+                    gravity_turn_offset: float = 0,
+                    enable_terminal_guidance: bool = False) -> pd.DataFrame:
     """
     Simulates the ascent from arbitrary initial conditions until an energy equivalent
     to the energy of a circular orbit at the target orbital altitude.
 
     Args:
+        enable_terminal_guidance(bool): if True, the ascent will use terminal guidance to adjust the pitch angle at the end of orbit insertion
+        gravity_turn_offset: offset from flightpath angle in degrees for gravity turn guidance in radians
         guidance (str): defines the guidance scheme used to control pitch angle. currently only gravity turn with offset and vertical burn are implemented
         target_orbital_altitude:
         initial_thrust_to_weight_ratio:
@@ -65,6 +77,7 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
 
     if target_orbital_altitude:
         target_orbit_energy = hv.calculate_circular_orbit_energy(target_orbital_altitude)
+        target_orbit_velocity = np.sqrt(cn.gravitational_parameter / (cn.earth_radius + target_orbital_altitude))
     else:
         target_orbit_energy = None
 
@@ -90,10 +103,33 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
 
         flightpath_angle = np.atan2(past_r_dot, past_r * past_theta_dot)
 
-        if guidance == 'gravity turn':
-            pitch_angle = flightpath_angle + np.deg2rad(7.81) # offset from flightpath angle needs to be manually adjusted
+        velocity = np.sqrt(past_r_dot**2 + (past_r * past_theta_dot)**2)
+        energy = velocity**2/2 - cn.gravitational_parameter/past_r
+
+        if (enable_terminal_guidance
+                and throttle > 0
+                and target_orbital_altitude
+                and abs(past_r - (cn.earth_radius + target_orbital_altitude))/(cn.earth_radius + target_orbital_altitude) < 0.05
+                and velocity > target_orbit_velocity * 0.9
+                ):
+            # Terminal guidance
+            target_r_double_dot = -past_r_dot / 10  # arrest the radial velocity to zero in 10 seconds
+            try:
+                target_pitch_angle = np.arcsin(
+                    (target_r_double_dot - past_r * past_theta_dot ** 2 + cn.gravitational_parameter/past_r**2)
+                    / (cn.g_0 * past_tw)
+                ) # Rearranging off the r_double_dot equation to find the pitch angle
+            except FloatingPointError:
+                target_pitch_angle = np.pi/2  # set to vertical if value in arcsin is out of bounds
+
+            pitch_angle = max(target_pitch_angle, 0) # Don't pitch below horizontal
+        elif guidance == 'gravity turn':
+            pitch_angle = flightpath_angle + gravity_turn_offset # offset from flightpath angle needs to be manually adjusted
+            pitch_angle = max(pitch_angle, 0)  # Don't pitch below horizontal
         elif guidance == 'vertical':
             pitch_angle = np.pi/2
+        else:
+            raise ValueError(f"Unknown guidance scheme: {guidance}")
 
         vertical_acceleration = -cn.gravitational_parameter / past_r ** 2 + past_tw * cn.g_0 * np.sin(pitch_angle)
         r_double_dot = vertical_acceleration + past_r * past_theta_dot ** 2
@@ -130,18 +166,38 @@ def simulate_ascent(initial_thrust_to_weight_ratio: float,
             target_flightpath_angle
         )
 
-
-        velocity = np.sqrt(past_r_dot**2 + (past_r * past_theta_dot)**2)
-        energy = velocity**2/2 - cn.gravitational_parameter/past_r
-
         if target_orbital_altitude and throttle > 0 and energy > target_orbit_energy:
             throttle = 0
             print(pd.Series(data[i], index = states))
 
         if past_r < cn.earth_radius/2 or past_mass < 0:
+            data = data[:i+1]  # Truncate data to the current length
             break
 
     return pd.DataFrame(data, columns=states)
+
+"""
+Given
+specific_impulse = 450
+initial_horizontal_velocity = 2280
+initial_vertical_velocity = 1040
+initial_altitude = 81700
+
+All of the following use terminal guidance enabled
+
+The delta V is 6210 m/s with thrust to weight ratio of 0.6 and 26.5 degrees offset from gravity turn guidance.
+The delta V is 5937 m/s with thrust to weight ratio of 0.7 and 17 degrees offset from gravity turn guidance.
+The delta V is 5810 m/s with thrust to weight ratio of 0.8 and 11 degrees offset from gravity turn guidance.
+The delta V is 5739 m/s with thrust to weight ratio of 0.9 and 6.5 degrees offset from gravity turn guidance.
+The delta V is 5673 m/s with thrust to weight ratio of 1.0 and 3.7 degrees offset from gravity turn guidance.
+The delta V is 5645 m/s with thrust to weight ratio of 1.1 and 1.5 degrees offset from gravity turn guidance.
+The delta V is 5629 m/s with thrust to weight ratio of 1.2 and 0 degrees offset from gravity turn guidance.
+The delta V is 5618 m/s with thrust to weight ratio of 1.3 and -1.5 degrees offset from gravity turn guidance.
+The delta V is 5610 m/s with thrust to weight ratio of 1.4 and -3.5 degrees offset from gravity turn guidance.
+"""
+
+delta_v_twr_relation = {'delta_v'               : [6210, 5937, 5810, 5739, 5673, 5645, 5629, 5618, 5610],
+                        'thrust_to_weight_ratio': [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4], }
 
 if __name__ == '__main__':
 
@@ -157,6 +213,8 @@ if __name__ == '__main__':
                                  simulation_time=5e3,
                                  target_orbital_altitude=2e5,
                                  guidance='gravity turn',
+                                 gravity_turn_offset=np.deg2rad(7.81),
+                                 enable_terminal_guidance=False
                                  )
 
     end = time.time()
@@ -178,9 +236,15 @@ if __name__ == '__main__':
     plt.grid(True)
     plt.show()
 
-
-
     print(trajectory.loc[len(trajectory)-1])
 
     print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
     print('time:', end-start)
+
+    plt.plot(delta_v_twr_relation['thrust_to_weight_ratio'], delta_v_twr_relation['delta_v'], marker='x', label='Known Data')
+    plt.xlabel('Thrust to Weight Ratio')
+    plt.ylabel('Delta V [m/s]')
+    plt.title('Delta V vs Thrust to Weight Ratio')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
