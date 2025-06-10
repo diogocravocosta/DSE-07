@@ -94,6 +94,8 @@ class BluntBody:
                 self.c_x_cone.append(0)
                 self.c_y_cone.append(0)
         
+        self.c_axial = (self.c_x_cap + self.c_x_cone)
+        
         '''
         calculating lift and drag coefficients
         '''
@@ -101,6 +103,18 @@ class BluntBody:
         self.c_d = ((self.c_y_cap + self.c_y_cone)*np.sin(self.aoa_all)) + ((self.c_x_cap + self.c_x_cone)*np.cos(self.aoa_all))
         self.lift_over_drag = self.c_l / self.c_d
         self.normal_over_axial = (self.c_y_cap + self.c_y_cone) / (self.c_x_cap + self.c_x_cone)
+
+        '''
+        Calculating cl_alpha
+        '''
+        cl_max = max(self.c_l)
+        cl_min = min(self.c_l)
+        cl_max_idx = np.where(self.c_l == cl_max)
+        self.cl_alpha_calc = (cl_max - cl_min) / (self.aoa_all[cl_max_idx]) * -1
+        
+
+        
+
         
     def flight_profile(self, velocities, densities, altitudes, angle_of_attack):
         '''
@@ -122,29 +136,29 @@ class BluntBody:
         Hemisphere mesh grid
         '''
         mu = np.linspace(0, self.mu_b, 100)
-        rho = np.linspace(0, 2*np.pi)
+        rho = np.linspace(0, 2*np.pi, 100)
         mu, rho = np.meshgrid(mu, rho)
 
         '''
         Hemisphere parametric equations
         '''
-        x_sphere = self.sphere_radius * (1 - np.cos(mu))
-        y_sphere = self.sphere_radius * np.sin(mu) * np.cos(rho)
+        self.x_sphere = self.sphere_radius * (1 - np.cos(mu))
+        self.y_sphere = self.sphere_radius * np.sin(mu) * np.cos(rho)
         z_sphere = self.sphere_radius * np.sin(mu) * np.sin(rho)
 
         '''
         Cone mesh grid
         '''
-        x_cone = np.linspace(self.base_arc_height, self.base_arc_height + self.cone_length, 100)
-        rho_cone = np.linspace(0, 2*np.pi, 100)
-        x_cone, rho_cone = np.meshgrid(x_cone, rho_cone)
+        self.x_cone = np.linspace(self.base_arc_height, self.base_arc_height + self.cone_length, 100)
+        self.rho_cone = np.linspace(0, 2*np.pi, 100)
+        x_cone, rho_cone = np.meshgrid(self.x_cone, self.rho_cone)
 
         '''
         Cone parametric equations
         '''
-        r_cone = self.cone_max_radius - ((self.cone_max_radius - self.cone_min_radius)/self.cone_length) * (x_cone - self.base_arc_height)
-        y_cone = r_cone * np.cos(rho_cone)
-        z_cone = r_cone * np.sin(rho_cone)
+        self.r_cone = self.cone_max_radius - ((self.cone_max_radius - self.cone_min_radius)/self.cone_length) * (x_cone - self.base_arc_height)
+        self.y_cone = self.r_cone * np.cos(self.rho_cone)
+        z_cone = self.r_cone * np.sin(self.rho_cone)
 
         '''
         Plotting
@@ -153,10 +167,10 @@ class BluntBody:
         ax = fig.add_subplot(111, projection='3d')
 
         # Hemisphere (front)
-        ax.plot_surface(x_sphere, y_sphere, z_sphere, color='skyblue', alpha=0.9)
+        ax.plot_surface(self.x_sphere, self.y_sphere, z_sphere, color='skyblue', alpha=0.9)
 
         # Cone (extending backward)
-        ax.plot_surface(x_cone, y_cone, z_cone, color='lightcoral', alpha=0.9)
+        ax.plot_surface(self.x_cone, self.y_cone, z_cone, color='lightcoral', alpha=0.9)
 
         # Labels and aspect
         ax.set_xlabel('x')
@@ -167,7 +181,8 @@ class BluntBody:
 
         plt.show()
 
-    def stability(self, file_name, mode):
+
+    def RASAero(self, file_name, mode):
         '''
         Function: To assess stability of a geometry
         Input: Requires CSV file output from RASAero 
@@ -193,12 +208,26 @@ class BluntBody:
             data = pd.read_csv(data_path)
 
             data_alpha_0 = data[data["Alpha"] == 0]
-            data_alpha_2 = data[data["Alpha"] == 2]
+            self.data_alpha_2 = data[data["Alpha"] == 2]
             self.data_alpha_4 = data[data["Alpha"] == 4]
+            self.RASAero_mach = np.array(self.data_alpha_4["Mach"])
 
-            self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"]) / 4)
+            self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"])/ 2)
 
             self.cmq_cmadot = (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.cl_alpha_rasaero
+            print(self.cmq_cmadot)
+
+            data_drag_4 = self.data_alpha_4['CD']
+            data_lift_4 = self.data_alpha_4["CL"]
+            self.cd_4 = np.array(data_drag_4)
+            self.cl_4 = np.array(data_lift_4)
+        
+        if mode == 2:
+            self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.c_axial
+            #self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.sphere_radius*2)**2)) * self.c_d
+            self.cmq = (self.cl_alpha_calc - (2*self.c_d)) / (self.mass * (self.sphere_radius*2)**2 / self.moment_inertia)
+
+
     
     def analysis(self):
         '''
@@ -274,13 +303,25 @@ class BluntBody:
         # plt.plot(self.aoa_all * 180/np.pi, self.c_y_cap + self.c_y_cone, label = "normal force coeff", color = "blue")
         # plt.plot(self.aoa_all * 180/np.pi, self.c_x_cap + self.c_x_cone, label = "axial force coeff", color = "red")
         # plt.plot(self.aoa_all * 180/np.pi, self.normal_over_axial, label = "normal / axial", color = "green")
+        plt.figure()
         plt.plot(self.aoa_all * 180/np.pi, self.lift_over_drag, label="lift over drag", color = 'red')
         plt.plot(self.aoa_all * 180/np.pi, self.c_l, label="lift coefficient", color = 'green')
         plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
         plt.legend()
-        plt.show()
 
-        plt.plot(np.array(self.data_alpha_4["Mach"]) , self.cmq_cmadot, label='stability')
+        # plt.figure()
+        # plt.plot(self.RASAero_mach, self.cd_4, label='C_d vs Mach at a = 4 / RASAero')
+        # plt.legend()
+
+        # plt.figure()
+        # plt.plot(self.RASAero_mach, self.cl_4, label='C_l vs Mach at a = 4 / RASAero')
+        # plt.legend()
+
+        '''
+        Stability plots
+        '''
+        plt.figure()
+        plt.plot(self.aoa_all * 180/np.pi, self.cmq_cmadot, label='stability')
         plt.legend()
         plt.show()
 
@@ -302,15 +343,15 @@ if __name__ == "__main__":
 
     body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
 
-    body.draw_geometry()
+    #body.draw_geometry()
 
     body.compute_aerodynamics()
 
-    body.stability(mode = 1, file_name = "HermesV1-RASAero.csv")
+    body.RASAero(mode = 2, file_name = "HermesV1-RASAero.csv")
+
+    #body.analysis()
 
     body.plots()
-
-    body.analysis()
 
 
 
