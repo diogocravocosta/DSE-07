@@ -15,7 +15,6 @@ COM = np.array(
     [vehicle_dimensions[0], vehicle_dimensions[1] / 4, np.sqrt(
         (vehicle_dimensions[0] ** 2 + vehicle_dimensions[1] ** 2) / 4)]
 )  # Center of mass of the spacecraft in meters
-print(COM)
 re_entry_moment = 166000  # Maximum moment during re-entry in Nm
 redundancy_factor = 2  # Redundancy factor for thrusters
 I_sp_thrusters_nammo = 160 # s, Specific impulse of the Nammo thrusters
@@ -549,15 +548,15 @@ def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_tim
     propellant_mass = {
         "nammo_220": max(updated_positions["nammo_220"][ "x"], 
                          updated_positions["nammo_220"]["y"], 
-                         updated_positions["nammo_220"]["z"]) * thrust_nammo_220 * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+                         updated_positions["nammo_220"]["z"]) * ((thrust_nammo_220 * burn_time) / (I_sp_thrusters_nammo * g_0)),  # in kg
 
        "nammo_220_3":  max(updated_positions["nammo_220_3"][ "x"], 
                          updated_positions["nammo_220_3"]["y"], 
-                         updated_positions["nammo_220_3"]["z"]) * thrust_nammo_220_3 * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+                         updated_positions["nammo_220_3"]["z"]) * ((thrust_nammo_220_3 * burn_time) / (I_sp_thrusters_nammo * g_0)),  # in kg
 
         "nammo_220_4": max(updated_positions["nammo_220_4"][ "x"], 
                          updated_positions["nammo_220_4"]["y"], 
-                         updated_positions["nammo_220_4"]["z"]) * thrust_nammo_220_4 * burn_time / (I_sp_thrusters_nammo * g_0)  # in kg
+                         updated_positions["nammo_220_4"]["z"]) * ((thrust_nammo_220_4 * burn_time) / (I_sp_thrusters_nammo * g_0))  # in kg
 
     }
 
@@ -613,7 +612,7 @@ def acs_tank_design(htp_density, total_prop_mass):
     tank_radius = ((tank_volume / np.pi) * 0.75) ** (1/3)  # Assuming a spherical tank for simplicity
     tank_thickness_SS_316 = (tank_pressure * tank_radius)/(Materials['Stainless Steel 316']['yield_strength'])  # Using the formula for thin-walled pressure vessels
     tank_thickness_AA_6000 = (tank_pressure * tank_radius)/(Materials['Aluminum AA6000 T6 Series']['yield_strength'])  # Using the formula for thin-walled pressure vessels
-    print(tank_thickness_SS_316, tank_thickness_AA_6000)
+    # print(tank_thickness_SS_316, tank_thickness_AA_6000)
     tank_mass_SS_316 = 4 * np.pi * tank_radius**2 * tank_thickness_SS_316 * Materials['Stainless Steel 316']['density']  # Mass of the tank in kg
     tank_mass_AA_6000 = 4 * np.pi * tank_radius**2 * tank_thickness_AA_6000 * Materials['Aluminum AA6000 T6 Series']['density']  # Mass of the tank in kg
     tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the maximum mass of the tank
