@@ -147,6 +147,9 @@ class GlidingEntry:
         dgamma_dt = (0.5 * self.C_L * rho * V**2 * self.S - self.mass * self.g * np.sin(gamma) * (1 - (V/circular_velocity)**2))/(self.mass * V)
         dh_dt = V * np.sin(gamma)
 
+    def circular_velocity(self):
+        v_c = np.sqrt()
+
 
 #     def get_velocity(self):
 #         # CORRECT
