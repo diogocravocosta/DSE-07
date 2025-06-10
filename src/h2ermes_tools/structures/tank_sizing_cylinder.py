@@ -240,3 +240,61 @@ def calculate_tank_thickness(
         t = t_press
         print("Hoop stress leading")
     return t
+
+def calculate_tank_thickness_2(
+    wet_mass,
+    propellant_pressure,
+    max_propellant_pressure,
+    fuel_mass,
+    tank_length,
+    R,
+    r,
+    phi,
+    E,
+    strength,
+    thrust,
+    gamma=0.65,
+):
+    """
+    Compute required wall thickness of a conical tank using given rocket and tank parameters.
+    """
+
+    # Average radius (approximate effective radius for stress)
+    radius = (R + r) / 2
+    # Allowable stress
+    sigma_allow = strength / gamma
+
+    def von_mises(t):
+        # Hoop stress due to internal pressure
+        sigma_h = (propellant_pressure * radius / (t)) * ((1 - np.sin(phi)**2) / np.sin(phi))
+        # Meridional (axial) stress due to internal pressure
+        sigma_m_p = (propellant_pressure * radius) / (2*t * np.sin(phi))
+        # Meridional (axial) stress due to thrust
+        A = 2 * np.pi * radius * t  # conical shell approx area
+        sigma_m_l = safety_factor * thrust / A
+        # Meridional (bending) stress 
+        #sigma_b = M_bend * y / I
+        sigma_m = sigma_m_p + sigma_m_l
+        # Von Mises stress
+        return np.sqrt(sigma_h**2 + sigma_m**2 - sigma_h * sigma_m)
+
+    # Iterate to find minimum thickness
+    t_guess = 0.001  # start at 1 mm
+    while True:
+        sigma_vm = von_mises(t_guess)
+        if sigma_vm <= sigma_allow:
+            break
+        t_guess += 0.0001  # increment in 0.1 mm steps
+
+    #Check for Axial Buckling 
+    N_cr = 0.33 * (2*np.pi*E*t_guess**2*np.cos(phi))/np.sqrt(3*(1-0.33**3))
+    if safety_factor * thrust / (2 * np.pi * radius * t_guess) > N_cr:
+        print("THE STRUCTURE BUCKLES and sigma critical is: " + str(N_cr))
+    
+    #Check for hoop stress at maximum boil off pressure:
+    t_press = (max_propellant_pressure * radius)/(2*strength * np.sin(phi))
+    # check hoop stress
+    if t_press > t_guess:
+        t_guess = t_press
+        print("Transversial stress leading and hoop stress is: " + str((max_propellant_pressure * radius)/(t_press) * (1-np.sin(phi)**2)/(np.sin(phi))))
+    return t_guess
