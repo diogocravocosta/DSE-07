@@ -65,7 +65,7 @@ heat_shield_thickness = Variable(
 
 coolant_inlet_pressure = Variable(
     name="Coolant Inlet Pressure",
-    value=50e5,  # 5 bar
+    value=50e5,  # 50 bar
     unit="Pa",
     latex_symbol="P_{c_{in}}",
     confidence="a guess at this point",
