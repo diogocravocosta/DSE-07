@@ -21,6 +21,8 @@ class Coolant:
         self.mass_flow = mass_flow
         self.reynolds_number = self.get_reynolds_number()
         self.nusselt_number = self.get_nusselt_number_taylor()
+        self.fluid_speed = self.get_fluid_speed()
+        self.heat_transfer_coefficient = self.get_heat_transfer_coefficient()
 
     def plot_coolant_properties(
         self, temperatures=np.linspace(13.8, 300, 100), pressure=10e5
@@ -135,7 +137,58 @@ class Coolant:
         Returns:
         - Heat transfer coefficient (W/m²·K)
         """
-        return self.nusselt_number * self.fluid.conductivity / self.channel.diameter
+        return (
+            self.nusselt_number
+            * self.fluid.conductivity
+            / self.channel.hydraulic_diameter
+        )
+
+    def add_energy(self, energy, dt=None):
+        """
+        Add energy to the coolant and update its temperature.
+        Parameters:
+        - energy: Energy to be added (J)
+        - dt: Time step (s), optional (for history tracking)
+        """
+        # Calculate temperature rise: dT = Q / (m * cp)
+        cp = self.fluid.specific_heat  # J/kg/K
+        dT = energy / (self.mass_flow * cp)
+        new_temp = self.fluid.temperature + dT
+        # Update fluid state (keep pressure constant for now)
+        self.fluid = self.fluid.with_state(
+            Input.pressure(self.fluid.pressure),
+            Input.temperature(new_temp),
+        )
+        # Optionally, store temperature history
+        if not hasattr(self, "temperature_history"):
+            self.temperature_history = []
+        self.temperature_history.append(self.fluid.temperature)
+        if dt is not None:
+            if not hasattr(self, "time_history"):
+                self.time_history = []
+            self.time_history.append(
+                dt if not self.time_history else self.time_history[-1] + dt
+            )
+
+    def calculate_pressure_drop(self, section_length=None):
+        """
+        Calculate and update the coolant pressure using Darcy-Weisbach equation
+        on a section of the channel of a limited length.
+        """
+        # Darcy-Weisbach: dP = f * (L/D) * (rho*v^2/2)
+        L = section_length
+        D = self.channel.hydraulic_diameter
+        v = self.get_fluid_speed()
+        rho = self.fluid.density
+        # Estimate friction factor (f) using Blasius for turbulent, else laminar
+        Re = self.get_reynolds_number()
+        if Re < 2300:
+            f = 64.0 / Re
+        else:
+            f = 0.3164 * Re**-0.25
+        dP = f * (L / D) * (rho * v**2 / 2)
+
+        return dP
 
 
 if __name__ == "__main__":
@@ -157,3 +210,8 @@ if __name__ == "__main__":
     print(f"Nusselt Number: {nusselt_number}")
     print(f"Heat Transfer Coefficient: {heat_transfer_coefficient} W/m²·K")
     print(f"Fluid Speed: {fluid_speed} m/s")
+
+    # Pressure drop calculation
+    section_length = 1.0  # m
+    pressure_drop = coolant.calculate_pressure_drop(section_length)
+    print(f"Pressure Drop over {section_length} m: {pressure_drop} Pa")
