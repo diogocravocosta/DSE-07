@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from data import constants as cs
 from data import material as mat
 import rainflow
+from scipy.stats import linregress
+
 #--------------------------------------------------------
 #Functions for Stress and Crack Growth Calculations
 #--------------------------------------------------------
@@ -38,7 +40,7 @@ def nasa_pressure_combined_load_stress(material, thickness_tank, phi, radius_sma
     """
     gamma = 0.33
     delta_gamma = 0.12
-    mu = 0.4 # GET EXACT VALUE
+    mu = 0.33 # GET EXACT VALUE
     term1 = gamma / np.sqrt(3 * (1 - mu**2))
     stiffness_term = (term1 + delta_gamma) * (2 * np.pi * material.E * thickness_tank**2 * np.cos(np.radians(phi))**2)
     pressure_term = np.pi * radius_small**2 * pressure_tank
@@ -87,11 +89,16 @@ def miners(stress_range, miner_coeff_C, miner_coeff_m, stress_cycle,safety_facto
     """
     sigma = cycle_launch(stress_range,safety_factor)
     cycle = cycle_launch(stress_cycle,launches)
+
     Di = []
     for i in range(len(sigma)):
-        Di.append(cycle[i]*sigma[i]**miner_coeff_m/miner_coeff_C)
+
+        damage_calc = cycle[i]*sigma[i]**miner_coeff_m/miner_coeff_C
+        Di.append(damage_calc)
+
     damage = sum(Di)
-    return damage
+    
+    return Di,cycle,damage
 
 def cycle_launch(stress_cycle, launches):
     """
@@ -145,7 +152,6 @@ def fatigue_paris_estimation(
             a_crack_depth =a_crack_depth+ da_dn
             a_crack.append(a_crack_depth) 
             count += 1
-            j = j+1
             if a_crack_depth >  critical_crack_depth:
                 print('Expected lifecycles: ',count)
                 break
@@ -167,13 +173,22 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safet
     Calculates the fatigue life due to Miners cycle.
     Takes into account a safety factor and a conservative number of launches.
     """
-    damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches)
+    Di,cycle,damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches)
     if damage>1:
         print('Failure was predicted due to Miners rule.')
     while damage>1:
         launches = launches - 1
-        damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches)
+        damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor,launches)[2]
     print('Damage count is:', damage,". Expected number of launches:", launches)
+    if plot == True:
+        plt.figure(figsize=(8, 5))
+        plt.plot(cycle, Di, marker='o')
+        plt.xlabel('Cycle')
+        plt.ylabel('Damage per Cycle (Di)')
+        plt.title('Miner\'s Rule: Damage per Cycle vs Cycle')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
     return damage,launches
 
 def loading_phases(): 
@@ -193,7 +208,6 @@ def loading_phases():
     # 1st stage max q
     sigma_thermal_maxq = 0 #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi) # is valid for this.
     sigma_pressure_maxq = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius, pressure_launch_tank) 
-    print
     sigma_axial_maxq = mechanical_stress(launch_mass*g_launch_force_ratio*cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_maxq = sigma_thermal_maxq + sigma_pressure_maxq + sigma_axial_maxq 
 
@@ -321,6 +335,20 @@ def fatigue_check(a_crack_depth,
     else:
         return False
 
+def miner_coefficients(stress,cycles):
+
+    log_stress = np.log10(stress)
+    log_N = np.log10(cycles)
+
+    # Linear regression
+    slope, intercept, _, _, _ = linregress(log_stress, log_N)
+
+    # Extract coefficients
+    m = -slope
+    C = 10**intercept
+
+    return m,C
+
 if __name__ =="__main__":
     #--------------------------------------------------------
     #Main Input Parameters
@@ -334,7 +362,7 @@ if __name__ =="__main__":
     # Geometry Properties
     phi = 10 # degrees, conical head angle, later import from tank sizing file in final sizing.
     tank_radius = 5# 5 # m, tank radius, later import from tank sizing file in final sizing.
-    thickness_tank = 0.003 # m, tank thickness later import from tank sizing file in final sizing.
+    thickness_tank = 0.01 # m, tank thickness later import from tank sizing file in final sizing.
     
     # Material Properties
 
@@ -385,13 +413,18 @@ if __name__ =="__main__":
 
     #Extrapolated parameters 
     # Paris law
-    paris_coeff_C = 5.131e-17 /1e3 # m/cycle
+    paris_coeff_C = 5.131e-17 /1e3 # convert from mm/cycle to m/cycle
     paris_exp_m = 7.02 # dimensionless
 
-    # Miners Law
-    miner_c = 1.8e12 #mpa
-    miner_m = 3.2
 
+    # Example Miner's law coefficients for stainless steel 304L
+    # Cryogenic paper miner coeff --- 408,-0.02
+    # MAT200 paper --- 1884, -0.1555
+    const = 1884
+    exp_coeff = -0.1555
+    miner_m = -1/exp_coeff
+    miner_c = 10**(np.log10(const)/-exp_coeff)
+    print("The C coefficient for miner equation is",miner_c,"and m coefficient is",miner_m)
     # Conditions
     plot = True 
     crack_cond = True
