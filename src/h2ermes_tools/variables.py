@@ -75,7 +75,7 @@ launch_vehicle_dimensions = Variable(
 
 mass_vehicle= Variable(
     name="Vehicle Mass",
-    value=150000, # Approximate value for H2ermes vehicle
+    value=1500000, # Approximate value for H2ermes vehicle
     unit="kg",
     latex_symbol="M_{vehicle}",
     confidence="highly approximate", #Needs to be updated with actual values
