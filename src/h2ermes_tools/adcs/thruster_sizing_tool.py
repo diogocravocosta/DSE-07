@@ -12,8 +12,10 @@ theta = 50  # Angle between the spacecraft and the local vertical in degrees
 altitude = 600000  # Altitude of the spacecraft in meters (600 km)
 radius_earth = cn.earth_radius  # Radius of the Earth in meters
 COM = np.array(
-    [vehicle_dimensions[0] / 2, vehicle_dimensions[1] / 2, vehicle_dimensions[2] / 2]
+    [vehicle_dimensions[0], vehicle_dimensions[1] / 4, np.sqrt(
+        (vehicle_dimensions[0] ** 2 + vehicle_dimensions[1] ** 2) / 4)]
 )  # Center of mass of the spacecraft in meters
+print(COM)
 re_entry_moment = 166000  # Maximum moment during re-entry in Nm
 redundancy_factor = 2  # Redundancy factor for thrusters
 I_sp_thrusters_nammo = 160 # s, Specific impulse of the Nammo thrusters
@@ -33,26 +35,25 @@ MMOI_vehicle = MMOI_vehicle.value  # Mass Moment of Inertia (MMOI) of the spacec
 # print("Mass Moment of Inertia (MMOI) of the spacecraft:", MMOI_vehicle)
 
 thrusters = {
-    "nammo_220": {  # sea level thrust
-        "thrust": 148,  # in N
+    "nammo_220": {  # maximum sea level thrust
+        "thrust": 180,  # in N
         "power": 50,  # in W
-        "moment_arm": np.linalg.norm(COM),  # in meters
+        "moment_arm": COM[0],  # in meters
     },
     "nammo_220_3": {  # nominal vacuum thrust
         "thrust": 220,  # in N
         "power": 50,  # in W
-        "moment_arm": np.linalg.norm(COM),  # in meters
+        "moment_arm": np.sqrt(COM[0]**2 + (2*COM[1]**2)),  # in meters
     },
     "nammo_220_4": {  # max vacuum thrust
         "thrust": 250,  # in N
         "power": 50,  # in W
-        "moment_arm": np.linalg.norm(COM),  # in meters
+        "moment_arm": np.sqrt((4*COM[1]**2) + (0.5*COM[0]**2)),  # in meters
     },
 }
-
-geo_midpoint = np.array(
-    [vehicle_dimensions[0] / 2, vehicle_dimensions[1] / 2, 0]
-)  # Actual value to be determined from the constants file
+# print(thrusters["nammo_220"]["moment_arm"], thrusters["nammo_220_3"]["moment_arm"], thrusters["nammo_220_4"]["moment_arm"])
+geo_midpoint = COM  # Geometric midpoint of the spacecraft in meters
+ # Actual value to be determined from the constants file
 
 # print("Mass Moment of Inertia (MMOI) of the spacecraft:", MMOI_vehicle)
 # print("MMOI in the x-direction:", MMOI_vehicle[0], "kg*m^2")
@@ -193,7 +194,7 @@ torque_list = [
 # print(torque_list)
 
 
-def plot_torques(torque_list):
+def plot_disturbance_torques(torque_list):
     """
     Function to plot the torques on the spacecraft.
     Args:
@@ -218,7 +219,7 @@ def plot_torques(torque_list):
     plt.show()
 
 
-# plot_torques(torque_list)  # Plot the torques on the spacecraft
+# plot_disturbance_torques(torque_list)  # Plot the disturbance torques on the spacecraft
 
 disturbance_load = np.sum(
     [magnetic_torque, gravity_gradient_torque, aerodynamic_drag, solar_torque]
@@ -227,11 +228,11 @@ disturbance_load = np.sum(
 # print("Total disturbance torque on the spacecraft:", disturbance_load, "Nm")
 # print("Torque required to counteract disturbances:", required_torque, "Nm")
 
-# slew rate = 3 deg/s
+# slew rate = 3 deg/s; Average slew rate for low earth orbit spacecraft with similar maneuverability requirements
 slew_rate = np.deg2rad(3)  # in rad/s
 # average slew rate for low earth orbit spacecraft with similar maneuverability requirements
-
-ang_acc_max = slew_rate / (burn_time)  # in rad/s^2
+maneuver_time = burn_time  # in seconds, assuming maximum burn time for maneuvering
+ang_acc_max = slew_rate / (maneuver_time)  # in rad/s^2
 
 
 
@@ -264,18 +265,12 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
         + disturbance_load
     )  # Torque produced by each thruster in Nm
 
-
+    # print(torque_produced)
     # Number of thrusters required for the nammo_220 engine with nominal sea level thrust
-    thrust_x_direction_two = (torque_produced[0] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220"]["moment_arm"]
-    )  # Thrust required in the x-direction
-    thrust_y_direction_two = (torque_produced[1] + re_entry_moment / 3) / (
-        2 * thrusters["nammo_220"]["moment_arm"]
-    )  # Thrust required in the y-direction
-    thrust_z_direction_two = (torque_produced[2] + re_entry_moment / 3) / (
-    2 * thrusters["nammo_220"]["moment_arm"]
-    )  # Thrust required in the z-direction
-    print("Thrust in x, y, and z directions for nammo_220 are: ", thrust_x_direction_two, thrust_y_direction_two, thrust_z_direction_two, "N")
+    thrust_x_direction_two = (torque_produced[0] + re_entry_moment / 3) / (2 * thrusters["nammo_220"]["moment_arm"])  # Thrust required in the x-direction
+    thrust_y_direction_two = (torque_produced[1] + re_entry_moment / 3) / (2 * thrusters["nammo_220"]["moment_arm"])  # Thrust required in the y-direction
+    thrust_z_direction_two = (torque_produced[2] + re_entry_moment / 3) / (2 * thrusters["nammo_220"]["moment_arm"])  # Thrust required in the z-direction
+    # print("Thrust in x, y, and z directions for nammo_220 are: ", thrust_x_direction_two, thrust_y_direction_two, thrust_z_direction_two, "N")
     
     
     # Number of thrusters required for the nammo_220_3 engine with nominal vacuum thrust    
@@ -289,7 +284,7 @@ def thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle):
         2 * thrusters["nammo_220_3"]["moment_arm"]
     )  # Thrust required in the z-direction
     # print("Thrust in x, y, and z directions for nammo_220_3 are: ", thrust_x_direction_three, thrust_y_direction_three, thrust_z_direction_three, "N")
-
+    
     # Number of thrusters required for the nammo_220_4 engine with maximum vacuum thrust
     thrust_x_direction_four = (torque_produced[0] + re_entry_moment / 3) / (
         2 * thrusters["nammo_220_4"]["moment_arm"]
@@ -415,13 +410,13 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
         if thruster_type == "nammo_220_4":
             
             number_of_thrusters[thruster_type]["x"] = (
-                number_of_thrusters[thruster_type]["x"] // 2
+                number_of_thrusters[thruster_type]["x"] // 1.4
             )
             number_of_thrusters[thruster_type]["y"] = ( 
-                number_of_thrusters[thruster_type]["y"] // 2
+                number_of_thrusters[thruster_type]["y"] // 1.4
             )
             number_of_thrusters[thruster_type]["z"] = ( 
-                number_of_thrusters[thruster_type]["z"] // 2
+                number_of_thrusters[thruster_type]["z"] // 1.4
             )
             
         elif thruster_type == "nammo_220":
@@ -503,7 +498,7 @@ def get_thruster_positions(COM, thrusters, number_of_thrusters):
 
 
 all_thruster_positions, updated_positions = get_thruster_positions(COM, thrusters, number_of_thrusters)
-print(updated_positions)
+# print(updated_positions)
 
 # print("\nAll thruster positions:")
 # for thruster_type in all_thruster_positions:
@@ -533,38 +528,39 @@ def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_tim
    """
     #Calculate total dry mass of the thrusters
     total_dry_mass = {
-        "nammo_220": updated_positions["nammo_220"]["x"] * rcs_dry_mass
-        + updated_positions["nammo_220"]["y"] * rcs_dry_mass
-        + updated_positions["nammo_220"]["z"] * rcs_dry_mass,
-        "nammo_220_3": updated_positions["nammo_220_3"]["x"] * rcs_dry_mass
-        + updated_positions["nammo_220_3"]["y"] * rcs_dry_mass
-        + updated_positions["nammo_220_3"]["z"] * rcs_dry_mass,
-        "nammo_220_4": updated_positions["nammo_220_4"]["x"] * rcs_dry_mass
-        + updated_positions["nammo_220_4"]["y"] * rcs_dry_mass
-        + updated_positions["nammo_220_4"]["z"] * rcs_dry_mass,
+        "nammo_220": max(updated_positions["nammo_220"][ "x"], 
+                         updated_positions["nammo_220"]["y"], 
+                         updated_positions["nammo_220"]["z"]) * rcs_dry_mass,
+        "nammo_220_3": max(updated_positions["nammo_220_3"][ "x"], 
+                           updated_positions["nammo_220_3"]["y"], 
+                           updated_positions["nammo_220_3"]["z"]) * rcs_dry_mass,
+        "nammo_220_4": max(updated_positions["nammo_220_4"][ "x"], 
+                           updated_positions["nammo_220_4"]["y"], 
+                           updated_positions["nammo_220_4"]["z"]) * rcs_dry_mass
     }
+
+    
+        
     #Calculate total propellant mass for each thrust level
     thrust_nammo_220 = thrusters["nammo_220"]["thrust"]
     thrust_nammo_220_3 = thrusters["nammo_220_3"]["thrust"]
     thrust_nammo_220_4 = thrusters["nammo_220_4"]["thrust"]
     # Propellant mass for each thruster type
     propellant_mass = {
-        "nammo_220": (updated_positions["nammo_220"]["x"] * thrust_nammo_220
-        + updated_positions["nammo_220"]["y"] * thrust_nammo_220
-        + updated_positions["nammo_220"]["z"] * thrust_nammo_220
-    ) * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+        "nammo_220": max(updated_positions["nammo_220"][ "x"], 
+                         updated_positions["nammo_220"]["y"], 
+                         updated_positions["nammo_220"]["z"]) * thrust_nammo_220 * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
 
-       "nammo_220_3":  (updated_positions["nammo_220_3"]["x"] * thrust_nammo_220_3
-        + updated_positions["nammo_220_3"]["y"] * thrust_nammo_220_3
-        + updated_positions["nammo_220_3"]["z"] * thrust_nammo_220_3
-        ) * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
+       "nammo_220_3":  max(updated_positions["nammo_220_3"][ "x"], 
+                         updated_positions["nammo_220_3"]["y"], 
+                         updated_positions["nammo_220_3"]["z"]) * thrust_nammo_220_3 * burn_time / (I_sp_thrusters_nammo * g_0),  # in kg
 
-        "nammo_220_4": (updated_positions["nammo_220_4"]["x"] * thrust_nammo_220_4
-        + updated_positions["nammo_220_4"]["y"] * thrust_nammo_220_4
-        + updated_positions["nammo_220_4"]["z"] * thrust_nammo_220_4
-         ) * burn_time / (I_sp_thrusters_nammo * g_0)  # in kg
+        "nammo_220_4": max(updated_positions["nammo_220_4"][ "x"], 
+                         updated_positions["nammo_220_4"]["y"], 
+                         updated_positions["nammo_220_4"]["z"]) * thrust_nammo_220_4 * burn_time / (I_sp_thrusters_nammo * g_0)  # in kg
 
     }
+
 
     # Mass calculations for thrusters
     total_propellant_mass = sum(propellant_mass.values())  
@@ -573,58 +569,62 @@ def mass_and_power_estimation(updated_positions, thrusters, burn_time = burn_tim
     total_mass = total_dry_mass + total_propellant_mass  # Total mass in kg
     #Calculate total power consumption of the thrusters
     power_thrusters = {
-    "nammo_220": updated_positions["nammo_220"]["x"]
-    * thrusters["nammo_220"]["power"]
-    + updated_positions["nammo_220"]["y"] * thrusters["nammo_220"]["power"]
-    + updated_positions["nammo_220"]["z"] * thrusters["nammo_220"]["power"],
-    "nammo_220_3": updated_positions["nammo_220_3"]["x"]
-    * thrusters["nammo_220_3"]["power"]
-    + updated_positions["nammo_220_3"]["y"] * thrusters["nammo_220_3"]["power"]
-    + updated_positions["nammo_220_3"]["z"] * thrusters["nammo_220_3"]["power"],
-    "nammo_220_4": updated_positions["nammo_220_4"]["x"]
-    * thrusters["nammo_220_4"]["power"]
-    + updated_positions["nammo_220_4"]["y"] * thrusters["nammo_220_4"]["power"]
-    + updated_positions["nammo_220_4"]["z"] * thrusters["nammo_220_4"]["power"],
+    "nammo_220": max(updated_positions["nammo_220"][ "x"], 
+                         updated_positions["nammo_220"]["y"], 
+                         updated_positions["nammo_220"]["z"]) * thrusters["nammo_220"]["power"],
+    "nammo_220_3": max(updated_positions["nammo_220_3"][ "x"], 
+                         updated_positions["nammo_220_3"]["y"], 
+                         updated_positions["nammo_220_3"]["z"]) * thrusters["nammo_220_3"]["power"],
+    "nammo_220_4": max(updated_positions["nammo_220_4"][ "x"], 
+                         updated_positions["nammo_220_4"]["y"], 
+                         updated_positions["nammo_220_4"]["z"]) * thrusters["nammo_220_4"]["power"],
     }
     total_power = sum(power_thrusters.values())  # Total power consumption in W
     return total_power, total_mass, total_dry_mass, total_propellant_mass
 
 total_power_thrusters, total_mass_thrusters, total_dry_mass_thrusters, total_prop_mass_thrusters = mass_and_power_estimation(updated_positions, thrusters)
-print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
+# print("The total power requirement of the RCS thrusters is: ", total_power_thrusters, "W")
 # print("The total dry mass of the RCS thrusters is: ", total_dry_mass_thrusters, "kg")
 # print("The total propellant mass of the RCS thrusters is: ", total_prop_mass_thrusters, "kg")
-print("The total mass of the RCS thrusters is: ", total_mass_thrusters, "kg")
+# print("The total mass of the RCS thrusters is: ", total_mass_thrusters, "kg")
 
 htp_density = 1134.5 #kg/m^3, limiting density at highest inlet temperature of 80 degrees celsius
 
 def acs_tank_design(htp_density, total_prop_mass):
-    tank_pressure = 8e6  # in Pa
+    tank_pressure = 10e6  # in Pa
+    burst_safety_factor = 2 # Safety factor for burst pressure
+    tank_pressure *= burst_safety_factor  # Adjusting the tank pressure for safety factor
     Materials = {
-        "Stainless Steel SS304L": 
-                     { 'yield_strength': 215 * 10**6, # in Pa
-                      'density': 7930 # kg/m**3 
-        },
+                "Stainless Steel 316":
+                    { 'yield_strength': 205*10**6, # in Pa    
+                    'density': 7870 # kg/m**3
+                },
 
-                "Titanium Ti6Al4V Alloy": 
-                    { 'yield_strength': 310 * 10**6, # in Pa
-                    'density': 4430 # kg/m**3
-                }  
+                "Aluminum AA6000 T6 Series": 
+                    { 'yield_strength': 276 * 10**6, # in Pa
+                     'density': 2700 # kg/m**3}
+    }
     }
     
     total_prop_mass = total_prop_mass_thrusters
+    ullage_factor = 1.1  # Ullage factor to account for propellant expansion and sloshing
     tank_volume = total_prop_mass / htp_density  # in m^3
+    tank_volume *= ullage_factor  # Adjusting the tank volume for ullage factor
     tank_radius = ((tank_volume / np.pi) * 0.75) ** (1/3)  # Assuming a spherical tank for simplicity
-    tank_thickness_SS = (tank_pressure * tank_radius)/(Materials['Stainless Steel SS304L']['yield_strength'])  # Using the formula for thin-walled pressure vessels
-    tank_thickness_Ti = (tank_pressure * tank_radius)/(Materials["Titanium Ti6Al4V Alloy"]['yield_strength'])  # Using the formula for thin-walled pressure vessels
-    print(tank_thickness_SS, tank_thickness_Ti)
-    tank_mass_SS = 4 * np.pi * tank_radius**2 * tank_thickness_SS * Materials['Stainless Steel SS304L']['density']  # Mass of the tank in kg
-    tank_mass_Ti = 4 * np.pi * tank_radius**2 * tank_thickness_Ti * Materials["Titanium Ti6Al4V Alloy"]['density']  # Mass of the tank in kg
-    tank_mass = min(tank_mass_SS, tank_mass_Ti)  # Taking the maximum mass of the tank
-    tank_material = "Titanium Ti6Al4V Alloy" if tank_mass_Ti < tank_mass_SS else "Stainless Steel SS304L"
+    tank_thickness_SS_316 = (tank_pressure * tank_radius)/(Materials['Stainless Steel 316']['yield_strength'])  # Using the formula for thin-walled pressure vessels
+    tank_thickness_AA_6000 = (tank_pressure * tank_radius)/(Materials['Aluminum AA6000 T6 Series']['yield_strength'])  # Using the formula for thin-walled pressure vessels
+    print(tank_thickness_SS_316, tank_thickness_AA_6000)
+    tank_mass_SS_316 = 4 * np.pi * tank_radius**2 * tank_thickness_SS_316 * Materials['Stainless Steel 316']['density']  # Mass of the tank in kg
+    tank_mass_AA_6000 = 4 * np.pi * tank_radius**2 * tank_thickness_AA_6000 * Materials['Aluminum AA6000 T6 Series']['density']  # Mass of the tank in kg
+    tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the maximum mass of the tank
+    tank_material = 'Aluminum AA6000 T6 Series' if tank_mass_AA_6000 < tank_mass_SS_316 else "Stainless Steel 316"  # Choosing the material with the lower mass
     return tank_mass, tank_material
 
 tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
 # print("The mass of the ACS tank is: ", tank_mass, "kg")
 # print("The material of the ACS tank is: ", tank_material)
+
+print("The total mass of the ACS system is: ", total_mass_thrusters + tank_mass, "kg")
+print("The total power requirement of the ACS system is: ", total_power_thrusters, "W")
     
 

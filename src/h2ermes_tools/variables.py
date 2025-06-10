@@ -65,7 +65,7 @@ heat_shield_thickness = Variable(
 
 launch_vehicle_dimensions = Variable(
     name="Launch Vehicle Dimensions",
-    value=[15,10,5], # Rectangular dimensions in meters (length, width, height); Needs to be updated with actual shape
+    value=[2.46, 7, 7.42], # Cone dimensions in meters (radius, height, slant height)
     unit="m",
     latex_symbol="lv_{dim}",
     confidence="highly approximate", #Update with actual dimensions
@@ -85,7 +85,7 @@ mass_vehicle= Variable(
 
 MMOI_vehicle = Variable(
     name="Mass Moment of Inertia",
-    value=[625000, 1250000, 1625000], # Approximate values for chosen shape
+    value=[2723220, 4117860, 4117860], # Approximate values for chosen shape
     unit="kg*m^2",
     latex_symbol="I_{mass}",
     confidence="highly approximate", #Needs to be updated with actual values
