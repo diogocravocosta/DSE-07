@@ -49,7 +49,7 @@ class BluntBody:
         self.cap_centroid = self.sphere_radius
         self.cone_centroid = self.sphere_radius*(1 - np.cos(self.mu_b)) + (self.cone_length - (2*self.cone_length/3*(np.cos(self.cone_half_angle)**2)))
         
-    def compute_aerodynamics(self):
+    def hypersonic_aerodynamics(self):
         '''
         Function: Computes the aerodynamic coefficients
 
@@ -111,21 +111,6 @@ class BluntBody:
         cl_min = min(self.c_l)
         cl_max_idx = np.where(self.c_l == cl_max)
         self.cl_alpha_calc = (cl_max - cl_min) / (self.aoa_all[cl_max_idx]) * -1
-        
-
-        
-
-        
-    def flight_profile(self, velocities, densities, altitudes, angle_of_attack):
-        '''
-        Function: Plots the lift and drag over the flight profile
-
-        Variables:
-
-        '''
-
-            
-
 
     def draw_geometry(self):
         '''
@@ -182,13 +167,10 @@ class BluntBody:
         plt.show()
 
 
-    def RASAero(self, file_name, mode):
+    def stability(self, file_name):
         '''
         Function: To assess stability of a geometry
         Input: Requires CSV file output from RASAero 
-
-        Mode 1: Considers the default output from RASAero
-        Mode 2: Considers the "Run Test" output from RASAero for a specific angle of attack
         
         Variables:
             cl_alpha = cl-alpha slope
@@ -200,32 +182,27 @@ class BluntBody:
         self.moment_inertia = 231368.0069
         self.radius_gyration = np.sqrt(self.moment_inertia / self.mass)
                                        
-        if mode == 1:
-            current_dir = os.path.dirname(__file__)
-            data_path = os.path.join(current_dir, '..', 'data', file_name)
-            data_path = os.path.abspath(data_path)
-            print("Resolved path:", data_path)
-            data = pd.read_csv(data_path)
+        current_dir = os.path.dirname(__file__)
+        data_path = os.path.join(current_dir, '..', 'data', file_name)
+        data_path = os.path.abspath(data_path)
+        print("Resolved path:", data_path)
+        data = pd.read_csv(data_path)
 
-            data_alpha_0 = data[data["Alpha"] == 0]
-            self.data_alpha_2 = data[data["Alpha"] == 2]
-            self.data_alpha_4 = data[data["Alpha"] == 4]
-            self.RASAero_mach = np.array(self.data_alpha_4["Mach"])
+        data_alpha_0 = data[data["Alpha"] == 0]
+        self.data_alpha_2 = data[data["Alpha"] == 2]
+        self.data_alpha_4 = data[data["Alpha"] == 4]
+        self.RASAero_mach = np.array(self.data_alpha_4["Mach"])
 
-            self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"])/ 2)
+        self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"])/ 2)
 
-            self.cmq_cmadot = (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.cl_alpha_rasaero
-            print(self.cmq_cmadot)
-
-            data_drag_4 = self.data_alpha_4['CD']
-            data_lift_4 = self.data_alpha_4["CL"]
-            self.cd_4 = np.array(data_drag_4)
-            self.cl_4 = np.array(data_lift_4)
-        
-        if mode == 2:
-            self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.c_axial
-            #self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.sphere_radius*2)**2)) * self.c_d
-            self.cmq = (self.cl_alpha_calc - (2*self.c_d)) / (self.mass * (self.sphere_radius*2)**2 / self.moment_inertia)
+        data_drag_4 = self.data_alpha_4['CD']
+        data_lift_4 = self.data_alpha_4["CL"]
+        self.cd_4 = np.array(data_drag_4)
+        self.cl_4 = np.array(data_lift_4)
+    
+        self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.c_axial
+        #self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.sphere_radius*2)**2)) * self.c_d
+        #self.cmq = (self.cl_alpha_calc - (2*self.c_d)) / (self.mass * (self.sphere_radius*2)**2 / self.moment_inertia)
 
 
     
@@ -333,6 +310,8 @@ if __name__ == "__main__":
     base_arc_height = 2
     mass = 28000
 
+    print(cone_length / (cone_max_radius*2 - cone_min_radius*2))
+
 
     # #APOLLO CAPSULE
     # # cone_length = 2.662
@@ -342,12 +321,10 @@ if __name__ == "__main__":
     # # mass = 28000
 
     body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
+    body.hypersonic_aerodynamics()
 
-    #body.draw_geometry()
-
-    body.compute_aerodynamics()
-
-    body.RASAero(mode = 2, file_name = "HermesV1-RASAero.csv")
+    body.stability(file_name = "HermesV1-RASAero.csv")
+    print("nose radius", body.sphere_radius)
 
     #body.analysis()
 
