@@ -75,7 +75,7 @@ class TestStandardAtmosphere:
         for height, expected_temp in atm_dict.items():
             atmosphere = self.make_test_atmosphere(height)
             atmosphere.altitude_gp = atmosphere.geopotential_altitude()
-            temperature, pressure = atmosphere.atmosphere()
+            temperature, pressure, rho = atmosphere.atmosphere()
 
             expected_temperature = expected_temp
 
@@ -90,17 +90,17 @@ class TestStandardAtmosphere:
                     49: 90.336,
                     60: 21.958,
                     75: 2.3881,
-                    # 89: 0.21919,
-                    # 100: 0.032011,
-                    # 115: 0.0040096,
-                    # 200: 0.000084736,
-                    # 900: 0.000000010873
+                    89: 0.21919,
+                    100: 0.032011,
+                    115: 0.0040096,
+                    200: 0.000084736,
+                    900: 0.000000010873
                     }
 
         for height, expected_p in atm_dict.items():
             atmosphere = self.make_test_atmosphere(height)
             atmosphere.altitude_gp = atmosphere.geopotential_altitude()
-            temperature, pressure = atmosphere.atmosphere()
+            temperature, pressure, rho = atmosphere.atmosphere()
 
             expected_pressure = expected_p
 
@@ -109,16 +109,25 @@ class TestStandardAtmosphere:
 
 
 
-    # def test_all_densities(self):
-    #     atm_dict = {10: 223.252,
-    #                 15: 216.65,
-    #                 25: 221.552,
-    #                 35: 236.513,
-    #                 49: 270.65,
-    #                 60: 247.021,
-    #                 75: 208.399,
-    #                 89: 186.87,
-    #                 100: 195.08,
-    #                 115: 300.00,
-    #                 200: 854.56,
-    #                 900: 1000.00}
+    def test_all_densities(self):
+        atm_dict = {10: 4.1351e-1,
+                    15: 1.9476e-1,
+                    25: 4.0084e-2,
+                    35: 8.4634e-3,
+                    49: 1.1628e-3,
+                    60: 3.0968e-4,
+                    75: 3.9921e-5,
+                    89: 4.081e-6,
+                    100: 5.604e-7,
+                    115: 4.289e-8,
+                    200: 2.541e-10,
+                    900: 5.759e-15}
+
+        for height, expected_rho in atm_dict.items():
+            atmosphere = self.make_test_atmosphere(height)
+            atmosphere.altitude_gp = atmosphere.geopotential_altitude()
+            temperature, pressure, rho = atmosphere.atmosphere()
+
+            expected_density = expected_rho
+
+            npt.assert_almost_equal(rho, expected_density, decimal=2)

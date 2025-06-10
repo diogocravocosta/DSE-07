@@ -5,6 +5,7 @@ import pandas as pd
 import hvplot.pandas
 from pyatmos import download_sw_nrlmsise00,read_sw_nrlmsise00
 from pyatmos import nrlmsise00
+from scipy.interpolate import CubicSpline
 
 # internal
 import data.constants as ct
@@ -138,8 +139,7 @@ class StandardAtmosphere:
         # CALCULATIONS
         self.g = self.gravitational_acceleration_std()
         self.altitude_gp = self.geopotential_altitude()
-        self.T_std = self.atmosphere()
-        self.rho_std = 0  # TODO: add values
+        self.T_std, self.p_std, self.rho_std = self.atmosphere()
 
     # FOR STANDARD ATMOSPHERE MODEL
     def gravitational_acceleration_std(self) -> float:
@@ -177,13 +177,12 @@ class StandardAtmosphere:
 
         # layer 1 (0 - 11019)
         if self.altitude < 11019:
-            # TODO: add density
             scale = -6.5
             T_final = self.T_0 + scale * ((self.altitude_gp-0) / 1000)
             K = (self.g_0*self.M*1000/(self.R_star*scale))
             p_final = self.p_0 * (self.T_0/(self.T_0 + scale * ((self.altitude_gp-0)/1000)))**K
+            rho_final = p_final * self.M / (self.R_star * T_final)
         else:
-            # TODO: add density
             scale = -6.5
             T_1 = self.T_0 + scale * (11000 / 1000)
             K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -191,26 +190,24 @@ class StandardAtmosphere:
 
             # layer 2 (11019 - 20062)
             if 11019 <= self.altitude < 20062:
-                # TODO: add density
                 scale = 0.0
                 T_final = T_1 + scale * ((self.altitude_gp-11000) / 1000)
                 p_final = p_1 * np.exp(-self.g_0*self.M* (self.altitude_gp-11000)/(self.R_star*T_1))
+                rho_final = p_final * self.M / (self.R_star * T_final)
             elif 20062 <= self.altitude:
-                # TODO: add density
                 scale = 0.0
                 T_2 = T_1 + scale * ((20000- 11000) / 1000)
                 p_2 = p_1 * np.exp(-self.g_0*self.M* (20000-11000)/(self.R_star*T_1))
 
                 # layer 3 (20062 - 32161)
                 if 20062 <= self.altitude < 32161:
-                    # TODO: add density
                     scale = 1.0
                     T_final = T_2 + scale * ((self.altitude_gp-20000) / 1000)
                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                     p_final = p_2 * (T_2 / (T_2 + scale * ((self.altitude_gp - 20000) / 1000))) ** K
+                    rho_final = p_final * self.M / (self.R_star * T_final)
 
                 elif 32161 <= self.altitude:
-                    # TODO: add density
                     scale = 1.0
                     T_3 = T_2 + scale * ((32000-20000) / 1000)
                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -218,13 +215,12 @@ class StandardAtmosphere:
 
                     # layer 4 (32161 - 47348)
                     if 32161 <= self.altitude < 47348:
-                        # TODO: add density
                         scale = 2.8
                         T_final = T_3 + scale * ((self.altitude_gp-32000) / 1000)
                         K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                         p_final = p_3 * (T_3 / (T_3 + scale * ((self.altitude_gp - 32000) / 1000))) ** K
+                        rho_final = p_final * self.M / (self.R_star * T_final)
                     elif 47348 <= self.altitude:
-                        # TODO: add density
                         scale = 2.8
                         T_4 = T_3 + scale * ((47000 - 32000) / 1000)
                         K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
@@ -232,41 +228,40 @@ class StandardAtmosphere:
 
                         # layer 5 (47348 - 51411)
                         if 47348 <= self.altitude < 51411:
-                            # TODO: add density
                             scale = 0.0
                             T_final = T_4 + scale * ((self.altitude_gp-47000) / 1000)
                             p_final = p_4 * np.exp(-self.g_0*self.M* (self.altitude_gp-47000)/(self.R_star*T_4))
+                            rho_final = p_final * self.M / (self.R_star * T_final)
 
                         elif 51411 <= self.altitude:
-                            # TODO: add density
                             scale = 0.0
                             T_5 = T_4 + scale * ((51000 - 47000) / 1000)
                             p_5 = p_4 * np.exp(-self.g_0*self.M* (51000-47000)/(self.R_star*T_4))
 
                             # layer 6 (51411 - 71799)
                             if 51411 <= self.altitude < 71799:
-                                # TODO: add density
                                 scale = -2.8
                                 T_final = T_5 + scale * ((self.altitude_gp-51000) / 1000)
                                 K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                                 p_final = p_5 * (T_5 / (T_5 + scale * ((self.altitude_gp - 51000) / 1000))) ** K
+                                rho_final = p_final * self.M / (self.R_star * T_final)
 
                             elif 71799 <= self.altitude:
-                                # TODO: add density
                                 scale = -2.8
                                 T_6 = T_5 + scale * ((71000 - 51000) / 1000)
                                 K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
+                                p_final = p_5 * (T_5 / (T_5 + scale * ((71000 - 51000) / 1000))) ** K
                                 p_6 = p_5 * (T_5 / (T_5 + scale * ((71000 - 51000) / 1000))) ** K
 
                                 # layer 7 (71799 - 86000)
                                 if 71799 <= self.altitude < 86000:
-                                    # TODO: add density
                                     scale = -2.0
                                     T_final = T_6 + scale * ((self.altitude_gp-71000) / 1000)
                                     K = (self.g_0 * self.M * 1000 / (self.R_star * scale))
                                     p_final = p_6 * (T_6 / (T_6 + scale * ((self.altitude_gp - 71000) / 1000))) ** K
+                                    rho_final = p_final * self.M / (self.R_star * T_final)
+
                                 elif 86000 <= self.altitude:
-                                    # TODO: add density
                                     scale = -2.0
                                     T_7_0 = T_6 + scale * ((84852 - 71000) / 1000)
                                     T_7 = T_7_0 * 0.999579
@@ -275,31 +270,25 @@ class StandardAtmosphere:
 
                                     # layer 8 (86000 - 91000 89716)
                                     if 86000 <= self.altitude < 91000:
-                                        # TODO: add pressure
-                                        # TODO: add density
                                         scale = 0.0
                                         T_final = T_7 + scale * ((self.altitude-86000) / 1000)
-                                        # p_final = number_densities_sum * boltzmann * T_final
+                                        p_final = self.interpolate_pressure(self.altitude /1000)
+                                        rho_final = self.interpolate_density(self.altitude / 1000)
 
                                     elif 91000 <= self.altitude:
-                                        # TODO: add pressure
-                                        # TODO: add density
                                         scale = 0.0
                                         T_8 = T_7 + scale * ((91000 - 86000) / 1000)
 
                                         # layer 9 (91000 - 110000)
                                         if 91000 <= self.altitude < 110000:
-                                            # TODO: add pressure
-                                            # TODO: add density
                                             T_c = 263.1905
                                             A = -76.3232
                                             a = -19.9429
                                             T_final = T_c + A * (1-((((self.altitude-91000)/1000)/a)**2)) ** 0.5
-                                            # p_final = number_densities_sum * boltzmann * T_final
+                                            p_final = self.interpolate_pressure(self.altitude /1000)
+                                            rho_final = self.interpolate_density(self.altitude / 1000)
 
                                         elif 110000 <= self.altitude:
-                                            # TODO: add pressure
-                                            # TODO: add density
                                             T_c = 263.1905
                                             A = -76.3232
                                             a = -19.9429
@@ -307,28 +296,24 @@ class StandardAtmosphere:
 
                                             # layer 10 (110000 - 120000)
                                             if 110000 <= self.altitude < 120000:
-                                                # TODO: add pressure
-                                                # TODO: add density
                                                 scale = 12.0
                                                 T_final = T_9 + scale * ((self.altitude-110000) / 1000)
-                                                # p_final = number_densities_sum * boltzmann * T_final
+                                                p_final = self.interpolate_pressure(self.altitude /1000)
+                                                rho_final = self.interpolate_density(self.altitude / 1000)
 
                                             elif 120000 <= self.altitude:
-                                                # TODO: add pressure
-                                                # TODO: add density
                                                 scale = 12.0
                                                 T_10 = T_9 + scale * ((120000 - 110000) / 1000)
 
                                                 # layer 11 (120000 - 1000000)
                                                 if 120000 <= self.altitude < 1000000:
-                                                    # TODO: add pressure
-                                                    # TODO: add density
                                                     lbd = scale / (self.T_inf - T_10)
                                                     xi = ((self.altitude - 120000) * (self.R_0 + 120000) / (self.R_0 + self.altitude))/1000
                                                     T_final = self.T_inf - (self.T_inf - T_10) * np.exp(- lbd * xi)
-                                                    # p_final = number_densities_sum * boltzmann * T_final
-        #print(T_final, p_final)
-        return T_final, p_final
+                                                    p_final = self.interpolate_pressure(self.altitude /1000)
+                                                    rho_final = self.interpolate_density(self.altitude /1000)
+
+        return T_final, p_final, rho_final
 
     def interpolate_molecular_mass(self, height):
         # geometric altitude in km
@@ -367,59 +352,29 @@ class StandardAtmosphere:
         molecular_mass = np.interp(height, Z, M)
         return molecular_mass
 
-    def get_number_densities(self, height, temperature_7, temperature_final):
-        def get_coefficient_1(number_density_7, temp_0, temp_f):
-            c1 = number_density_7 * temp_0 / temp_f
-            return c1
+    def interpolate_pressure(self, height):
+        altitude = [86,100,115,130,150,175,200,250,300,400,500,600,700,800,900,1000]
+        pressure_array = [3.7338e-1, 3.2011e-2, 4.0096e-3, 1.2505e-3, 4.5422e-4, 1.7936e-4, 8.4736e-5, 2.4767e-5, 8.7704e-6, 1.4518e-6, 3.0236e-7, 8.2130e-8, 3.1908e-8, 1.7036e-8, 1.0873e-8, 7.5138e-9]
 
-        def get_coefficient_2(temp_f):
-            c2 = self.g / (self.R_star * temp_f)
+        pressure_interp = CubicSpline(altitude, pressure_array)
 
-            return c2
+        pressure_new = pressure_interp(height)
 
+        return pressure_new
 
-        number_densities_sum = 0
+    def interpolate_density(self, height):
+        altitude = [86, 100, 115, 130, 150, 175, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000]
+        rho_array = [6.958e-6, 5.604e-7, 4.289e-8, 8.152e-9, 2.076e-9, 6.339e-10, 2.541e-10, 6.073e-11, 1.916e-11,
+                     2.803e-12, 5.215e-13, 1.137e-13, 3.070e-14, 1.136e-14, 5.759e-15, 3.561e-15]
 
-        molecular_dictionary = {"N2":
-                                    {"number_density_86": 1.129794 * 10**20,
-                                     'alpha_i': 0},
-                                "O":
-                                    {"number_density_86": 8.600000 * 10**16,
-                                     'alpha_i': 0},
-                                "O2":
-                                    {"number_density_86": 3.030898 * 10**19,
-                                     'alpha_i': 0},
-                                "Ar":
-                                    {"number_density_86": 1.351400 * 10**18,
-                                     'alpha_i': 0},
-                                "He":
-                                    {"number_density_86": 7.581730 * 10**14,
-                                     'alpha_i': -0.40},
-                                "H":
-                                    {"number_density_86": 7.581730 * 10**14,
-                                     'alpha_i': -0.40}}
+        rho_interp = CubicSpline(altitude, rho_array)
+        rho_new = rho_interp(height)
+
+        return rho_new
 
 
-        # number density N2
-        if height > 100:
-            M = self.M
-        else:
-            M = self.interpolate_molecular_mass(height)
 
-        # number density N2
-        c1_N2 = get_coefficient_1(molecular_dictionary["N2"]["number_density_86"], temperature_7, temperature_final)
-        c2_N2 = get_coefficient_2(temperature_final)
-        N2_number_density = c1_N2 * (temperature_7/temperature_final) * np.exp(- M * c2_N2 * (height * 1000 - 86000))
 
-        # number density O
-
-        # number density O2
-
-        # number density Ar
-
-        # number density He
-
-        return number_densities_sum
 
 
 
@@ -470,22 +425,6 @@ class NrlmsiseAtmosphere:
         rho = nrl00.rho
 
         return T, rho
-
-# TEST
-# temps = []
-# hs = []
-# i = 0
-# while i <= 1000:
-#     atmosphere = StandardAtmosphere(i)
-#     temp = atmosphere.T_std
-#     hs.append(i)
-#     temps.append(temp)
-#     i += 0.01
-#
-# df = pd.DataFrame({'temp': temps, 'h': hs})
-#
-# plot = df.hvplot(x = 'temp', y = 'h').opts(width = 400, height = 800)
-# hvplot.show(plot)
 
 
 
