@@ -18,7 +18,7 @@ def volume_spherical_endcap_sheet(radius,thickness):
 def surface_area_spherical_end_cap(radius):
     return 2*np.pi*radius**2
 
-def mass_endcap(material,radius,thickness):
+def mass_spherical_endcap(material,radius,thickness):
     mass = material.rho*volume_spherical_endcap_sheet(radius,thickness)
     return mass
 
@@ -78,7 +78,7 @@ def T_black_box(q_internal,absorptivity, dt, area,mass,Cp,T_ambient,emissivity,s
         heat_in = heat_conductive+heat_rad
     return T_comp
 
-def thickness_optim(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_insulation,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,q_in):
+def thickness_optimization(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_insulation,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,q_in):
     while T_blackbox>T_max_operating:
         thickness_insulation = thickness_insulation+0.001
         q_internal = heat_flux_internal(material,qs,time,thickness_insulation,dt)
@@ -88,28 +88,34 @@ def thickness_optim(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_in
     print("Temperature of blackbox:",T_blackbox-273,"Celcius")
     return T_blackbox,thickness_insulation
 
-def mass_insulation(rho_insulation):
+def mass_insulation(rho_insulation,radius,thickness_insulation):
+    surface_area = surface_area_spherical_end_cap(radius)
+    mass = surface_area*thickness_insulation*rho_insulation
+    return mass
 
+def total_mass(rho_insulation,radius,thickness_insulation,thickness_wall):
+    mass_insulation_endcap = mass_insulation(rho_insulation,radius,thickness_insulation)
+    mass_endcap = mass_spherical_endcap(material,radius,thickness_wall)
+    mass_total = mass_insulation_endcap + mass_endcap 
+    return mass_total
 
 if __name__ =="__main__":
-
     radius = 2.5
     thickness_wall = 0.002
     thickness_insulation = 0.01
     radius_nose = 0.5
     n_coefficient = 0.5
     m_coefficient = 3
-    c_star = 1.18e8
-    velocity_max = 3000
+
     plot = True
-    dt = 0.1
+    dt = 0.1 #s
     time_count = 170/dt
     time = np.linspace(0,170,int(time_count))
     air_densities = []
     qs = []
     altitude_vec = []
     velocity_vec = []
-    T_ambient = 300
+    T_ambient = 300 #K
     emissivity_blackbox = 0.5
     absorptivity_blackbox = 1
     sigma_boltzman = 5.67e-8
@@ -117,9 +123,9 @@ if __name__ =="__main__":
     area_fuel_cell = 2*0.4**2+4*0.4*1.2
     emissivity_fuel_cell = 0.7
     surface_area_blackbox =  6*0.4**2
-    Cp_blackbox = 500
-    T_max_operating = 380
-    mass_blackbox = 5
+    Cp_blackbox = 500 #J/kg*K
+    T_max_operating = 273+50
+    mass_blackbox = 5 #kg
     rho_insulation = 20 #kg/m3
 
     q_in = heat_radiation(T_surface_fuel_cell , area_fuel_cell,emissivity_fuel_cell,sigma_boltzman)
@@ -130,8 +136,6 @@ if __name__ =="__main__":
                             yield_strength=500e6,
                             thermal_conductivity = 0.1,
                             specific_heat = 500)
-    mass_cap = mass_endcap(material,radius,thickness_wall)
-    alpha = material.k/(material.rho)
 
     for i in range(len(time)):
         alt = altitude_km(time[i])
@@ -143,11 +147,13 @@ if __name__ =="__main__":
 
     print("Max stagnation heat flux is",max(qs),"W/m²")
     q_internal = heat_flux_internal(material,qs,time,thickness_insulation,dt)
-    T_blackbox= T_black_box(q_internal,absorptivity_blackbox,dt,surface_area_blackbox,5,Cp_blackbox,T_ambient,emissivity_blackbox,sigma_boltzman,q_in)
+    T_blackbox= T_black_box(q_internal,absorptivity_blackbox,dt,surface_area_blackbox,mass_blackbox,Cp_blackbox,T_ambient,emissivity_blackbox,sigma_boltzman,q_in)
 
-    print("Predicted temperature of black box:",T_blackbox-273,"Celcius")
-    thickness_insulation = thickness_optim(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_insulation,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,q_in)[1]
+    thickness_insulation = thickness_optimization(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_insulation,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,q_in)[1]
     
+    mass_total = total_mass(rho_insulation,radius,thickness_insulation,thickness_wall)
+    print("Total mass is: ",mass_total,"kg")
+
     if plot == True:
         plt.figure(figsize=(8, 5))
         plt.plot(time, q_internal, label="Internal Heat Flux")
