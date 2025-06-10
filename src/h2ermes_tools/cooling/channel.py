@@ -41,12 +41,12 @@ class RectangularChannel:
     def __init__(self, width, height, length, roughness):
         self.width = width
         self.height = height
-        self.hydraulic_diameter = self.hydraulic_diameter()
+        self.hydraulic_diameter = self.get_hydraulic_diameter()
         self.cross_sectional_area = width * height
         self.length = length
         self.roughness = roughness
 
-    def hydraulic_diameter(self):
+    def get_hydraulic_diameter(self):
         """
         Calculate the hydraulic diameter of the channel.
 
@@ -54,3 +54,12 @@ class RectangularChannel:
             float: Hydraulic diameter in meters.
         """
         return 2 * (self.width * self.height) / (self.width + self.height)
+    
+    def get_contact_area(self, length=1.0):
+        """
+        Calculate the contact area of the channel.
+
+        Returns:
+            float: Contact area in square meters.
+        """
+        return 2 * (self.width + self.height) * length

@@ -136,6 +136,24 @@ class Material:
             fill_value="extrapolate",
         )
 
+    def set_thermal_diffusivity(self, temperature_values):
+        """
+        Set thermal diffusivity based on the material's thermal conductivity, density, and specific heat.
+
+        Args:
+            temperature_values (np.ndarray): Array of temperatures [K].
+        """
+        k_values = self.thermal_conductivity(temperature_values)
+        Cp_values = self.specific_heat(temperature_values)
+
+        self.thermal_diffusivity = k_values / (self.density * Cp_values)
+        self.thermal_diffusivity = interpolate.interp1d(
+            temperature_values,
+            self.thermal_diffusivity,
+            kind="linear",
+            fill_value="extrapolate",
+        )
+
     def plot_property(self, temperature_range, property_function, ylabel):
         """
         Plot a material property as a function of temperature.
@@ -231,6 +249,7 @@ SS310.set_thermal_conductivity(k_data[:, 0] + 273.15, k_data[:, 1])
 SS310.set_thermal_expansion_coefficient(cte_data[:, 0] + 273.15, cte_data[:, 1])
 SS310.set_yield_strength(yield_strength_data[:, 0] + 273.15, yield_strength_data[:, 1])
 SS310.set_youngs_modulus(youngs_modulus_data[:, 0] + 273.15, youngs_modulus_data[:, 1])
+SS310.set_thermal_diffusivity(np.linspace(10, 1273, 100))
 
 # SS304 (SS 1.4301)
 k = ss304_data["thermal_conductivity"]
@@ -297,6 +316,9 @@ if __name__ == "__main__":
         temperature_range, SS310.ultimate_strength, "Ultimate Strength [Pa]"
     )
     SS310.plot_property(temperature_range, SS310.youngs_modulus, "Young's Modulus [Pa]")
+    SS310.plot_property(
+        temperature_range, SS310.thermal_diffusivity, "Thermal Diffusivity [m^2/s]"
+    )
 
     SS304.plot_property(
         temperature_range, SS304.specific_heat, "Specific Heat [J/kg/K]"
