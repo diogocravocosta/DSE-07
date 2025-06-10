@@ -106,9 +106,19 @@ def calculate_tank_thickness(
     return t
 
 
-def calculate_tank_mass(R, r, tank_length, thickness, material_density):
+def calculate_tank_mass(bottom_radius: float,
+                        top_radius: float,
+                        tank_length: float,
+                        thickness: float,
+                        material_density: float,
+                        cap_height_radius_ratio: float) -> float:
+
     volume_shell_wall = (
-        (np.pi * tank_length / 3) * (R**2 + R*r + r**2 - (R-thickness)**2 - (R-thickness)*(r-thickness) - (r-thickness)**2) + np.pi/6*((R+thickness)**3 - R**3) + np.pi/6*((r+thickness)**3 - r**3)
+        (np.pi * tank_length / 3)
+        * (bottom_radius**2 + bottom_radius*top_radius+top_radius**2
+           - (bottom_radius-thickness)**2 - (bottom_radius-thickness)*(top_radius-thickness) - (top_radius-thickness)**2)
+        + 2*np.pi/3*((bottom_radius+thickness)**3 - bottom_radius**3) * cap_height_radius_ratio
+        + 2*np.pi/3*((top_radius+thickness)**3 -top_radius**3) * cap_height_radius_ratio
     )
     mass = volume_shell_wall * material_density
     return mass
@@ -117,31 +127,30 @@ def calculate_tank_mass(R, r, tank_length, thickness, material_density):
 def check_vibrations(tank_mass, thickness, E, tank_length):
     omega = np.sqrt(
         (3 * E * (np.pi * (2 * thickness) / 64) / (tank_mass * tank_length**3))
-    )  # with k = 3EI/L^3 modelled as cantiliver beam
+    )  # with k = 3EI/L^3 modelled as cantilever beam
     f_natural = 1 / (2 * np.pi) * omega
-    print(f_natural)
     return f_natural
 
-def tank_overall_dimensions():
-    ratio_radius = 0.5
-    phi = np.arange(0, 91, 1)
-    R = (
-        (520 + 99)
-        * 3
-        * np.tan(np.radians(phi))
-        / (np.pi * (1 - ratio_radius) * (1 + ratio_radius + ratio_radius**2))
-    ) * (1 / 3)
-    r = R * ratio_radius
-    h = (R - r) / np.tan(np.radians(phi))
-    sols = 0
-    for i, val in enumerate(R):
-        if 2 * val >= 10:
-            continue
-        if 2 * val < 7:
-            continue
-        sols += 1
-        print(f"For {ratio_radius=}, {phi[i]=}:\n{R[i]=}\n{r[i]=}\n{h[i]=}\n")
-    print(sols)
+# def tank_overall_dimensions():
+#     ratio_radius = 0.5
+#     phi = np.arange(0, 91, 1)
+#     R = (
+#         (520 + 99)
+#         * 3
+#         * np.tan(np.radians(phi))
+#         / (np.pi * (1 - ratio_radius) * (1 + ratio_radius + ratio_radius**2))
+#     ) * (1 / 3)
+#     r = R * ratio_radius
+#     h = (R - r) / np.tan(np.radians(phi))
+#     sols = 0
+#     for i, val in enumerate(R):
+#         if 2 * val >= 10:
+#             continue
+#         if 2 * val < 7:
+#             continue
+#         sols += 1
+#         print(f"For {ratio_radius=}, {phi[i]=}:\n{R[i]=}\n{r[i]=}\n{h[i]=}\n")
+#     print(sols)
 
 ######################################################################################################################
 if __name__ == "__main__":
@@ -153,10 +162,13 @@ if __name__ == "__main__":
         },
     }
     # Geometry
-    radius_ratio = np.sqrt(0.5)
+    radius_ratio = 0.5
+    top_radius_ratio = 0.52
+    bottom_radius_ratio = radius_ratio / top_radius_ratio
+
     bottom_radius = 5  # m
-    middle_radius = bottom_radius * radius_ratio
-    top_radius = bottom_radius * radius_ratio**2
+    middle_radius = bottom_radius * bottom_radius_ratio
+    top_radius = middle_radius * top_radius_ratio
     cap_height_radius_ratio = 0.5  # ratio of the height of the caps to the radius
     phi = np.deg2rad(10)  # phi in radians
 
@@ -170,8 +182,8 @@ if __name__ == "__main__":
     LH2_pressure = 1000 * safety_factor_pressure * 1000  # Pa (10bar)
     LOX_pressure = 270 * 2 * 1000  # Pa (2.7 bar)
 
-    LH2_boiloff_margin = 1.1  # 10% ullage
-    LOX_boiloff_margin = 1.1  # 3% ullage
+    LH2_ullage_margin = 1.1  # 10% ullage
+    LOX_ullage_margin = 1.1  # 10% ullage
 
     LH2_density = 77  # kg/m3
     LOX_density = 1340  # kg/m3
@@ -183,9 +195,9 @@ if __name__ == "__main__":
     print("Mass LH2: " + str(LH2_mass) + " kg")
     LOX_mass = 6.0 / 7.0 * propellant_mass
     print("Mass LOX: " + str(LOX_mass) + " kg")
-    LH2_volume = LH2_mass / LH2_density * LH2_boiloff_margin
+    LH2_volume = LH2_mass / LH2_density * LH2_ullage_margin
     print("Volume LH2: " + str(LH2_volume) + " m3")
-    LOX_volume = LOX_mass / LOX_density  # * LOX_boiloff_margin
+    LOX_volume = LOX_mass / LOX_density  * LOX_ullage_margin
     print("Volume LOX: " + str(LOX_volume) + " m3")
     print(
         "-----------------------------------------------------------------------------------------------------------------"
@@ -204,23 +216,27 @@ if __name__ == "__main__":
     young_modulus = materials_properties[material]["young modulus"]  # Pa
 
     tank_length_LH2 = calculate_frustum_tank_length(LH2_volume,
-                                                    bottom_radius*radius_ratio,
-                                                    bottom_radius,
-                                                    cap_height_radius_ratio)
+                                                    top_radius,
+                                                    middle_radius,
+                                                    cap_height_radius_ratio,
+                                                    subtract_bottom_cap=False,
+                                                    subtract_top_cap=False)
     print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
-    print("LH2 Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
-    print("LH2 Tank Top Diameter: " + str(middle_radius * 2) + " m")
+    print("LH2 Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
+    print("LH2 Tank Top Diameter: " + str(top_radius * 2) + " m")
 
     print(
         "----------------------------------------------------------------------------------------------"
     )
     tank_length_LOX = calculate_frustum_tank_length(LOX_volume,
-                                                    bottom_radius*radius_ratio**2,
-                                                    bottom_radius*radius_ratio,
-                                                    cap_height_radius_ratio)
+                                                    middle_radius,
+                                                    bottom_radius,
+                                                    cap_height_radius_ratio,
+                                                    subtract_bottom_cap=False,
+                                                    subtract_top_cap=True)
     print("LOX Tank Length: " + str(tank_length_LOX) + " m")
-    print("LOX Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
-    print("LOX Tank Top Diameter: " + str(top_radius * 2) + " m")
+    print("LOX Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
+    print("LOX Tank Top Diameter: " + str(middle_radius * 2) + " m")
     print(
         "----------------------------------------------------------------------------------------------"
     )
@@ -255,11 +271,11 @@ if __name__ == "__main__":
     )
     print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
     mass_LH2_tank = calculate_tank_mass(
-        bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, density
+        bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, density, cap_height_radius_ratio
     )
     print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
     mass_LOX_tank = calculate_tank_mass(
-        middle_radius, top_radius, tank_length_LOX, thickness_LOX, density
+        middle_radius, top_radius, tank_length_LOX, thickness_LOX, density, cap_height_radius_ratio
     )
     print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
 
