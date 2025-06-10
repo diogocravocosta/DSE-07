@@ -175,3 +175,68 @@ mass_LOX_tank = calculate_tank_mass(
     tank_diameter, tank_length_LOX, thickness_LOX, density
 )
 print("Mass LOX Tank: " + str(mass_LOX_tank))
+
+def calculate_tank_thickness(
+    wet_mass,
+    propellant_pressure,
+    fuel_mass,
+    tank_length,
+    R,
+    r,
+    phi,
+    E,
+    strength,
+    thrust,
+    gamma=0.65,
+):
+    average_radius = (R + r) / (2 * np.cos(phi))
+    max_thickness = 0.1  # 10 cm limit
+    t = 0.001  # Start with 1 mm
+
+    t_press = (propellant_pressure / 6894.76 * R) / (
+        np.cos(phi) * (strength * 0.85 - propellant_pressure / 6894.76)
+    )  # Pressure vessel design
+    while t < max_thickness:
+            # axial stress due to the launch acceleration
+            V = np.pi * r * tank_length * t
+            # sigma_axial = (thrust) / (2 * np.pi * R * t * np.cos(phi))  # Roak textbook
+
+            # bending stress due to lateral loads
+            # sigma_bend = (7800 * V * 2.2 * 9.81 * (t**2 / 2)) / (t**3 / 12)
+
+            # Combined Loading
+            N_axial = np.cos(phi) * thrust - np.sin(phi) * 7800 * V * 2 * 9.81
+            M_bend = (
+                7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * tank_length / 2
+            )  # (t**2 / 2)
+
+            M_cr_bend = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
+                2 * np.pi * E * r * t**2 * np.cos(phi) ** 2
+            ) + np.pi * r**3 * propellant_pressure / 2
+
+            P_cr_axial = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
+                2 * np.pi * E * t**2 * np.cos(phi) ** 2
+            ) + np.pi * r**2 * propellant_pressure
+
+            p_cr = (0.92 * E * 0.75) / (
+                (tank_length / average_radius) * (average_radius / t) ** (5 / 2)
+            )  # in N
+            interaction = safety_factor * (N_axial / P_cr_axial + M_bend / M_cr_bend)
+
+            if interaction <= 1.0:
+                break
+            t += 0.0001  # Increment 0.1 mm
+    else:
+            raise ValueError(
+                "Could not find a suitable tank thickness. Check your assumptions or inputs."
+            )
+
+    print("the axial load is: " + str(N_axial))
+    print("the bending load is: " + str(M_bend))
+    print("The PRESSURE IS: " + str(p_cr))
+    
+    # check hoop stress
+    if t_press > t:
+        t = t_press
+        print("Hoop stress leading")
+    return t

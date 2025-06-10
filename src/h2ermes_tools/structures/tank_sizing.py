@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def calculate_frustum_tank_length(volume: float,
                                   top_radius: float,
@@ -44,6 +45,7 @@ def calculate_frustum_tank_length(volume: float,
 def calculate_tank_thickness(
     wet_mass,
     propellant_pressure,
+    max_propellant_pressure,
     fuel_mass,
     tank_length,
     R,
@@ -54,56 +56,49 @@ def calculate_tank_thickness(
     thrust,
     gamma=0.65,
 ):
-    average_radius = (R + r) / (2 * np.cos(phi))
-    max_thickness = 0.1  # 10 cm limit
-    t = 0.001  # Start with 1 mm
+    """
+    Compute required wall thickness of a conical tank using given rocket and tank parameters.
+    """
 
-    t_press = (propellant_pressure / 6894.76 * R) / (
-        np.cos(phi) * (strength * 0.85 - propellant_pressure / 6894.76)
-    )  # Pressure vessel design
+    # Average radius (approximate effective radius for stress)
+    radius = (R + r) / 2
+    # Allowable stress
+    sigma_allow = strength / gamma
 
-    while t < max_thickness:
-        # axial stress due to the launch acceleration
-        V = np.pi * r * tank_length * t
-        # sigma_axial = (thrust) / (2 * np.pi * R * t * np.cos(phi))  # Roak textbook
+    def von_mises(t):
+        # Hoop stress due to internal pressure
+        sigma_h = (propellant_pressure * radius / (t)) * ((1 - np.sin(phi)**2) / np.sin(phi))
+        # Meridional (axial) stress due to internal pressure
+        sigma_m_p = (propellant_pressure * radius) / (2*t * np.sin(phi))
+        # Meridional (axial) stress due to thrust
+        A = 2 * np.pi * radius * t  # conical shell approx area
+        sigma_m_l = safety_factor * thrust / A
+        # Meridional (bending) stress 
+        #sigma_b = M_bend * y / I
+        sigma_m = sigma_m_p + sigma_m_l
+        # Von Mises stress
+        return np.sqrt(sigma_h**2 + sigma_m**2 - sigma_h * sigma_m)
 
-        # bending stress due to lateral loads
-        # sigma_bend = (7800 * V * 2.2 * 9.81 * (t**2 / 2)) / (t**3 / 12)
-
-        # Combined Loading
-        N_axial = np.cos(phi) * thrust - np.sin(phi) * 7800 * V * 2 * 9.81
-        M_bend = (
-            7800 * V * (np.sin(phi) * 6 + np.cos(phi) * 2) * 9.81 * tank_length / 2
-        )  # (t**2 / 2)
-
-        M_cr_bend = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
-            2 * np.pi * E * r * t**2 * np.cos(phi) ** 2
-        ) + np.pi * r**3 * propellant_pressure / 2
-
-        P_cr_axial = (0.33 / (3 * (1 - 0.33**2)) + 0.1) * (
-            2 * np.pi * E * t**2 * np.cos(phi) ** 2
-        ) + np.pi * r**2 * propellant_pressure
-
-        p_cr = (0.92 * E * 0.75) / (
-            (tank_length / average_radius) * (average_radius / t) ** (5 / 2)
-        )  # in N
-        interaction = safety_factor * (N_axial / P_cr_axial + M_bend / M_cr_bend)
-
-        if interaction <= 1.0:
+    # Iterate to find minimum thickness
+    t_guess = 0.001  # start at 1 mm
+    while True:
+        sigma_vm = von_mises(t_guess)
+        if sigma_vm <= sigma_allow:
             break
-        t += 0.0001  # Increment 0.1 mm
-    else:
-        raise ValueError(
-            "Could not find a suitable tank thickness. Check your assumptions or inputs."
-        )
-    print("the axial load is: " + str(N_axial))
-    print("the bending load is: " + str(M_bend))
-    print("The PRESSURE IS: " + str(p_cr))
+        t_guess += 0.0001  # increment in 0.1 mm steps
+
+    #Check for Axial Buckling 
+    N_cr = 0.33 * (2*np.pi*E*t_guess**2*np.cos(phi))/np.sqrt(3*(1-0.33**3))
+    if safety_factor * thrust / (2 * np.pi * radius * t_guess) > N_cr:
+        print("THE STRUCTURE BUCKLES and sigma critical is: " + str(N_cr))
+    
+    #Check for hoop stress at maximum boil off pressure:
+    t_press = (max_propellant_pressure * radius)/(strength) * (1-np.sin(phi)**2)/(np.sin(phi))
     # check hoop stress
-    if t_press > t:
-        t = t_press
-        print("Hoop stress leading")
-    return t
+    if t_press > t_guess:
+        t_guess = t_press
+        print("Hoop stress leading and hoop stress is: " + str((max_propellant_pressure * radius)/(t_press) * (1-np.sin(phi)**2)/(np.sin(phi))))
+    return t_guess
 
 
 def calculate_tank_mass(bottom_radius: float,
@@ -130,6 +125,30 @@ def check_vibrations(tank_mass, thickness, E, tank_length):
     )  # with k = 3EI/L^3 modelled as cantilever beam
     f_natural = 1 / (2 * np.pi) * omega
     return f_natural
+
+
+def plot_stress_vs_thickness(P, R, r, phi, thrust, strength, gamma):
+    thicknesses = np.linspace(0.001, 0.1, 500)
+    stresses = []
+
+    for t in thicknesses:
+        radius = (R + r) / 2
+        sigma_h = (P * radius / (t)) * ((2 - np.sin(phi)**2) / np.sin(phi))
+        sigma_m_p = (P * radius) / (t * np.sin(phi))
+        A = 2 * np.pi * radius * t
+        sigma_m_l = thrust / A
+        sigma_m = sigma_m_p + sigma_m_l
+        sigma_vm = np.sqrt(sigma_h**2 + sigma_m**2 - sigma_h * sigma_m)
+        stresses.append(sigma_vm / 1e6)  # MPa
+
+    plt.plot(thicknesses * 1000, stresses)
+    plt.axhline(y=strength/gamma / 1e6, color='r', linestyle='--', label='Allowable')
+    plt.xlabel("Wall Thickness (mm)")
+    plt.ylabel("Von Mises Stress (MPa)")
+    plt.title("Stress vs Thickness")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
 
 # def tank_overall_dimensions():
 #     ratio_radius = 0.5
@@ -177,10 +196,9 @@ if __name__ == "__main__":
     safety_factor_pressure = 2.0
     # tank_diameter = 7
     payload_mass = 15000
-    thrust_engines = 2129573.909
-
-    LH2_pressure = 1000 * safety_factor_pressure * 1000  # Pa (10bar)
-    LOX_pressure = 270 * 2 * 1000  # Pa (2.7 bar)
+    LH2_pressure = 200 * safety_factor_pressure * 1000  # Pa (10bar)
+    max_pressure_boiloff = 200 * 1000 * safety_factor_pressure
+    LOX_pressure = 280 * safety_factor_pressure * 1000  # Pa (2.7 bar)
 
     LH2_ullage_margin = 1.1  # 10% ullage
     LOX_ullage_margin = 1.1  # 10% ullage
@@ -191,6 +209,7 @@ if __name__ == "__main__":
     structural_mass = 20642.21346
     propellant_mass = 149913.1903
     wet_mass = propellant_mass + structural_mass
+    thrust_engines = 1.2 * wet_mass
     LH2_mass = 1 / 7.0 * propellant_mass + payload_mass
     print("Mass LH2: " + str(LH2_mass) + " kg")
     LOX_mass = 6.0 / 7.0 * propellant_mass
@@ -245,6 +264,7 @@ if __name__ == "__main__":
     thickness_LH2 = calculate_tank_thickness(
         wet_mass,
         LH2_pressure,
+        max_pressure_boiloff,
         LH2_mass,
         tank_length_LH2,
         bottom_radius,
@@ -258,6 +278,7 @@ if __name__ == "__main__":
     print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
     thickness_LOX = calculate_tank_thickness(
         wet_mass,
+        LOX_pressure,
         LOX_pressure,
         LOX_mass,
         tank_length_LOX,
@@ -284,3 +305,5 @@ if __name__ == "__main__":
         mass_LH2_tank, thickness_LH2, young_modulus, tank_length_LH2
     )
     print("Natural Frequency: " + str(natural_frequency) + " Hz")
+    plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
+    plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
