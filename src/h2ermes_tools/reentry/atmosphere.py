@@ -368,18 +368,33 @@ class StandardAtmosphere:
         return molecular_mass
 
     def get_number_densities(self, height, temperature_7, temperature_final):
+        def get_coefficient_1(number_density_7, temp_0, temp_f):
+            c1 = number_density_7 * temp_0 / temp_f
+            return c1
+
+        def get_coefficient_2(temp_f):
+            c2 = self.g / (self.R_star * temp_f)
+
+            return c2
+
+
         number_densities_sum = 0
 
         molecular_dictionary = {"N2":
-                                    {"number_density_86": 1.129794 * 10**20},
+                                    {"number_density_86": 1.129794 * 10**20,
+                                     'alpha_i': 0},
                                 "O":
-                                    {"number_density_86": 8.600000 * 10**16},
+                                    {"number_density_86": 8.600000 * 10**16,
+                                     'alpha_i': 0},
                                 "O2":
-                                    {"number_density_86": 3.030898 * 10**19},
+                                    {"number_density_86": 3.030898 * 10**19,
+                                     'alpha_i': 0},
                                 "Ar":
-                                    {"number_density_86": 1.351400 * 10**18},
+                                    {"number_density_86": 1.351400 * 10**18,
+                                     'alpha_i': 0},
                                 "He":
-                                    {"number_density_86": 7.581730 * 10**14}}
+                                    {"number_density_86": 7.581730 * 10**14,
+                                     'alpha_i': -0.40}}
 
 
         # number density N2
@@ -389,8 +404,9 @@ class StandardAtmosphere:
             M = self.interpolate_molecular_mass(height)
 
         # number density N2
-        c1_N2 = get_coefficient_
-        N2_number_density = molecular_dictionary["N2"]["number_density_86"] * (temperature_7/temperature_final) * np.exp(- M * self.g * (height * 1000 - 86000) / (self.R_star * temperature_final))
+        c1_N2 = get_coefficient_1(molecular_dictionary["N2"]["number_density_86"], temperature_7, temperature_final)
+        c2_N2 = get_coefficient_2(temperature_final)
+        N2_number_density = c1_N2 * (temperature_7/temperature_final) * np.exp(- M * c2_N2 * (height * 1000 - 86000))
 
         # number density O
 
@@ -400,10 +416,9 @@ class StandardAtmosphere:
 
         # number density He
 
-        def get_coefficient_1(number_density_7):
-            c1 = number_density_7 * temperature_7 / temperature_final
-            return c1
         return number_densities_sum
+
+
 
 class NrlmsiseAtmosphere:
     def __init__(self,
