@@ -590,7 +590,7 @@ total_power_thrusters, total_mass_thrusters, total_dry_mass_thrusters, total_pro
 htp_density = 1134.5 #kg/m^3, limiting density at highest inlet temperature of 80 degrees celsius
 
 def acs_tank_design(htp_density, total_prop_mass):
-    tank_pressure = 10e6  # in Pa
+    tank_pressure = 2e6  # in Pa
     burst_safety_factor = 2 # Safety factor for burst pressure
     tank_pressure *= burst_safety_factor  # Adjusting the tank pressure for safety factor
     Materials = {
@@ -610,9 +610,10 @@ def acs_tank_design(htp_density, total_prop_mass):
     tank_volume = total_prop_mass / htp_density  # in m^3
     tank_volume *= ullage_factor  # Adjusting the tank volume for ullage factor
     tank_radius = ((tank_volume / np.pi) * 0.75) ** (1/3)  # Assuming a spherical tank for simplicity
+    print(tank_radius)
     tank_thickness_SS_316 = (tank_pressure * tank_radius)/(Materials['Stainless Steel 316']['yield_strength'])  # Using the formula for thin-walled pressure vessels
     tank_thickness_AA_6000 = (tank_pressure * tank_radius)/(Materials['Aluminum AA6000 T6 Series']['yield_strength'])  # Using the formula for thin-walled pressure vessels
-    # print(tank_thickness_SS_316, tank_thickness_AA_6000)
+    print(tank_thickness_AA_6000)
     tank_mass_SS_316 = 4 * np.pi * tank_radius**2 * tank_thickness_SS_316 * Materials['Stainless Steel 316']['density']  # Mass of the tank in kg
     tank_mass_AA_6000 = 4 * np.pi * tank_radius**2 * tank_thickness_AA_6000 * Materials['Aluminum AA6000 T6 Series']['density']  # Mass of the tank in kg
     tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the maximum mass of the tank
@@ -621,7 +622,7 @@ def acs_tank_design(htp_density, total_prop_mass):
 
 tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
 # print("The mass of the ACS tank is: ", tank_mass, "kg")
-# print("The material of the ACS tank is: ", tank_material)
+print("The material of the ACS tank is: ", tank_material)
 
 print("The total mass of the ACS system is: ", total_mass_thrusters + tank_mass, "kg")
 print("The total power requirement of the ACS system is: ", total_power_thrusters, "W")
