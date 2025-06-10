@@ -394,6 +394,9 @@ class StandardAtmosphere:
                                      'alpha_i': 0},
                                 "He":
                                     {"number_density_86": 7.581730 * 10**14,
+                                     'alpha_i': -0.40},
+                                "H":
+                                    {"number_density_86": 7.581730 * 10**14,
                                      'alpha_i': -0.40}}
 
 
