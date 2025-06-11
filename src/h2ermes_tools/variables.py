@@ -447,6 +447,16 @@ minimum_tank_pressure = Variable(
     margin=(1.0, 1.05),
 )
 
+nose_cone_mass = Variable(
+    name="Nose Cone Mass",
+    value=700,
+    unit="kg",
+    latex_symbol="m_{nose cone}",
+    confidence="very low",
+    constraints="must be positive",
+    margin=(1.0, 1.5),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
