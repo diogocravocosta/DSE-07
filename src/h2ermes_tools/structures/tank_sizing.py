@@ -148,7 +148,7 @@ def calculate_tank_thickness(
     #  BUCKLING CHECKS
     # ------------------------------------------------------------------
     # Axial Stress
-    N_cr = 0.33 * (2 * np.pi * material.E * t_guess ** 2 * np.cos(phi)) / np.sqrt(3 * (1 - 0.33 ** 3))
+    N_cr = 0.33 * (2 * np.pi * material.E * t_guess ** 2 * np.cos(phi)) / np.sqrt(3 * (1 - 0.33 ** 2))
 
     if safety_factor * thrust / (2 * np.pi * radius * t_guess) > N_cr:
         print("BUCKLES: sigma_critical =", N_cr, "N  (increase t or add stiffeners)")
