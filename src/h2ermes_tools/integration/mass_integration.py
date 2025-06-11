@@ -119,7 +119,6 @@ class MassIntegrator:
         Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
         """
         self.subsystem_dry_masses = {
-            "turbopump": size_turbopump(oi.min_tank_pressure, oi.total_vacuum_thrust),
             'landing_legs': size_landing_legs(
                 n_legs=4,
                 mass_land=oi.dry_mass,
@@ -128,14 +127,21 @@ class MassIntegrator:
                 material=oi.landingleg_material,
                 clearance_height=oi.clearance_height
             ),
-            "turbopump": size_turbopump(oi.min_tank_pressure,
-                                        oi.total_vacuum_thrust),
-            "main_tank": size_tanks(tank_material,
-                                    oi.gross_mass,
-                                    oi.total_hydrogen_mass,
-                                    oi.total_oxygen_mass,
-                                    oi.hydrogen_design_pressure,
-                                    oi.oxygen_design_pressure,
-                                    oi.total_vacuum_thrust),
+            "turbopump": size_turbopump(tank_pressure=oi.min_tank_pressure,
+                                        thrust=oi.total_vacuum_thrust),
+            "main_tank": size_tanks(material=oi.tank_material,
+                                    wet_mass=oi.gross_mass,
+                                    LH2_mass=oi.total_hydrogen_mass,
+                                    LOX_mass=oi.total_oxygen_mass,
+                                    LH2_design_pressure=oi.hydrogen_design_pressure,
+                                    LOX_design_pressure=oi.oxygen_design_pressure,
+                                    thrust_engines=oi.total_vacuum_thrust),
 
         }
+
+    def calculate_other_masses(self, oi: 'MassIntegrator') -> None:
+        """
+        Calculate other masses that are not part of the dry mass.
+        """
+        self.h2_boil_off_mass = dds.h2_boil_off_mass(oi.main_hydrogen_mass)
+        self.o2_boil_off_mass = dds.o2_boil_off_mass(oi.main_oxygen_mass)
