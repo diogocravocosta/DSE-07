@@ -45,7 +45,7 @@ class Variable:
 # Enter your variables here
 coolant_mass = Variable(
     name="Coolant Mass",
-    value=0.0,
+    value=3000.0,
     unit="kg",
     latex_symbol="M_c",
     confidence="poor",
@@ -55,12 +55,22 @@ coolant_mass = Variable(
 
 heat_shield_thickness = Variable(
     name="Heat Shield Thickness",
-    value=4e-3,
+    value=10e-3,  # includes the coolant channels
     unit="m",
     latex_symbol="t_{s}",
     confidence="good",
     constraints="must be greater than 0",
-    margin=(1.0, 1.1),
+    margin=(0.8, 1.2),
+)
+
+heat_shield_mass = Variable(
+    name="Heat Shield Mass",
+    value=750.0,  # only the mass of the metallic structure
+    unit="kg",
+    latex_symbol="M_{hs}",
+    confidence="poor",
+    constraints="must be greater than zero",
+    margin=(1.0, 1.5),
 )
 
 orbit_insertion_delta_v = Variable(
