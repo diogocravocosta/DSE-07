@@ -127,7 +127,7 @@ class MassIntegrator:
                 clearance_height=oi.clearance_height
             ),
             "turbopump": size_turbopump(tank_pressure=oi.min_tank_pressure,
-                                        thrust=oi.total_vacuum_thrust),
+                                        thrust=oi.vacuum_thrust),
             "main_tank": size_tanks(material=oi.tank_material,
                                     wet_mass=oi.gross_mass,
                                     LH2_mass=oi.total_hydrogen_mass,

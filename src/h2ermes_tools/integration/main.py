@@ -1,8 +1,11 @@
 import numpy as np
 
+import data.material as dm
+import data.constants as cn
+
 import h2ermes_tools.variables as vr
 import h2ermes_tools.integration.mass_integration as mi
-import data.material as dm
+
 
 # Add unchanging variables to the MassIntegrator
 def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
@@ -24,6 +27,8 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
 
     integrator.of_ratio = vr.engine_mixture_ratio.value  # Unchanging
 
+    integrator.vacuum_twr = vr.t_w_vac.value
+
     # Set parameters which will probably change
     integrator.phi = np.deg2rad(10) # rad
     integrator.bottom_radius = 5 # m
@@ -36,6 +41,10 @@ def add_initial_values(integrator: mi.MassIntegrator) -> None:
     """Add initial values to the MassIntegrator object."""
     integrator.dry_mass = vr.total_dry_mass.value
     integrator.h2_boil_off_mass = 1000
+    integrator.gross_mass = vr.gross_mass.value
+
+    integrator.vacuum_thrust = integrator.gross_mass * cn.g_0 * integrator.vacuum_twr
+
 
 def main() -> None:
     """Main function to run the mass integration."""

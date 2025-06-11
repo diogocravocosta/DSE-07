@@ -210,7 +210,7 @@ class LandingLegs:
         self.h_clearance = clearance_height
 
         # Computes the minimum length of the legs based on the required clearance and the phi angle
-        self.min_length = self.h_clearance / np.cos(np.radians(self.v.phi))
+        self.min_length = self.h_clearance / np.cos(self.v.phi)
 
         # Initialize geometry parameters
         self.radius = 0
@@ -281,8 +281,8 @@ class LandingLegs:
         Internal method to determine the different loads based on the geometry and mass
         """
         self.force = self.mass_land * constants.g_0 / self.n_legs
-        self.force_transverse = self.force * np.sin(np.radians(self.v.phi))
-        self.force_axial = self.force * np.cos(np.radians(self.v.phi))
+        self.force_transverse = self.force * np.sin(self.v.phi)
+        self.force_axial = self.force * np.cos(self.v.phi)
 
     def _euler_buckling(self) -> float:
         """
