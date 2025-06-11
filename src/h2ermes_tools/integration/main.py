@@ -5,7 +5,6 @@ import data.constants as cn
 
 import h2ermes_tools.variables as vr
 import h2ermes_tools.integration.mass_integration as mi
-from data.material import random_steel
 
 
 # Add unchanging variables to the MassIntegrator
@@ -37,15 +36,25 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.oxygen_design_pressure = 2.5e5
     integrator.boiloff_design_pressure = 10e5
 
-    # Set parameters which will probably change
+    integrator.landing_leg_material = dm.Ti6Al4V
+    integrator.tank_material = dm.random_steel
+    integrator.header_tank_material = dm.random_steel
+
+    # Set parameters which will probably change in actuality
     integrator.phi = np.deg2rad(10) # rad
     integrator.bottom_radius = 5 # m
     integrator.middle_radius = 4.8 # m
     integrator.hydrogen_tank_height = 12.65 # m
     integrator.top_radius = 2.5 # m
-    integrator.landing_leg_material = dm.Ti6Al4V
-    integrator.tank_material = dm.random_steel
-    integrator.header_tank_material = dm.random_steel
+
+    # Add unchanging subsystem dry masses
+    integrator.unchanging_subsystem_dry_masses = {
+        "acs": vr.acs_dry_mass.value,
+        "heat shield": vr.heat_shield_mass.value,
+        "thrust chambers": vr.thrust_chamber_sl_mass.value * 8 + vr.thrust_chamber_sl_mass.value * 16,
+        "docking system": vr.docking_system_mass.value,
+        "nose cone": vr.nose_cone_mass.value
+    }
 
 
 # Define initial values for the MassIntegrator
