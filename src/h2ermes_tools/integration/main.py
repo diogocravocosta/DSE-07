@@ -5,6 +5,7 @@ import data.constants as cn
 
 import h2ermes_tools.variables as vr
 import h2ermes_tools.integration.mass_integration as mi
+from data.material import random_steel
 
 
 # Add unchanging variables to the MassIntegrator
@@ -39,9 +40,12 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     # Set parameters which will probably change
     integrator.phi = np.deg2rad(10) # rad
     integrator.bottom_radius = 5 # m
-    integrator.landing_leg_material = dm.SS14845
-    integrator.tank_material = dm.SS14404
-    integrator.header_tank_material = dm.SS14404
+    integrator.middle_radius = 4.8 # m
+    integrator.hydrogen_tank_height = 12.65 # m
+    integrator.top_radius = 2.5 # m
+    integrator.landing_leg_material = random_steel
+    integrator.tank_material = dm.random_steel
+    integrator.header_tank_material = dm.random_steel
 
 
 # Define initial values for the MassIntegrator
@@ -75,14 +79,19 @@ def main() -> None:
     for i in range(1):
         new_integrator = mi.MassIntegrator()
         add_unchanging_variables(new_integrator)
+
         new_integrator.calculate_dry_mass(old_integrator)
+        new_integrator.calculate_other_masses(old_integrator)
+
+        new_integrator.calculate_propellant_mass()
+        new_integrator.calculate_hydrogen_oxygen_mass()
 
     # Print the results
-    print(f"Total mass: {old_integrator.gross_mass:.2f} kg")
-    print(f"Dry mass: {old_integrator.dry_mass:.2f} kg")
-    print(f"Propellant mass: {old_integrator.propellant_mass:.2f} kg")
-    print(f"Hydrogen mass: {old_integrator.total_hydrogen_mass:.2f} kg")
-    print(f"Oxygen mass: {old_integrator.total_oxygen_mass:.2f} kg")
+    print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
+    print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")
+    print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")
+    print(f"Hydrogen mass: {new_integrator.total_hydrogen_mass:.2f} kg")
+    print(f"Oxygen mass: {new_integrator.total_oxygen_mass:.2f} kg")
 
 if __name__ == "__main__":
     main()

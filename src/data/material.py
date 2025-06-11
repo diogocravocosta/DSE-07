@@ -128,7 +128,7 @@ SS14404.set_thermal_conductivity(
     np.array([273, 373, 473, 573, 673, 773, 873, 973, 1073, 1173, 1273]),
 )
 
-## SS 1.4845 (SS 310S)
+## 1.4845 (SS 310S)
 k = 16.2  # thermal conductivity [W/m/K] at 500 C
 Cp = 500  # specific heat [J/kg/K] at 500 C
 rho = 7900  # density [kg/m^3] at 500 C
@@ -140,6 +140,13 @@ eps = 0.8  # thermal emissivity
 Ra = 0.9e-5  # effective roughness height [m] from Materialise
 alpha = k / rho / Cp  # thermal diffusivity [m^2/s]
 SS14845 = Material("SS14845", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
+
+random_steel = Material(
+    name="Random Steel",
+    youngs_modulus=200e9,
+    density=7800,
+    yield_strength=1060e6
+)
 
 
 if __name__ == "__main__":
