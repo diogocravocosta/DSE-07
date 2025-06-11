@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import simpson
 
 # internal
-import src.data.constants as ct
+import data.constants as ct
 from h2ermes_tools.reentry import atmosphere as atm
 
 class GlidingEntry:
