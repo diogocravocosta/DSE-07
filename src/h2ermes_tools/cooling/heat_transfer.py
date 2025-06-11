@@ -200,7 +200,6 @@ class HeatShield:
         Marches in both time and space: for each time step, solves the 1-D wall heat transfer at each space segment,
         updating coolant properties and passing them to the next segment.
         """
-        segment_length = channel_length / num_segments
         all_temperatures_segments = []
         all_times = None
         x = None
@@ -403,3 +402,14 @@ class HeatShield:
         V_outer = (1/3) * np.pi * h**2 * (3*r_outer - h)
         mass = (V_outer - V_inner) * self.heat_shield_density
         return mass
+    
+    def estimate_heat_shield_mass(self, h, radius=None):
+        """
+        Estimate the heat shield mass. This mass is composed of two spherical masses.
+        The first mass is the solid, full heat shield wall and the second mass is the
+        portion of the wall that has coolant channels inside it.
+
+        The coolant channels are assumed to be layed underneath 50% of the surface.
+        """
+        first_mass = self.estimate_spherical_mass(h, radius)
+        r_outer = rad
