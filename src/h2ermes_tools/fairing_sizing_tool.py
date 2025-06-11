@@ -1,12 +1,9 @@
 import numpy as np
-from pathlib import Path
-import sys
 import matplotlib.pyplot as plt
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir.parent))
+
 from data import constants as cs
 from data import material as mat
-from atmosphere import Atmosphere
+from h2ermes_tools.reentry.atmosphere import ExponentialAtmosphere
 
 #spherical end cap
 
@@ -141,7 +138,7 @@ if __name__ =="__main__":
         alt = altitude_km(time[i])
         altitude_vec.append(alt)
         velocity_vec.append(launcher_velocity(time[i]))
-        atm = Atmosphere(alt)
+        atm = ExponentialAtmosphere(alt)
         air_densities.append(atm.rho_exp)  
         qs.append(chapman_simplified_stagnation_heat_flux(radius_nose,velocity_vec[i],air_densities[i]))
 
