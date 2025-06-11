@@ -5,6 +5,7 @@ import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks
+from h2ermes_tools.boil_off_estimation import total_boil_off_h2
 
 tank_material = 1
 class MassIntegrator:
@@ -23,7 +24,6 @@ class MassIntegrator:
 
     payload_mass: float, payload mass to be transferred to the depo in kg
     h2_boil_off_mass: float, mass of hydrogen lost to boil_off in kg
-    o2_boil_off_mass: float, mass of oxygen lost to boil_off in kg
     h2_power_mass: float, mass of hydrogen used for power generation in kg
     o2_power_mass: float, mass of oxygen used for power generation in kg
     coolant_mass: float, mass of hydrogen used for reentry cooling in kg
@@ -66,7 +66,7 @@ class MassIntegrator:
         total_mass += self.deorbit_propellant_mass
 
         # add boil_off mass and payload mass
-        total_mass += self.h2_boil_off_mass + self.o2_boil_off_mass + self.payload_mass
+        total_mass += self.h2_boil_off_mass + self.payload_mass
         # calculate and add propellant mass for circularization and orbit raising
         self.transfer_propellant_mass = (np.exp((self.circularization_delta_v + self.orbit_raising_delta_v)
                                            / (self.vacuum_isp * cn.g_0)) - 1) * total_mass
@@ -89,7 +89,7 @@ class MassIntegrator:
         main_tank_propellant_mass = self.transfer_propellant_mass + self.orbit_insertion_propellant_mass
 
         self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
-        self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boil_off_mass + self.o2_power_mass
+        self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_power_mass
 
         self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
 
@@ -119,7 +119,6 @@ class MassIntegrator:
         Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
         """
         self.subsystem_dry_masses = {
-            "turbopump": size_turbopump(oi.min_tank_pressure, oi.total_vacuum_thrust),
             'landing_legs': size_landing_legs(
                 n_legs=4,
                 mass_land=oi.dry_mass,

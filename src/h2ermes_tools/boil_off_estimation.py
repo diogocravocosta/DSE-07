@@ -3,6 +3,7 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import pytest
 from data import material as mat
+import data.constants as cn
 
 #------------------------------------------------
 #Functions
@@ -37,7 +38,7 @@ def rad_load(T_tank, T_lh2, material,area_gh2):
     q_load = q * area_gh2
     return q_load
 
-def heat_load(solar_power, planetary_power, albedo_power,area, material,rho_lh2_20k):
+def heat_load(solar_power, planetary_power, albedo_power,area, material,rho_lh2_20k, m_payload):
     # Geometry
     incident_area = 7 * 9 + np.pi * 0.875 * 3.5
     planetary_flux = planetary_power / incident_area * material.eps
@@ -103,14 +104,14 @@ def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k):
     m_vap_h2_launchend = vanderwaals(P1, V2_vapor, R, T1, a, b, h2_nm)
 
     mass_boil_off_launch = m_vap_h2_launchend - m_vap_h2_launchstart 
-    print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3 and projected area of",volume_cone(h,ro,ri)[1])
+    # print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3 and projected area of",volume_cone(h,ro,ri)[1])
     return mass_boil_off_launch
 
-def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, material, heat_load_data, boil_off_mass,rho_lh2_20k):
+def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, material, heat_load_data, boil_off_mass,rho_lh2_20k, m_payload):
     area_proj = volume_cone(h, ro, ri)[1]
-    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, material,rho_lh2_20k)
+    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, material,rho_lh2_20k, m_payload)
     boil_off_specific = linear_regression(heat_load_data, boil_off_mass, heat_load_h2go)
-    print("Boil off during orbit (due to external heat sources): ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go,"W")
+    # print("Boil off during orbit (due to external heat sources): ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go,"W")
     return boil_off_specific
 
 def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock):
@@ -140,22 +141,81 @@ def boiloff_reentry(ro,ri,h,m_h2_reentry,material,T_skin_reentry,T_lh2,rho_lh2_3
     print('Boil off in reentry due to tank wall heating up: ',m_boil_off_reentry,'kg for radiation load: ',radiation_load,"W")
     return m_boil_off_reentry
 
-def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot):
+def total_boil_off_h2(m_h2_tot,
+                      m_payload,
+                      m_coolant,
+                      m_boil_off,
+                      middle_radius,
+                      top_radius,
+                      height,
+                      material,
+                      T_gh2_launch=20,
+                      heat_load_data=[44000,40000,50000,47000],
+                      boil_off_mass_data=[16381-14200, 16381-15040,16381-13000,16381-13604],
+                      p_vent=10e6,
+                      T_vapor=75,
+                      T_vapor_refuel=50,
+                      a=0.2453e-6,
+                      b=0.02651e-3,
+                      h2_nm=2,
+                      solar_power=135311.68,
+                      planetary_power=25795.63,
+                      albedo_power=13604.74,
+                      rho_lh2_20k=71,
+                      worst_case=False,
+                      P_min_vapor=3e5,
+                      ):
+    m_payload_coolant_boil_off = m_payload + m_coolant + m_boil_off
+
     # During launch
     total_boil_off = 0
-    mass_boil_off_launch = boil_off_launch(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k)
+    mass_boil_off_launch = boil_off_launch(
+        P_min_vapor,
+        T_gh2_launch,
+        cn.R_star/1000,
+        m_h2_tot,
+        m_payload_coolant_boil_off,
+        middle_radius,
+        top_radius,
+        height,
+        rho_lh2_20k)
     total_boil_off += mass_boil_off_launch
 
     # During orbit
-    boil_off_specific = orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,rho_lh2_20k)
+    boil_off_specific = orbit_boil_off(
+        height,
+        middle_radius,
+        top_radius,
+        solar_power,
+        planetary_power,
+        albedo_power,
+        material,
+        heat_load_data,
+        boil_off_mass_data,
+        rho_lh2_20k,
+        m_payload_coolant_boil_off
+    )
     total_boil_off += boil_off_specific  # kg, total boil-off mass during orbit
 
+    transfer_boil_off = 0.05/0.95*m_payload  # kg, transfer boil-off mass during orbit
+    total_boil_off += transfer_boil_off
     # During Refueling
-    if worst_case == True:
-        m_boiloff_worst_case = boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock)
+    if worst_case is True:
+        m_boiloff_worst_case = boil_off_refueling(
+            p_vent,
+            T_vapor,
+            T_vapor_refuel,
+            a,
+            b,
+            R,
+            h2_nm,
+            rho_lh2_20k,
+            m_coolant,
+            m_payload + m_coolant
+        )
         total_boil_off +=  m_boiloff_worst_case
-    print('Total boil off of LH2 is: ',total_boil_off,"kg")
-    print('New payload mass is: ',h2_depot+total_boil_off+m_h2_reentry,"kg")
+    # print('Total boil off of LH2 is: ',total_boil_off,"kg")
+    # print('New payload mass is: ', h2_depot + total_boil_off + m_h2_coolant, "kg")
     return total_boil_off
 #------------------------------------------------
 # Calculations
@@ -170,16 +230,15 @@ if __name__ =='__main__':
     rho_lh2_30K = 50
 
     # Mass paramters
-    h2_depot = 10500
-    m_payload = 15000
-    m_h2_reentry = 3000
     h2_nm = 2.016 #g/mol
     total_boil_off = 0
 
+    m_payload = 10000
+    m_coolant = 3000
+    m_boil_off = 2500
+
     m_prop_h2 = 150000/7
-    m_h2_tot = m_prop_h2 + 15500
-    m_h2_reentry = 3000
-    m_h2_dock = m_h2_reentry + 10500
+    m_h2_tot = m_prop_h2 + m_payload + m_coolant + m_boil_off
 
     #Geometry parameters
     ro = 4.92
@@ -221,4 +280,15 @@ if __name__ =='__main__':
     # Conditions
     worst_case = False
 
-    total_boil_off = total_boil_off_h2(P_min_vapor,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
+    total_boil_off_mass = total_boil_off_h2(
+        m_h2_tot,
+        m_payload,
+        m_coolant,
+        m_boil_off,
+        ro,
+        ri,
+        h,
+        material,
+    )
+
+    print("Total boil off mass of LH2 is: ", total_boil_off_mass, "kg")
