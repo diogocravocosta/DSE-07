@@ -13,40 +13,54 @@ def sa_cone(ro,ri,h):
     l = ((ro-ri)**2 + h**2)**0.5
     return np.pi *( (ro + ri) * l +ri**2 + ro**2)
 
-def volume_cone(h,ro,ri):
-    volume = (1 / 3) * np.pi * h * (ro ** 2 + ro * ri + ri ** 2) + 2/3*np.pi * ri**3/4 + 2/3*np.pi * ro**3/4
+def volume_frustrum(h,ro,ri):
+    volume = ((1/3) * np.pi * h * (ro ** 2 + ro * ri + ri ** 2)
+              + 2/3*np.pi * ri**3 /4
+              + 2/3*np.pi * ro**3 /4)
     area_proj_cylinder = (ro + ri)*h
     area_proj = area_proj_cylinder + np.pi*ri**2/4+np.pi*ro**2/4
     return volume, area_proj
 
-def height_calc_cone(volume):
-    h = volume*3/np.pi/(ro ** 2 + ro * ri + ri ** 2)
+def height_calc_cone(volume, bottom_radius, top_radius):
+    h = volume*3/np.pi/(bottom_radius ** 2 + bottom_radius * top_radius + top_radius ** 2)
     return h
 # Calculate the new inner radius based on ullage height
-def calculate_cone_param(ro, ri, h, mass,rho_lh2, phi):
-    vol_cone = volume_cone(h,ro,ri)[0]
+def calculate_cone_param(bottom_radius, top_radius, h, mass,rho_lh2, phi):
+    vol_cone = volume_frustrum(h, bottom_radius, top_radius)[0]
     vol_ullage = vol_cone - mass / rho_lh2
-    h_ull = 3
-    ro= ri + h_ull * np.tan(phi)
-    while volume_cone(h_ull, ro, ri)[0] < vol_ullage:
-        ro= ri + h_ull * np.tan(phi)
+    h_ull = 0
+    gas_bottom_radius= top_radius + h_ull * np.tan(phi)
+    while volume_frustrum(h_ull, gas_bottom_radius, top_radius)[0] < vol_ullage:
+        gas_bottom_radius= top_radius + h_ull * np.tan(phi)
         h_ull = h_ull + 0.1  # Increment ullage height until the volume condition is met
-    return ro, h_ull
+    return gas_bottom_radius, h_ull
 
 def rad_load(T_tank, T_lh2, material,area_gh2):
     q = material.eps * cn.boltzmann_constant *(T_tank**4-T_lh2**4)
     q_load = q * area_gh2
     return q_load
 
-def heat_load(solar_power, planetary_power, albedo_power,area, material,rho_lh2_20k, m_payload,phi):
+def heat_load(
+        solar_power,
+        planetary_power,
+        albedo_power,
+        area,
+        material,
+        rho_lh2_20k,
+        m_payload,
+        phi,
+        bottom_radius,
+        top_radius,
+        height
+):
     # Geometry
     incident_area = 7 * 9 + np.pi * 0.875 * 3.5
     planetary_flux = planetary_power / incident_area * material.eps
     solar_flux = solar_power / incident_area * material.abs
     albedo_flux = albedo_power / incident_area * material.abs
 
-    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_payload,rho_lh2_20k,phi)  # Calculate new outer radius based on ullage height
-    area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  # Calculate the surface area of the cone with the new outer radius
+    ro_gh2, h_gh2 = calculate_cone_param(bottom_radius, top_radius, height, m_payload,rho_lh2_20k,phi)  # Calculate new outer radius based on ullage height
+    area_gh2 = sa_cone(ro_gh2, top_radius, h_gh2)  # Calculate the surface area of the cone with the new outer radius
     q_load = rad_load(150, 20, material,area_gh2)  # Example temperatures in Kelvin
     heat_load = (solar_flux + planetary_flux + albedo_flux) * area + q_load
     return heat_load
@@ -95,9 +109,24 @@ def pres_vanderwaals(n, V, R, T, a, b):
     P = (n * R * T)/(V - n * b) - a * (n / V) ** 2
     return P
 
-def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k, a, b, phi):
-    V1_vapor = 0.1*volume_cone(h,ro,ri)[0]#volume_cone(calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
-    V2_vapor =  volume_cone(calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k,phi)[1], calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k, phi)[0], ri)[0]  #m3
+def boil_off_launch(
+        P1,
+        T1,
+        R,
+        m_pl,
+        ro,
+        ri,
+        h,
+        rho_lh2_20k,
+        a,
+        b,
+        phi,
+        h2_nm
+):
+    V1_vapor = 0.1 * volume_frustrum(h, ro, ri)[0]#volume_cone(calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
+    V2_vapor =  volume_frustrum(
+        calculate_cone_param(ro, ri, h, m_pl, rho_lh2_20k, phi)[1],
+        calculate_cone_param(ro, ri, h, m_pl, rho_lh2_20k, phi)[0], ri)[0]  #m3
     n1 = P1*V1_vapor/T1/R
     m_vap_h2_launchstart = vanderwaals(P1, V1_vapor, R, T1, a, b, h2_nm)
 
@@ -107,16 +136,44 @@ def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k, a, b, phi):
     # print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3 and projected area of",volume_cone(h,ro,ri)[1])
     return mass_boil_off_launch
 
-def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, material, heat_load_data, boil_off_mass,rho_lh2_20k, m_payload, phi):
-    area_proj = volume_cone(h, ro, ri)[1]
-    heat_load_h2go = heat_load(solar_power, planetary_power, albedo_power,area_proj, material,rho_lh2_20k, m_payload, phi)
+def orbit_boil_off(
+        height,
+        bottom_radius,
+        top_radius,
+        solar_power,
+        planetary_power,
+        albedo_power,
+        material,
+        heat_load_data,
+        boil_off_mass,
+        rho_lh2_20k,
+        m_payload,
+        phi):
+    area_proj = volume_frustrum(height, bottom_radius, top_radius)[1]
+    heat_load_h2go = heat_load(
+        solar_power, 
+        planetary_power, 
+        albedo_power,
+        area_proj, 
+        material,
+        rho_lh2_20k, 
+        m_payload, 
+        phi,
+        bottom_radius,
+        top_radius,
+        height
+    )
     boil_off_specific = linear_regression(heat_load_data, boil_off_mass, heat_load_h2go)
     # print("Boil off during orbit (due to external heat sources): ", boil_off_specific, "kg for the given heat load of: ", heat_load_h2go,"W")
     return boil_off_specific
 
 def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock):
-    V1 = volume_cone(calculate_cone_param(ro,ri,h,m_h2_dock,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_dock,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
-    V2 = volume_cone(calculate_cone_param(ro,ri,h,m_h2_reentry,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_reentry,rho_lh2_20k)[0], ri)[0]  #m3
+    V1 = volume_frustrum(
+        calculate_cone_param(ro, ri, h, m_h2_dock, rho_lh2_20k)[1],
+        calculate_cone_param(ro, ri, h, m_h2_dock, rho_lh2_20k)[0], ri)[0]  # Volume of the cone
+    V2 = volume_frustrum(
+        calculate_cone_param(ro, ri, h, m_h2_reentry, rho_lh2_20k)[1],
+        calculate_cone_param(ro, ri, h, m_h2_reentry, rho_lh2_20k)[0], ri)[0]  #m3
     P1 = p_vent
     T1 = T_vapor # K, temperature before refueling (temperature of gh2 during venting. should be ideally reset every iteration)
     T2 = T_vapor_refuel# K, temperature after refueling (temperature of gh2 after long period of venting. should be ideally reset every iteration)
@@ -133,7 +190,7 @@ def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m
     return m_boiloff_worst_case
 
 def boiloff_reentry(ro,ri,h,m_h2_reentry,material,T_skin_reentry,T_lh2,rho_lh2_30k):
-    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry,rho_lh2_30k)  # Calculate new outer radius based on ullage height 
+    ro_gh2, h_gh2 = calculate_cone_param(ro, ri, h, m_h2_reentry,rho_lh2_30k)  # Calculate new outer radius based on ullage height
     area_gh2 = sa_cone(ro_gh2, ri, h_gh2)  
     radiation_load = rad_load(T_skin_reentry, T_lh2, material,area_gh2)  # Example temperatures in Kelvin
     m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
@@ -174,7 +231,6 @@ def total_boil_off_h2(m_h2_tot,
         P_min_vapor,
         T_gh2_launch,
         cn.R_star/1000,
-        m_h2_tot,
         m_payload_coolant_boil_off,
         middle_radius,
         top_radius,
@@ -182,7 +238,8 @@ def total_boil_off_h2(m_h2_tot,
         rho_lh2_20k,
         a,
         b,
-        phi
+        phi,
+        h2_nm
     )
     total_boil_off += mass_boil_off_launch
 

@@ -145,7 +145,9 @@ random_steel = Material(
     name="Random Steel",
     youngs_modulus=200e9,
     density=7800,
-    yield_strength=1060e6
+    yield_strength=1060e6,
+    absorptivity=0.2,
+    emissivity=0.08
 )
 
 
