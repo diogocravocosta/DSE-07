@@ -109,6 +109,7 @@ def main() -> None:
         print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")
         print(f"Hydrogen mass: {new_integrator.total_hydrogen_mass:.2f} kg")
         print(f"Oxygen mass: {new_integrator.total_oxygen_mass:.2f} kg")
+        print(f"ACS propellant mass: {new_integrator.acs_propellant_mass} kg")
         print("--------------------------------------------------------------")
 
         old_integrator = new_integrator
