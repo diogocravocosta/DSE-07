@@ -53,7 +53,12 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
         "heat shield": vr.heat_shield_mass.value,
         "thrust chambers": vr.thrust_chamber_sl_mass.value * 8 + vr.thrust_chamber_sl_mass.value * 16,
         "docking system": vr.docking_system_mass.value,
-        "nose cone": vr.nose_cone_mass.value
+        "nose cone": vr.nose_cone_mass.value,
+        "power": vr.power_dry_mass.value,
+        "data handling": vr.data_handling_mass.value,
+        "avionics harness": vr.avionics_harness_mass.value,
+        "interstage": vr.interstage_mass.value,
+        "gnc": vr.interstage_mass.value
     }
 
 
@@ -98,6 +103,7 @@ def main() -> None:
         new_integrator.update_thrust()
 
         # Print the results
+        print("--------------------------------------------------------------")
         print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
         print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")
         print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")

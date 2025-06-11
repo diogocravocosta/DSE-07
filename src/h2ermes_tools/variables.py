@@ -497,6 +497,56 @@ oxygen_power_mass = Variable(
     margin=(1.0, 1.5),
 )
 
+power_dry_mass = Variable(
+    name="Power subsystem dry mass",
+    value=719,
+    unit="kg",
+    latex_symbol="m_{power,dry}",
+    confidence="midterm number",
+    constraints="",
+    margin=(1.0, 1.0)
+)
+
+data_handling_mass = Variable(
+    name="Data handling subsystem mass",
+    value=100,
+    unit="kg",
+    latex_symbol="m_{power,dry}",
+    confidence="midterm number",
+    constraints="",
+    margin=(1.0, 1.0)
+)
+
+avionics_harness_mass = Variable(
+    name="Avionics harness mass",
+    value=403.32,
+    unit="kg",
+    latex_symbol="m_{avionics}",
+    confidence="midterm number",
+    constraints="",
+    margin=(1.0, 1.0)
+)
+
+interstage_mass = Variable(
+    name="Interstage mass",
+    value=461.97,
+    unit="kg",
+    latex_symbol="m_{interstage}",
+    confidence="midterm number",
+    constraints="",
+    margin=(1.0, 1.0)
+)
+
+gnc_mass = Variable(
+    name="GNC mass",
+    value=100,
+    unit="kg",
+    latex_symbol="m_{GNC}",
+    confidence="midterm number",
+    constraints="",
+    margin=(1.0, 1.0)
+)
+
 
 if __name__ == "__main__":
     # Example of how to create a variable
