@@ -33,7 +33,7 @@ class Material:
         specific_heat=None,
         poisson_ratio=None,
         youngs_modulus=None,
-        thermal_expansion_coeffient=None,
+        thermal_expansion_coefficient=None,
         emissivity=None,
         ultimate_strength=None,
         yield_strength=None,
@@ -52,7 +52,7 @@ class Material:
         self.Cp = specific_heat
         self.nu = poisson_ratio
         self.E = youngs_modulus
-        self.cte = thermal_expansion_coeffient
+        self.cte = thermal_expansion_coefficient
         self.eps = emissivity
         self.uts = ultimate_strength
         self.ys = yield_strength

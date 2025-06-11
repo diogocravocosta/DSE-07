@@ -246,17 +246,17 @@ def loading_phases(delta_T_earth,
 
     # Orbit - After docking
     sigma_thermal_dock = thermal_stress(delta_T_tank, material.E, material.cte, phi)
-    sigma_pressure_orbit = nasa_pressure_combined_load_stress(material,thickness_tank,phi,tank_radius, pressure_after_dock)
+    sigma_pressure_dock = nasa_pressure_combined_load_stress(material,thickness_tank,phi,tank_radius, pressure_after_dock)
     stress_comb_dock = sigma_thermal_orbit + sigma_pressure_orbit
 
     # Worst point during re-entry
-    sigma_thermal_reentry = thermal_stress(delta_T_tank_extreme,material.E,material.cte,tank_radius, thickness_tank, phi) 
+    sigma_thermal_reentry = thermal_stress(delta_T_tank_extreme,material.E, material.cte, phi) 
     sigma_axial_reentry = mechanical_stress(g_reentry_force_ratio *cs.g_0* dry_mass, tank_radius, thickness_tank, phi)
     sigma_pressure_reentry = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius, pressure_vent)
     stress_comb_reentry = sigma_thermal_reentry + sigma_pressure_reentry + sigma_axial_reentry
 
     # On launch pad
-    sigma_thermal_launchpad = thermal_stress(delta_T_earth,material.E,material.cte,tank_radius, thickness_tank, phi) 
+    sigma_thermal_launchpad = thermal_stress(delta_T_earth,material.E, material.cte, phi) 
     sigma_axial_launchpad= mechanical_stress(dry_mass*cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_launchpad = sigma_thermal_launchpad + sigma_axial_launchpad
         
@@ -431,16 +431,16 @@ if __name__ =="__main__":
     # Geometry Properties
     phi = 10 # degrees, conical head angle, later import from tank sizing file in final sizing.
     tank_radius = 5# 5 # m, tank radius, later import from tank sizing file in final sizing.
-    thickness_tank = 0.01 # m, tank thickness later import from tank sizing file in final sizing.
+    thickness_tank = 0.005 # m, tank thickness later import from tank sizing file in final sizing.
     
     # Material Properties
 
     # Mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coefficient=material.cte)
     material = mat.Material(
-        density = 7850,
+        density=7850,
         youngs_modulus=200e9,
-        thermal_expansion_coefficient=1.5e-6,
-        fracture_strength=200,
+        thermal_expansion_coefficient=1.5e-6,  # Changed from thermal_expansion_coefficient
+        fracture_toughness=200,
         yield_strength=500e6)
 
     # Mass Inputs
