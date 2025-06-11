@@ -377,6 +377,46 @@ t_w_vac = Variable(
         margin=(1, 1),
     )
 
+acs_peak_power = Variable(
+    name="ACS Peak Power",
+    value=2100,
+    unit="W",
+    latex_symbol="P_{acs,peak}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_average_power = Variable(
+    name="ACS Average Power",
+    value=1200,
+    unit="W",
+    latex_symbol="P_{acs,avg}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_dry_mass = Variable(
+    name="ACS Dry Mass",
+    value=150,
+    unit="kg",
+    latex_symbol="m_{acs}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_propellant_mass = Variable(
+    name="ACS Propellant Mass",
+    value=800,
+    unit="kg",
+    latex_symbol="m_{acs,prop}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
