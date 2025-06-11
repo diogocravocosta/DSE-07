@@ -128,6 +128,8 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_cone += 0.0001  # increment in 0.1 mm steps
+        if t_guess_cone > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the cone.")
 
     t_guess_top_ellipse = 0.001  # start at 1 mm
     while True:
@@ -135,6 +137,8 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_top_ellipse += 0.0001  # increment in 0.1 mm steps
+        if t_guess_top_ellipse > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the top ellipse.")
 
     t_guess_bottom_ellipse = 0.001  # start at 1 mm
     while True:
@@ -142,6 +146,8 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_bottom_ellipse += 0.0001  # increment in 0.1 mm steps
+        if t_guess_bottom_ellipse > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the bottom ellipse.")
 
     t_guess = max(t_guess_cone, t_guess_top_ellipse, t_guess_bottom_ellipse)
     # ------------------------------------------------------------------
@@ -352,8 +358,8 @@ def size_tanks(material: material.Material,
         max_pressure_boiloff,
         LH2_mass,
         tank_length_LH2,
-        bottom_radius,
         middle_radius,
+        top_radius,
         phi,
         material,
         thrust_engines,
@@ -367,23 +373,23 @@ def size_tanks(material: material.Material,
         LOX_pressure,
         LOX_mass,
         tank_length_LOX,
+        bottom_radius,
         middle_radius,
-        top_radius,
         phi,
         material,
         thrust_engines,
         safety_factor,
         gamma=0.65,
     )
-    # print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
+    print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
     mass_LH2_tank = calculate_tank_mass(
         bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, material, cap_height_radius_ratio
     )
-    # print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
+    print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
     mass_LOX_tank = calculate_tank_mass(
         middle_radius, top_radius, tank_length_LOX, thickness_LOX, material, cap_height_radius_ratio
     )
-    # print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+    print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
 
     # tank_overall_dimensions()
     natural_frequency = check_vibrations(
