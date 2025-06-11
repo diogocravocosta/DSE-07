@@ -4,9 +4,10 @@ import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
-from h2ermes_tools.structures.tank_sizing import size_tanks
+from h2ermes_tools.structures.tank_sizing import size_tanks, tank_thickness
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
 from h2ermes_tools.header_tank import size_header_tank
+from h2ermes_tools.fatigue_calculation_tool import thickness_optimization_fatigue
 
 class MassIntegrator:
     """
@@ -165,4 +166,49 @@ class MassIntegrator:
                                                   material=oi.tank_material,
                                                   phi=oi.phi,
                                                   )
+
+
+    def choose_tank_thickness(self, oi:'MassIntegrator') -> None:
+        """
+        Calculate thickness of the tank from fatigue and tank sizing, and select the higher one.
+
+        """
+        # fatigue thickness
+        tank_thickness_fatigue = thickness_optimization_fatigue(oi.cone_angle,
+                                                        oi.tank_radius,
+                                                        oi.thickness_tank,
+                                                        oi.tank_material,
+                                                        oi.fuel_reentry_LH2,
+                                                        oi.dry_mass,
+                                                        oi.launch_mass,
+                                                        oi.payload_mass,
+                                                        oi.g_reentry_force_ratio,
+                                                        oi.g_launch_force_ratio,
+                                                        oi.max_thrust2weight)
+
+        # tank sizing thickness
+        LH2_thickness, LOX_thickness = tank_thickness(oi.tank_material,
+                                               wet_mass = oi.gross_mass,
+                                               LH2_mass= oi.total_hydrogen_mass,
+                                               LOX_mass= oi.total_oxygen_mass,
+                                               LH2_design_pressure=oi.hydrogen_design_pressure,
+                                               LOX_design_pressure=oi.oxygen_design_pressure,
+                                               boiloff_design_pressure=oi.boiloff_design_pressure,
+                                               thrust_engines=oi.total_vacuum_thrust)
+
+
+        if LH2_thickness > tank_thickness_fatigue:
+            LH2_thickness = LH2_thickness
+        else:
+            LH2_thickness = tank_thickness_fatigue
+
+        if LOX_thickness > tank_thickness_fatigue:
+            LOX_thickness = LOX_thickness
+        else:
+            LOX_thickness = tank_thickness_fatigue
+
+        return LH2_thickness, LOX_thickness
+
+
+
 
