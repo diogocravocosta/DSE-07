@@ -271,7 +271,7 @@ if __name__ == "__main__":
     safety_factor_pressure = 1.5
     # tank_diameter = 7
     payload_mass = 15000
-    LH2_pressure = 250 * safety_factor_pressure * 1000  # Pa 
+    LH2_pressure = 200 * safety_factor_pressure * 1000  # Pa #Fixed
     max_pressure_boiloff = 200 * 1000 * safety_factor_pressure
     LOX_pressure = 270 * safety_factor_pressure * 1000  # Pa 
 
