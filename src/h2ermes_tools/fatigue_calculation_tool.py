@@ -428,7 +428,7 @@ def thickness_optimization_fatigue(phi,
     miner_c = 10 ** (np.log10(const) / -exp_coeff)
     print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
     # Conditions
-    plot = True
+    plot = False
     crack_cond = True
 
     sigma_global_loading = loading_phases(delta_T_earth,
@@ -511,8 +511,10 @@ def thickness_optimization_fatigue(phi,
                                               time_mission,
                                               plot)
         stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))
-        damage, launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor,
+        damage, number_of_launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor,
                                                     number_of_launches,plot)
+        if thickness_tank > 0.01:
+            raise RuntimeError("failed on Miners equation fatigue calculation")
     return thickness_tank
 
 
@@ -529,109 +531,109 @@ def miner_coefficients(stress, cycles):
 
     return m, C
 
-# if __name__ == "__main__":
-#     #--------------------------------------------------------
-#Main Input Parameters
+if __name__ == "__main__":
 #--------------------------------------------------------
+#     Main Input Parameters
+# --------------------------------------------------------
 
-#Constants
-# launches = 40
-# safety_factor = 2
-# min_launches = 25
+    #Constants
+    # launches = 40
+    # safety_factor = 2
+    # min_launches = 25
 
-# Geometry Properties
-phi = 10  # degrees, conical head angle, later import from tank sizing file in final sizing.
-tank_radius = 5  # 5 # m, tank radius, later import from tank sizing file in final sizing.
-thickness_tank = 0.005  # m, tank thickness later import from tank sizing file in final sizing.
+    # Geometry Properties
+    phi = 6  # degrees, conical head angle, later import from tank sizing file in final sizing.
+    tank_radius = 5  # 5 # m, tank radius, later import from tank sizing file in final sizing.
+    thickness_tank = 0.005  # m, tank thickness later import from tank sizing file in final sizing.
 
-# Material Properties
+    # Material Properties
 
-# Mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coefficient=material.cte)
-material = mat.Material(
-    density=7850,
-    youngs_modulus=200e9,
-    thermal_expansion_coefficient=1.5e-6,  # Changed from thermal_expansion_coefficient
-    fracture_toughness=200,
-    yield_strength=500e6)
+    # Mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coefficient=material.cte)
+    material = mat.Material(
+        density=7850,
+        youngs_modulus=200e9,
+        thermal_expansion_coefficient=1.5e-6,  # Changed from thermal_expansion_coefficient
+        fracture_toughness=200,
+        yield_strength=500e6)
 
-# # Mass Inputss
-fuel_reentry_LH2 = 3000  # kg, fuel mass during re-entry
-dry_mass = 20000  # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
-launch_mass = 150000  # kg, total launch mass to be corrected
-payload_mass = 15500
+    # # Mass Inputss
+    fuel_reentry_LH2 = 3000  # kg, fuel mass during re-entry
+    dry_mass = 20000  # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
+    launch_mass = 220_000  # kg, total launch mass to be corrected
+    payload_mass = 15500
 
-# Forces and time inputs
-# time_mission = [0, 0.1, 0.3, 18, 21, 23, 24]  # hours, mission time points
-g_reentry_force_ratio = 6
-g_launch_force_ratio = 6
-max_thrust2weight = 7.9
-# force_launch = g_launch_force_ratio * cs.g_0 * launch_mass
-# thrust_engines = max_thrust2weight * (
-#             dry_mass + payload_mass) * cs.g_0  # N, thrust of engines, later import from dictionary in main branch.
+    # Forces and time inputs
+    # time_mission = [0, 0.1, 0.3, 18, 21, 23, 24]  # hours, mission time points
+    g_reentry_force_ratio = 6
+    g_launch_force_ratio = 6
+    max_thrust2weight = 4.3
+    # force_launch = g_launch_force_ratio * cs.g_0 * launch_mass
+    # thrust_engines = max_thrust2weight * (
+    #             dry_mass + payload_mass) * cs.g_0  # N, thrust of engines, later import from dictionary in main branch.
 
-# Crack Growth Parameters
-# da_dn = []  # initialize da/dn as an empty list
-# a_crack = []  # to store crack growth
-# a_crack_depth = 0.001  # initial crack size in m
-# count = 0
-# Damage = 0
+    # Crack Growth Parameters
+    # da_dn = []  # initialize da/dn as an empty list
+    # a_crack = []  # to store crack growth
+    # a_crack_depth = 0.001  # initial crack size in m
+    # count = 0
+    # Damage = 0
 
-# Pressure Inputs
-# pressure_launch_tank = 3e5
-# pressure_dock_vent = 5e5
-# pressure_vent = 1e6  # Pa, pressure at which tank is vented. Taken from boil-off file
-# pressure_after_dock = 4.5e5
-# Temperature Inputs
-# T_lh2 = 20  #K
-# T_space = 4  #K, temperature in space
-# T_ambient_earth = 300  #K
-# T_gh2 = 150  #K Temperature of gaseous hydrogen
-# T_gh2_ext = 200  #K temperature of gaseous hydrogen at extreme
-# delta_T_earth = T_ambient_earth - T_lh2
-# delta_T_tank = T_gh2 - T_lh2
-# delta_T_tank_extreme = T_gh2_ext - T_lh2
+    # Pressure Inputs
+    # pressure_launch_tank = 3e5
+    # pressure_dock_vent = 5e5
+    # pressure_vent = 1e6  # Pa, pressure at which tank is vented. Taken from boil-off file
+    # pressure_after_dock = 4.5e5
+    # Temperature Inputs
+    # T_lh2 = 20  #K
+    # T_space = 4  #K, temperature in space
+    # T_ambient_earth = 300  #K
+    # T_gh2 = 150  #K Temperature of gaseous hydrogen
+    # T_gh2_ext = 200  #K temperature of gaseous hydrogen at extreme
+    # delta_T_earth = T_ambient_earth - T_lh2
+    # delta_T_tank = T_gh2 - T_lh2
+    # delta_T_tank_extreme = T_gh2_ext - T_lh2
 
-#Extrapolated parameters
-# # Paris law
-# paris_coeff_C = 5.131e-17 / 1e3  # convert from mm/cycle to m/cycle
-# paris_exp_m = 7.02  # dimensionless
+    #Extrapolated parameters
+    # # Paris law
+    # paris_coeff_C = 5.131e-17 / 1e3  # convert from mm/cycle to m/cycle
+    # paris_exp_m = 7.02  # dimensionless
 
-# Example Miner's law coefficients for stainless steel 304L
-# Cryogenic paper miner coeff --- 408,-0.02
-# MAT200 paper --- 1884, -0.1555
-# const = 1884
-# exp_coeff = -0.1555
-# miner_m = -1 / exp_coeff
-# miner_c = 10 ** (np.log10(const) / -exp_coeff)
-# print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
-# # Conditions
-# plot = True
-# crack_cond = True
-#--------------------------------------------------------
+    # Example Miner's law coefficients for stainless steel 304L
+    # Cryogenic paper miner coeff --- 408,-0.02
+    # MAT200 paper --- 1884, -0.1555
+    # const = 1884
+    # exp_coeff = -0.1555
+    # miner_m = -1 / exp_coeff
+    # miner_c = 10 ** (np.log10(const) / -exp_coeff)
+    # print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
+    # # Conditions
+    # plot = True
+    # crack_cond = True
+    #--------------------------------------------------------
 
-thickness_minimum_tank = thickness_optimization_fatigue(phi,
-                                   tank_radius,
-                                   thickness_tank,
-                                   material,
-                                   fuel_reentry_LH2,
-                                   dry_mass,
-                                   launch_mass,
-                                   payload_mass,
-                                   g_reentry_force_ratio,
-                                   g_launch_force_ratio,
-                                   max_thrust2weight,
-                                   number_of_launches=40,
-                                   min_launches=25,
-                                   safety_factor=2,
-                                   time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
-                                   a_crack_depth=0.001,
-                                   pressure_launch_tank=3e5,
-                                   pressure_dock_vent=5e5,
-                                   pressure_vent=1e6,
-                                   pressure_after_dock=4.5e5,
-                                   T_lh2=20,
-                                   T_space=4,
-                                   T_ambient_earth=300,
-                                   T_gh2=150,
-                                   T_gh2_ext=200)
-print("min thickness", thickness_minimum_tank)
+    thickness_minimum_tank = thickness_optimization_fatigue(phi,
+                                       tank_radius,
+                                       thickness_tank,
+                                       material,
+                                       fuel_reentry_LH2,
+                                       dry_mass,
+                                       launch_mass,
+                                       payload_mass,
+                                       g_reentry_force_ratio,
+                                       g_launch_force_ratio,
+                                       max_thrust2weight,
+                                       number_of_launches=40,
+                                       min_launches=25,
+                                       safety_factor=2,
+                                       time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
+                                       a_crack_depth=0.001,
+                                       pressure_launch_tank=3e5,
+                                       pressure_dock_vent=5e5,
+                                       pressure_vent=1e6,
+                                       pressure_after_dock=4.5e5,
+                                       T_lh2=20,
+                                       T_space=4,
+                                       T_ambient_earth=300,
+                                       T_gh2=150,
+                                       T_gh2_ext=200)
+    print("min thickness", thickness_minimum_tank)
