@@ -1,5 +1,3 @@
-from numpy.matrixlib.defmatrix import matrix
-
 from data import (
     constants,
     material
