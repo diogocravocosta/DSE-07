@@ -7,7 +7,9 @@ from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
 from h2ermes_tools.header_tank import size_header_tank
+from h2ermes_tools.fatigue_calculation_tool import thickness_optimization_fatigue
 
+tank_material = 1
 class MassIntegrator:
     """
     Class to handle mass integration
@@ -66,7 +68,7 @@ class MassIntegrator:
         total_mass += self.deorbit_propellant_mass
 
         # add boil_off mass and payload mass
-        total_mass += self.h2_boil_off_mass + self.payload_mass
+        total_mass += self.h2_boil_off_mass + self.o2_boil_off_mass + self.payload_mass
         # calculate and add propellant mass for circularization and orbit raising
         self.transfer_propellant_mass = (np.exp((self.circularization_delta_v + self.orbit_raising_delta_v)
                                            / (self.vacuum_isp * cn.g_0)) - 1) * total_mass
@@ -89,13 +91,14 @@ class MassIntegrator:
         main_tank_propellant_mass = self.transfer_propellant_mass + self.orbit_insertion_propellant_mass
 
         self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
-        self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_power_mass
+        self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boil_off_mass + self.o2_power_mass
+
+        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
 
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
 
-        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
         self.total_oxygen_mass = self.main_oxygen_mass + self.header_oxygen_mass
 
     def calculate_dummy_dry_masses(self, oi: 'MassIntegrator') -> None:
@@ -159,4 +162,24 @@ class MassIntegrator:
                                                   material=oi.tank_material,
                                                   phi=oi.phi,
                                                   )
+
+
+    def choose_tank_thickness(self, oi:'MassIntegrator') -> None:
+        """
+        Calculate thickness of the tank from fatigue and tank sizing, and select the higher one.
+
+        """
+        # fatigue thickness
+        tank_thickness = thickness_optimization_fatigue(oi.cone_angle,
+                                                        oi.tank_radius,
+                                                        oi.thickness_tank,
+                                                        oi.tank_material,
+                                                        oi.fuel_reentry_LH2,
+                                                        oi.dry_mass,
+                                                        oi.launch_mass,
+                                                        oi.payload_mass,
+                                                        oi.g_reentry_force_ratio,
+                                                        oi.g_launch_force_ratio,
+                                                        oi.max_thrust2weight)
+
 
