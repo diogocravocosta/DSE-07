@@ -289,6 +289,7 @@ SS304.set_thermal_conductivity(k_data[:, 0] + 273.15, k_data[:, 1])
 SS304.set_thermal_expansion_coefficient(cte_data[:, 0] + 273.15, cte_data[:, 1])
 SS304.set_yield_strength(yield_strength_data[:, 0] + 273.15, yield_strength_data[:, 1])
 SS304.set_youngs_modulus(youngs_modulus_data[:, 0] + 273.15, youngs_modulus_data[:, 1])
+SS304.set_thermal_diffusivity(np.linspace(10, 1273, 100))
 
 
 if __name__ == "__main__":

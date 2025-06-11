@@ -143,7 +143,7 @@ class Coolant:
             / self.channel.hydraulic_diameter
         )
 
-    def add_energy(self, energy, dt=None):
+    def add_energy(self, energy):
         """
         Add energy to the coolant and update its temperature.
         Parameters:
@@ -159,24 +159,14 @@ class Coolant:
             Input.pressure(self.fluid.pressure),
             Input.temperature(new_temp),
         )
-        # Optionally, store temperature history
-        if not hasattr(self, "temperature_history"):
-            self.temperature_history = []
-        self.temperature_history.append(self.fluid.temperature)
-        if dt is not None:
-            if not hasattr(self, "time_history"):
-                self.time_history = []
-            self.time_history.append(
-                dt if not self.time_history else self.time_history[-1] + dt
-            )
 
-    def calculate_pressure_drop(self, section_length=None):
+    def calculate_pressure_drop(self, segment_length=None):
         """
         Calculate and update the coolant pressure using Darcy-Weisbach equation
         on a section of the channel of a limited length.
         """
         # Darcy-Weisbach: dP = f * (L/D) * (rho*v^2/2)
-        L = section_length
+        L = segment_length
         D = self.channel.hydraulic_diameter
         v = self.get_fluid_speed()
         rho = self.fluid.density
@@ -189,6 +179,19 @@ class Coolant:
         dP = f * (L / D) * (rho * v**2 / 2)
 
         return dP
+    
+    def reduce_pressure(self, pressure_drop):
+        """
+        Reduce the coolant pressure by a specified amount.
+        Parameters:
+        - pressure_drop: Pressure drop to be applied (Pa)
+        """
+        new_pressure = self.fluid.pressure - pressure_drop
+        # if new_pressure < 0:
+        #     raise ValueError("Pressure cannot be negative.")
+        self.fluid = self.fluid.with_state(
+            Input.pressure(new_pressure), Input.temperature(self.fluid.temperature)
+        )
 
 
 if __name__ == "__main__":
@@ -211,7 +214,18 @@ if __name__ == "__main__":
     print(f"Heat Transfer Coefficient: {heat_transfer_coefficient} W/m²·K")
     print(f"Fluid Speed: {fluid_speed} m/s")
 
+    # Add energy to the coolant
+    energy_added = 670_000.0  # J
+    print(f"Old Coolant Temperature: {coolant.fluid.temperature} K")
+    coolant.add_energy(energy_added)
+    print(f"New Coolant Temperature: {coolant.fluid.temperature} K")
+
     # Pressure drop calculation
     section_length = 1.0  # m
     pressure_drop = coolant.calculate_pressure_drop(section_length)
     print(f"Pressure Drop over {section_length} m: {pressure_drop} Pa")
+
+    # Reduce coolant pressure
+    print(f"Old Coolant Pressure: {coolant.fluid.pressure*1e-5} bar")
+    coolant.reduce_pressure(pressure_drop)
+    print(f"New Coolant Pressure: {coolant.fluid.pressure*1e-5} bar")

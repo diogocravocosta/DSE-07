@@ -55,11 +55,11 @@ class RectangularChannel:
         """
         return 2 * (self.width * self.height) / (self.width + self.height)
     
-    def get_contact_area(self, length=1.0):
+    def get_contact_area(self, segment_length=1.0):
         """
-        Calculate the contact area of the channel.
+        Calculate the contact area of the channel with the cold side wall.
 
         Returns:
             float: Contact area in square meters.
         """
-        return 2 * (self.width + self.height) * length
+        return self.width * segment_length
