@@ -46,6 +46,8 @@ def heat_flux_internal(material, qs, time, thickness, dt):
         q_internal[i] = q_internal[i-1] + (dt / tau) * (qs[i] - q_internal[i-1])
     return q_internal
 
+
+
 def heat_flux_stagnation(time):
     altitude_vec=[]
     velocity_vec = []
@@ -55,7 +57,7 @@ def heat_flux_stagnation(time):
         alt = altitude_km(time[i])
         altitude_vec.append(alt)
         velocity_vec.append(launcher_velocity(time[i]))
-        atm = Atmosphere(alt)
+        atm = ExponentialAtmosphere(alt)
         air_densities.append(atm.rho_exp)  
         qs.append(chapman_simplified_stagnation_heat_flux(radius_nose,velocity_vec[i],air_densities[i]))
     print("Max stagnation heat flux is",max(qs),"W/m²")
@@ -106,15 +108,17 @@ def mass_insulation(rho_insulation,radius,thickness_insulation):
     return mass
 
 def total_mass_heat_flux_calculation(material,rho_insulation,radius,thickness_insulation,thickness_wall,T_max_operating,T_ambient,time,dt,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,T_surface_fuel_cell , area_fuel_cell,emissivity_fuel_cell,):
+    qs = heat_flux_stagnation(time)
     q_internal = heat_flux_internal(material,qs,time,thickness_insulation,dt)
     q_in = heat_radiation(T_surface_fuel_cell , area_fuel_cell,emissivity_fuel_cell,sigma_boltzman)
     T_blackbox= T_black_box(q_internal,absorptivity_blackbox,dt,surface_area_blackbox,mass_blackbox,Cp_blackbox,T_ambient,emissivity_blackbox,sigma_boltzman,q_in)
-    qs = heat_flux_stagnation(time)
     thickness_insulation = thickness_optimization(T_blackbox,T_max_operating,T_ambient,qs,time,dt,thickness_insulation,absorptivity_blackbox,surface_area_blackbox,mass_blackbox,Cp_blackbox,emissivity_blackbox,sigma_boltzman,q_in)[1]
     mass_insulation_endcap = mass_insulation(rho_insulation,radius,thickness_insulation)
     mass_endcap = mass_spherical_endcap(material,radius,thickness_wall)
     mass_total = mass_insulation_endcap + mass_endcap 
     return mass_total,q_internal,qs
+
+def heatflux
 
 if __name__ =="__main__":
     radius = 2.5
