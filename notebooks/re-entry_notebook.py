@@ -10,7 +10,7 @@ def _(mo):
         r"""
     # Re-entry Simulations Notebook
 
-    This notebook explores the re-entry of a spacecraft into the atmosphere. It performs trajectory calculations and heating calculations.
+    This notebook explores the reentry of a spacecraft into the atmosphere. It performs trajectory calculations and heating calculations.
     """
     )
     return
@@ -26,7 +26,7 @@ def _(mo):
 
     ### Equations of Motion
 
-    The following three equations of motion are applicable to the ballistic re-entry problem:
+    The following three equations of motion are applicable to the ballistic reentry problem:
 
     $$ m \frac{dV}{dt} = -D - mg \sin \gamma $$
 
@@ -40,7 +40,7 @@ def _(mo):
 
     ### Normalised Velocity
 
-    The analytical solution for the normalised velocity of the ballistic re-entry problem is given by:
+    The analytical solution for the normalised velocity of the ballistic reentry problem is given by:
 
     $$ \frac{V}{V_E} = \exp \left(\frac{1}{2} \frac{g \rho}{K \beta \sin \gamma_E}\right)$$
 
@@ -181,7 +181,7 @@ def _(
     ax1.set_ylim(0, 80)
     #ax1.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
     ax1.set_ylabel(r"$h$ [km]")
-    ax1.set_title("Normalized velocity during ballistic re-entry")
+    ax1.set_title("Normalized velocity during ballistic reentry")
     ax1.grid(True)
 
     ax2.plot(normalised_velocity, deceleration, label=r"$a$", color="red")
@@ -189,7 +189,7 @@ def _(
     ax2.set_ylim(0)
     #ax2.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
     ax2.set_ylabel(r"$a$ [m/s$^2$]")
-    ax2.set_title("Deceleration during ballistic re-entry")
+    ax2.set_title("Deceleration during ballistic reentry")
     ax2.grid(True)
 
     ax3.plot(normalised_velocity, normalised_heat_flux, label="$q_c/q_{c,\text{max}}$", color="green")
@@ -197,7 +197,7 @@ def _(
     ax3.set_ylim(0)
     ax3.set_xlabel(r"$\frac{V}{V_E}$" + "[-]")
     ax3.set_ylabel(r"$\frac{q_c}{q_{c,\text{max}}}$ [-]")
-    ax3.set_title("Normalized heat flux during ballistic re-entry")
+    ax3.set_title("Normalized heat flux during ballistic reentry")
     ax3.grid(True)
 
     plt.close(fig)  # Close the plot to prevent default PNG rendering

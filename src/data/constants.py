@@ -13,8 +13,11 @@ gravitational_parameter = gravitational_constant * earth_mass  # m3/s2
 earth_radius = 6378137  # m
 sidereal_rotation_period = 23 * 3600 + 56 * 60 + 4.1  # s, period of one Earths rotation around its axis with respect to distant stars
 density_sea_level = 1.225  # kg/m3
+temperature_sea_level = 288.15
+pressure_sea_level = 101325
 
 # Atmospheric constants
 R_star = 8314.32  # J/(kmol K), universal gas constant
 molecular_mass = 28.9644  # kg/kmol, molecular mass of Earth's atmosphere
 gamma = 1.4  # specific heat ratio
+boltzmann_constant = 1.380622 * 10**(-23) # N m / K

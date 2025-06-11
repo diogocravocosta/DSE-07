@@ -10,7 +10,7 @@ def _(mo):
         r"""
     # Re-entry Gliding Entry Simulations Notebook
 
-    This notebook explores the re-entry of a spacecraft into the atmosphere for the gliding mode. It performs trajectory calculations and heating calculations. It
+    This notebook explores the reentry of a spacecraft into the atmosphere for the gliding mode. It performs trajectory calculations and heating calculations. It
     """
     )
     return
@@ -23,7 +23,7 @@ def _(mo):
 #
 #     Ballistic entry calculations are implemented per Section 5.4 of the Re-entry Systems book by Erwin Mooij.
 #
-#     The analytical solution for the normalised velocity of the gliding re-entry problem is given by:
+#     The analytical solution for the normalised velocity of the gliding reentry problem is given by:
 #
 #     $$ \frac{V}{V_{c,0}} = \sqrt{\frac{\frac{W/S}{C_L}}{\frac{1}{2} \rho_0 e^{-\beta h} V_{c,0}^2 + \frac{W/S}{C_L}}} $$
 #
@@ -107,7 +107,7 @@ def _(plt,
     ax1.set_ylim(0, 120)
     ax1.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
     ax1.set_ylabel(r"$h$ [km]")
-    ax1.set_title("Velocity Ratio during gliding re-entry")
+    ax1.set_title("Velocity Ratio during gliding reentry")
     ax1.grid(True)
 
     plt.close(fig1)  # Close the plot to prevent default PNG rendering
@@ -159,7 +159,7 @@ def _(
     ax2.set_ylim(0, 4)
     ax2.set_xlabel(r"$\frac{V_E}{V_c}$" + "[-]")
     ax2.set_ylabel(r"$\frac{R}{R_E}$" + "[-]")
-    ax2.set_title("Range flight ratio during gliding re-entry")
+    ax2.set_title("Range flight ratio during gliding reentry")
     ax2.grid(True)
 
     ax3.plot(V_Vc_ratio, a_weight_amax_ratio, label=r"$a/a_max$", color="blue")
@@ -168,7 +168,7 @@ def _(
     ax3.set_ylim(0.001, 1)
     ax3.set_xlabel(r"$\frac{V}{V_c}$" + "[-]")
     ax3.set_ylabel(r"$\frac{a}{a_max}$" + "[-]")
-    ax3.set_title("Acceleration ratio during gliding re-entry")
+    ax3.set_title("Acceleration ratio during gliding reentry")
     ax3.grid(True)
 
     plt.close(fig2)  # Close the plot to prevent default PNG rendering
@@ -355,7 +355,7 @@ def _(np):
             rho: float
     ) -> tuple:
         """
-        Calculate the velocity ratio for gliding re-entry
+        Calculate the velocity ratio for gliding reentry
 
         Parameters:
         ----------
@@ -386,7 +386,7 @@ def _(np):
             lift_drag_ratio: float
     ) -> float:
         """
-        Calculate the velocity ratio for gliding re-entry
+        Calculate the velocity ratio for gliding reentry
 
         Parameters:
         ----------
