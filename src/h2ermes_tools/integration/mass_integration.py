@@ -6,6 +6,7 @@ from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
+from h2ermes_tools.header_tank import size_header_tank
 
 tank_material = 1
 class MassIntegrator:
@@ -136,6 +137,10 @@ class MassIntegrator:
                                     LH2_design_pressure=oi.hydrogen_design_pressure,
                                     LOX_design_pressure=oi.oxygen_design_pressure,
                                     thrust_engines=oi.total_vacuum_thrust),
+            "header_tank": size_header_tank(m_propellant = oi.propellant_mass,
+                                            of_ratio = oi.of_ratio,
+                                            material = oi.header_tank_material
+                                            )
 
         }
 
