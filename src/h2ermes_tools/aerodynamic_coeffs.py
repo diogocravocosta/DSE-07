@@ -227,7 +227,7 @@ class BluntBody:
             mass = 28000
 
             body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
-            body.compute_aerodynamics()
+            body.hypersonic_aerodynamics()
             max_ld_index = np.argmax(body.lift_over_drag)
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
@@ -254,7 +254,7 @@ class BluntBody:
         sphericity_radius = np.linspace(0.1, cone_max_radius, 100)
         for s in sphericity_radius:
             body = BluntBody(cone_length = 15, cone_max_radius = 5, cone_min_radius = 1, base_arc_height = s, mass = 28000)
-            body.compute_aerodynamics()
+            body.hypersonic_aerodynamics()
             max_ld_index = np.argmax(body.lift_over_drag)
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
@@ -302,33 +302,31 @@ class BluntBody:
         plt.legend()
         plt.show()
 
-if __name__ == "__main__":
-    #CURRENT DIMENSIONS
+def run():
+    # APOLLO CAPSULE
+    # cone_length = 2.662
+    # cone_max_radius = 1.956
+    # cone_min_radius = 0.01
+    # base_arc_height = 0.5
+    # mass = 28000
+
     cone_length = 13.95
     cone_max_radius = 4.95
     cone_min_radius = 2.46
     base_arc_height = 2
     mass = 28000
 
-    print(cone_length / (cone_max_radius*2 - cone_min_radius*2))
-
-
-    # #APOLLO CAPSULE
-    # # cone_length = 2.662
-    # # cone_max_radius = 1.956
-    # # cone_min_radius = 0.01
-    # # base_arc_height = 0.5
-    # # mass = 28000
-
     body = BluntBody(cone_length, cone_max_radius, cone_min_radius, base_arc_height, mass)
+    body.draw_geometry()
     body.hypersonic_aerodynamics()
-
     body.stability(file_name = "HermesV1-RASAero.csv")
-    print("nose radius", body.sphere_radius)
-
-    #body.analysis()
-
+    body.analysis()
     body.plots()
+
+if __name__ == "__main__":
+    run()
+    
+
 
 
 
