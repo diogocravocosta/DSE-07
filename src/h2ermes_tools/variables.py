@@ -65,7 +65,7 @@ heat_shield_thickness = Variable(
 
 launch_vehicle_dimensions = Variable(
     name="Launch Vehicle Dimensions",
-    value=[2.46, 7, 7.42], # Cone dimensions in meters (radius, height, slant height)
+    value=(2.46, 7, 7.42), # Cone dimensions in meters (radius, height, slant height)
     unit="m",
     latex_symbol="lv_{dim}",
     confidence="highly approximate", #Update with actual dimensions

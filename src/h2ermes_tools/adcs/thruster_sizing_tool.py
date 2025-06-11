@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 import data.constants as cn
 
 # vehicle_mass = 60000  # kg, Mass of the launch vehicle
@@ -186,7 +188,6 @@ def plot_disturbance_torques(torque_list):
     Args:
         torque_list (list): List of torques on the spacecraft.
     """
-    import matplotlib.pyplot as plt
 
     labels = [
         "Solar Torque",
@@ -504,6 +505,8 @@ def mass_and_power_estimation(number_of_thrusters, rcs_dry_mass, thrusters, burn
     
         
     #Calculate total propellant mass for each thrust level
+    # thrust_nammo_220 = thrusters["nammo_220"]["thrust"]
+    # thrust_nammo_220_3 = thrusters["nammo_220_3"]["thrust"]
     # thrust_nammo_220 = thrusters["nammo_220"]["thrust"]
     # thrust_nammo_220_3 = thrusters["nammo_220_3"]["thrust"]
     thrust_nammo_220_4 = thrusters["nammo_220_4"]["thrust"]
