@@ -5,6 +5,7 @@ import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks
+from h2ermes_tools.header_tank import size_header_tank
 
 tank_material = 1
 class MassIntegrator:
@@ -137,6 +138,9 @@ class MassIntegrator:
                                     LH2_design_pressure=oi.hydrogen_design_pressure,
                                     LOX_design_pressure=oi.oxygen_design_pressure,
                                     thrust_engines=oi.total_vacuum_thrust),
+            "header_tank": size_header_tank(m_propellant = 0,
+                                            of_ratio = 0,
+                                            )
 
         }
 

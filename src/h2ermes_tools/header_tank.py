@@ -54,38 +54,39 @@ def thickness_optimization(material,pressure,radius,thickness,safety_factor):
     print("Final thickness is:",thickness,"m")
     return thickness
 
-if __name__ == '__main__':
-    m_propellant = 3000
-    OF_Ratio = 7
-    m_h2_header = m_propellant/OF_Ratio
-    m_o2_header = m_propellant - m_h2_header
-    rho_h2 = 71 #kg/m3
-    rho_o2 = 1141 #kg/m3
-    liquid_fraction = 0.9
-    thickness_h2_header = 0.0024
-    thickness_o2_header = 0.003
-    deltaT_wall = 273+50-77
+def size_header_tank(m_propellant,
+                     of_ratio,
+                     rho_h2 = 71,
+                     rho_o2 = 1141,
+                     liquid_fraction = 0.9,
+                     thickness_h2_header = 0.0024,
+                     thickness_o2_header = 0.003):
+    # mass_prop = 3000
+    # OF_Ratio = 7
+
+    deltaT_wall = 273 + 50 - 77 #TODO: WHAT ???? Dhruv
     pressure = 1e6
     safety_factor = 2
+
+    m_h2_header = m_propellant / of_ratio
+    m_o2_header = m_propellant - m_h2_header
+
+    radius_h2_header = radius_tank(m_h2_header, rho_h2, liquid_fraction)
+    radius_o2_header = radius_tank(m_o2_header, rho_o2, liquid_fraction)
     thermal_conductivity_insulation = 3.8e-3
-    material = mat.Material(density = 7850,
+    material = mat.Material(density=7850,
                             youngs_modulus=200e9,
                             fracture_strength=800e6,
                             yield_strength=500e6,
-                            thermal_conductivity = 0.1,
-                            specific_heat = 500)
-    
-    radius_h2_header = radius_tank(m_h2_header,rho_h2,liquid_fraction)
-    radius_o2_header = radius_tank(m_o2_header,rho_o2,liquid_fraction)
+                            thermal_conductivity=0.1,
+                            specific_heat=500)
 
-    thickness_h2_header = thickness_optimization(material,pressure,radius_h2_header,thickness_h2_header,safety_factor)
+    thickness_h2_header = thickness_optimization(material, pressure, radius_h2_header, thickness_h2_header,
+                                                 safety_factor)
 
-    radius_h2_header = radius_tank(m_h2_header,rho_h2,liquid_fraction)
-    mass_h2_header = mass_tank(radius_h2_header,material, thickness_h2_header)
-    radius_o2_header = radius_tank(m_o2_header,rho_o2,liquid_fraction)
-    mass_o2_header = mass_tank(radius_o2_header,material, thickness_o2_header)
+    radius_h2_header = radius_tank(m_h2_header, rho_h2, liquid_fraction)
+    mass_h2_header = mass_tank(radius_h2_header, material, thickness_h2_header)
+    radius_o2_header = radius_tank(m_o2_header, rho_o2, liquid_fraction)
+    mass_o2_header = mass_tank(radius_o2_header, material, thickness_o2_header)
     q = heat_load_tank(deltaT_wall, thickness_h2_header, thermal_conductivity_insulation, radius_h2_header)
 
-    print("Radius of LH2 tank",radius_h2_header,"m with mass",mass_h2_header,"kg.")
-    print("Radius of LOX tank",radius_o2_header,"m with mass",mass_o2_header,"kg.")
-    print('heat flux:',q)
