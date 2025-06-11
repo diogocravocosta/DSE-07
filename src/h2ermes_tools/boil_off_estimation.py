@@ -189,7 +189,7 @@ if __name__ =='__main__':
     h = 12-ro/4-ri/4
     # Pressure Parameters
     p_vent = 10e6 #pa
-    P1= 3e5 #pa
+    P_min_vapor= 3e5 #pa
 
     #Temperature parameters
     T_vapor = 75
@@ -221,4 +221,4 @@ if __name__ =='__main__':
     # Conditions
     worst_case = False
 
-    total_boil_off = total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
+    total_boil_off = total_boil_off_h2(P_min_vapor,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
