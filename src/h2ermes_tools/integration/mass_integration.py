@@ -3,8 +3,9 @@ import numpy as np
 import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
+from h2ermes_tools.structures.tank_sizing import size_tanks
 
-
+tank_material = 1
 class MassIntegrator:
     """
     Class to handle mass integration
@@ -89,9 +90,13 @@ class MassIntegrator:
         self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
         self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boil_off_mass + self.o2_power_mass
 
+        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
+
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
+
+        self.total_oxygen_mass = self.main_oxygen_mass + self.header_oxygen_mass
 
     def calculate_dummy_dry_masses(self, old_integrator: 'MassIntegrator') -> None:
         """
@@ -108,10 +113,19 @@ class MassIntegrator:
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
 
-    def calculate_dry_mass(self, old_integrator: 'MassIntegrator') -> None:
+    def calculate_dry_mass(self, oi: 'MassIntegrator') -> None:
         """
         Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
         """
         self.subsystem_dry_masses = {
-            "turbopump": size_turbopump(old_integrator.min_tank_pressure, old_integrator.total_vacuum_thrust),
+            "turbopump": size_turbopump(oi.min_tank_pressure,
+                                        oi.total_vacuum_thrust),
+            "main_tank": size_tanks(tank_material,
+                                    oi.gross_mass,
+                                    oi.total_hydrogen_mass,
+                                    oi.total_oxygen_mass,
+                                    oi.hydrogen_design_pressure,
+                                    oi.oxygen_design_pressure,
+                                    oi.total_vacuum_thrust),
+
         }
