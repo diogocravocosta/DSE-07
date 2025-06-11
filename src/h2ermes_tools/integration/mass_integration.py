@@ -170,7 +170,7 @@ class MassIntegrator:
 
         """
         # fatigue thickness
-        tank_thickness = thickness_optimization_fatigue(oi.cone_angle,
+        tank_thickness_fatigue = thickness_optimization_fatigue(oi.cone_angle,
                                                         oi.tank_radius,
                                                         oi.thickness_tank,
                                                         oi.tank_material,
@@ -181,5 +181,8 @@ class MassIntegrator:
                                                         oi.g_reentry_force_ratio,
                                                         oi.g_launch_force_ratio,
                                                         oi.max_thrust2weight)
+
+        # tank sizing thickness
+        tank_thickness_sizing =
 
 
