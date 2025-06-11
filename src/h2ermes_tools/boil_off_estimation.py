@@ -13,10 +13,14 @@ def sa_cone(ro,ri,h):
     return np.pi *( (ro + ri) * l +ri**2 + ro**2)
 
 def volume_cone(h,ro,ri):
-    volume = (1 / 3) * np.pi * h * (ro ** 2 + ro * ri + ri ** 2)
-    area_proj = (ro + ri)*h/2
+    volume = (1 / 3) * np.pi * h * (ro ** 2 + ro * ri + ri ** 2) + 2/3*np.pi * ri**3/4 + 2/3*np.pi * ro**3/4
+    area_proj_cylinder = (ro + ri)*h
+    area_proj = area_proj_cylinder + np.pi*ri**2/4+np.pi*ro**2/4
     return volume, area_proj
 
+def height_calc_cone(volume):
+    h = volume*3/np.pi/(ro ** 2 + ro * ri + ri ** 2)
+    return h
 # Calculate the new inner radius based on ullage height
 def calculate_cone_param(ro, ri, h, mass,rho_lh2):
     vol_cone = volume_cone(h,ro,ri)[0]
@@ -35,7 +39,7 @@ def rad_load(T_tank, T_lh2, material,area_gh2):
 
 def heat_load(solar_power, planetary_power, albedo_power,area, material,rho_lh2_20k):
     # Geometry
-    incident_area = 7 * 9 + np.pi / 2 * 0.875 * 3.5
+    incident_area = 7 * 9 + np.pi * 0.875 * 3.5
     planetary_flux = planetary_power / incident_area * material.eps
     solar_flux = solar_power / incident_area * material.abs
     albedo_flux = albedo_power / incident_area * material.abs
@@ -91,15 +95,15 @@ def pres_vanderwaals(n, V, R, T, a, b):
     return P
 
 def boil_off_launch(P1,T1,R,m_h2_tot,m_pl,ro,ri,h,rho_lh2_20k):
-    V1_vapor = volume_cone(calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
+    V1_vapor = 0.1*volume_cone(h,ro,ri)[0]#volume_cone(calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_h2_tot,rho_lh2_20k)[0], ri)[0]  # Volume of the cone
     V2_vapor =  volume_cone(calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k)[1], calculate_cone_param(ro,ri,h,m_pl,rho_lh2_20k)[0], ri)[0]  #m3
-    print(V1_vapor,V2_vapor)
     n1 = P1*V1_vapor/T1/R
-    m_vap_h2_1 = n1 * h2_nm/1000  # kg, mass of vaporized hydrogen
-    n2 = V2_vapor*n1/V1_vapor
-    m_vap_h2_2 = n2 * h2_nm/1000  # kg, mass of vaporized hydrogen after first stage
-    mass_boil_off_launch = m_vap_h2_2 - m_vap_h2_1 
-    print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3")
+    m_vap_h2_launchstart = vanderwaals(P1, V1_vapor, R, T1, a, b, h2_nm)
+
+    m_vap_h2_launchend = vanderwaals(P1, V2_vapor, R, T1, a, b, h2_nm)
+
+    mass_boil_off_launch = m_vap_h2_launchend - m_vap_h2_launchstart 
+    print("Boil off during launch (due to rapid vaporization): ", mass_boil_off_launch, "kg for the start volume of: ",volume_cone(h,ro,ri)[0],"m3 and projected area of",volume_cone(h,ro,ri)[1])
     return mass_boil_off_launch
 
 def orbit_boil_off(h,ro,ri, solar_power, planetary_power, albedo_power, material, heat_load_data, boil_off_mass,rho_lh2_20k):
@@ -122,7 +126,7 @@ def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m
 
     print("No boil off is expected in this region as pressure will drop from ",P1/10e5, "bar to ",p/10e5,"bar")
     m_boiloff_worst_case = vanderwaals(P1,V2, R, T2, a, b,h2_nm) - m_gh2_orbit
-    print(m_gh2_orbit, vanderwaals(P1,V2, R, T2, a, b,h2_nm))
+
     print('Worst case boil off if pressure is held constant ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar. The change in mass is ',m_gh2_refuel/m_gh2_orbit)
 
     return m_boiloff_worst_case
@@ -150,8 +154,8 @@ def total_boil_off_h2(P1,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,s
     if worst_case == True:
         m_boiloff_worst_case = boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m_h2_reentry,m_h2_dock)
         total_boil_off +=  m_boiloff_worst_case
-    print('Total boil off of LH2 is: ',total_boil_off)
-    print('New payload mass is: ',h2_depot+total_boil_off+m_h2_reentry)
+    print('Total boil off of LH2 is: ',total_boil_off,"kg")
+    print('New payload mass is: ',h2_depot+total_boil_off+m_h2_reentry,"kg")
     return total_boil_off
 #------------------------------------------------
 # Calculations
@@ -165,12 +169,6 @@ if __name__ =='__main__':
     rho_lh2_20k = 71
     rho_lh2_30K = 50
 
-    #Geometry parameters
-    ro = 4.92
-    ri = 2.46
-    h = 13.95
-    phi = np.arctan((ro - ri) / h)  # angle in radians
-
     # Mass paramters
     h2_depot = 10500
     m_payload = 15000
@@ -183,9 +181,15 @@ if __name__ =='__main__':
     m_h2_reentry = 3000
     m_h2_dock = m_h2_reentry + 10500
 
+    #Geometry parameters
+    ro = 4.92
+    ri = 2.46
+    volume = m_h2_tot / rho_lh2_20k/0.9
+    phi = 10
+    h = 12-ro/4-ri/4
     # Pressure Parameters
     p_vent = 10e6 #pa
-    P1= 10**5 #pa
+    P1= 3e5 #pa
 
     #Temperature parameters
     T_vapor = 75
@@ -195,7 +199,8 @@ if __name__ =='__main__':
     T_gh2_launch = 20
 
     # Material properties
-    material = mat.Material(absorptivity=0.2,emissivity=0.8)
+    material = mat.Material(absorptivity=0.2,
+                            emissivity=0.08)
 
     #------------------------------------------------
     # Constants
@@ -209,9 +214,9 @@ if __name__ =='__main__':
     b = 0.02651e-3
     h2_nm = 2 #g/mol
 
-    # Boil-off data
-    heat_load_data = [40000, 42500, 45000, 47500, 50000, 52500, 55000]  # W
-    boil_off_mass = [605, 861, 1470, 1978, 2434, 2855, 3253] #kg
+    # Boil-off data40000, 42500, 45000, 47500, 50000, 52500, 55000: 861, 1470, 1978, 2434, 2855, 3253
+    heat_load_data = [44000,40000,50000,47000]  # W
+    boil_off_mass = [16381-14200, 16381-15040,16381-13000,16381-13604] #kg
 
     # Conditions
     worst_case = False

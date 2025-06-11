@@ -153,7 +153,7 @@ if __name__ =="__main__":
     
     mass_total = total_mass(rho_insulation,radius,thickness_insulation,thickness_wall)
     print("Total mass is: ",mass_total,"kg")
-
+    print("Max internal heat flux is:",max(q_internal),"W/m^2")
     if plot == True:
         plt.figure(figsize=(8, 5))
         plt.plot(time, q_internal, label="Internal Heat Flux")
