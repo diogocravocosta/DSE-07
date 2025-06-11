@@ -337,6 +337,16 @@ total_dry_mass = Variable(
         margin=(0.8, 1.2),
     )
 
+payload_mass = Variable(
+        name="The payload mass delivered to depot",
+        value=10_000,
+        unit="kg",
+        latex_symbol="m_p",
+        confidence="set",
+        constraints="only positive values",
+        margin=(1.0, 1.0),
+    )
+
 thrust_chamber_sl_mass = Variable(
         name="The mass of a sea level optimized Thrust Chamber",
         value=4.063444786849481, 

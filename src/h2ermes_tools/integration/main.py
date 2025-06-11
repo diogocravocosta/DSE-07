@@ -1,56 +1,32 @@
-from dataclasses import dataclass
+import numpy as np
 
-from h2ermes_tools.variables import landing_delta_v
+import h2ermes_tools.variables as vr
+import h2ermes_tools.integration.mass_integration as mi
+
+# Add unchanging variables to the MassIntegrator
+def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
+    """Add unchanging variables to the MassIntegrator object."""
+    integrator.payload_mass = vr.payload_mass.value  # Unchanging
+    integrator.h2_power_mass = vr.h2_power_mass.value  # Unchanging
+    integrator.o2_power_mass = vr.o2_power_mass.value  # Unchanging
+    integrator.acs_propellant_mass = vr.acs_propellant_mass.value  # Unchanging
+
+    integrator.sea_level_isp = vr.sea_level_isp.value  # Unchanging
+    integrator.vacuum_isp = vr.vacuum_isp.value  # Unchanging
+
+    integrator.landing_delta_v = vr.landing_delta_v.value  # Unchanging
+    integrator.deorbit_delta_v = vr.deorbit_delta_v.value  # Unchanging
+    integrator.circularization_delta_v = vr.circularization_delta_v.value  # Unchanging
+    integrator.orbit_raising_delta_v = vr.orbit_raising_delta_v.value  # Unchanging
+    integrator.orbit_insertion_delta_v = vr.orbit_insertion_delta_v.value  # Unchanging
+
+    integrator.of_ratio = vr.of_ratio.value  # Unchanging
 
 
+# Define initial values for the MassIntegrator
+def add_initial_values(integrator: mi.MassIntegrator) -> None:
+    """Add initial values to the MassIntegrator object."""
+    integrator.dry_mass = vr.total_dry_mass.value # Changing
+    integrator.h2_boil_off_mass = 1000 # Changing
 
-payload_mass = 10_000.0
-sea_level_isp = 360
-vacuum_isp = 450
-
-landing_delta_v = 525
-deorbit_delta_v = 180
-circularization_delta_v = 150
-orbit_raising_delta_v = 150
-orbit_insertion_delta_v = 6000
-
-initial_dry_mass = 30_000.0
-
-@dataclass
-class MissionParameters:
-    """
-    Class to hold mission parameters for the H2ERMES mission.
-
-    Attributes:
-        sea_level_isp (float): Sea level specific impulse in seconds.
-        vacuum_isp (float): Vacuum specific impulse in seconds.
-        of_ratio (float): Oxidizer to fuel mass ratio for the main propulsion system.
-
-        landing_delta_v (float): Delta V required for landing in m/s.
-        deorbit_delta_v (float): Delta V required for deorbit in m/s.
-        circularization_delta_v (float): Delta V required for circularization in m/s.
-        orbit_raising_delta_v (float): Delta V required for orbit raising in m/s.
-        orbit_insertion_delta_v (float): Delta V required for orbit insertion in m/s.
-    """
-    sea_level_isp: float = sea_level_isp
-    vacuum_isp: float = vacuum_isp
-    of_ratio: float = 6.0
-
-    landing_delta_v: float = landing_delta_v
-    deorbit_delta_v: float = deorbit_delta_v
-    circularization_delta_v: float = circularization_delta_v
-    orbit_raising_delta_v: float = orbit_raising_delta_v
-    orbit_insertion_delta_v: float = orbit_insertion_delta_v
-
-@dataclass
-class MassParameters:
-    """
-    Class to hold mass parameters for the H2ERMES mission.
-
-    Attributes:
-        dry_mass (float): Initial dry mass of the vehicle in kg.
-        payload_mass (float): Mass of the payload in kg.
-    """
-    dry_mass: float = initial_dry_mass
-    payload_mass: float = payload_mass
-
+    integrator.landing_delta_v = 525 # Changing
