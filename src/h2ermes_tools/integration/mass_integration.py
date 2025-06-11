@@ -98,6 +98,12 @@ class MassIntegrator:
         self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
         self.total_oxygen_mass = self.main_oxygen_mass + self.header_oxygen_mass
 
+    def update_thrust(self) -> None:
+        """
+        Updates thrust and potentially eventually other relevant values
+        """
+        self.total_vacuum_thrust = self.gross_mass * cn.g_0 * self.vacuum_twr
+
     def calculate_dummy_dry_masses(self, oi: 'MassIntegrator') -> None:
         """
         Calculate the dry masses of the subsystems based on the masses from previous iteration.
@@ -145,7 +151,7 @@ class MassIntegrator:
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
 
-    def calculate_other_masses(self, oi: 'MassIntegrator') -> None:
+    def calculate_non_propellant_consumables(self, oi: 'MassIntegrator') -> None:
         """
         Calculate other masses that are not part of the dry mass.
         """

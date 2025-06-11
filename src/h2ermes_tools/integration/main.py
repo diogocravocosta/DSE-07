@@ -76,22 +76,27 @@ def main() -> None:
     old_integrator.calculate_propellant_mass()
     old_integrator.calculate_hydrogen_oxygen_mass()
 
-    for i in range(1):
+    for i in range(5):
         new_integrator = mi.MassIntegrator()
         add_unchanging_variables(new_integrator)
 
         new_integrator.calculate_dry_mass(old_integrator)
-        new_integrator.calculate_other_masses(old_integrator)
+        new_integrator.calculate_non_propellant_consumables(old_integrator)
 
         new_integrator.calculate_propellant_mass()
         new_integrator.calculate_hydrogen_oxygen_mass()
 
-    # Print the results
-    print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
-    print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")
-    print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")
-    print(f"Hydrogen mass: {new_integrator.total_hydrogen_mass:.2f} kg")
-    print(f"Oxygen mass: {new_integrator.total_oxygen_mass:.2f} kg")
+        new_integrator.update_thrust()
+
+        # Print the results
+        print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
+        print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")
+        print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")
+        print(f"Hydrogen mass: {new_integrator.total_hydrogen_mass:.2f} kg")
+        print(f"Oxygen mass: {new_integrator.total_oxygen_mass:.2f} kg")
+        print("--------------------------------------------------------------")
+
+        old_integrator = new_integrator
 
 if __name__ == "__main__":
     main()
