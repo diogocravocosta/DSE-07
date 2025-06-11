@@ -427,6 +427,16 @@ acs_propellant_mass = Variable(
     margin=(0.5, 2.0),
 )
 
+docking_system_mass = Variable(
+    name='Docking System Mass',
+    value=370,
+    unit='kg',
+    latex_symbol='m_{docking system}',
+    confidence='good',
+    constraints='>0',
+    margin=(1.0, 1.1),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
