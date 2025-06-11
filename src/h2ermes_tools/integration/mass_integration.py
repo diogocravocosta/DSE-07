@@ -88,11 +88,11 @@ class MassIntegrator:
         """
         main_tank_propellant_mass = self.transfer_propellant_mass + self.orbit_insertion_propellant_mass
 
-        self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
+        self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass + self.payload_mass
         self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_power_mass
 
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
-        self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
+        self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
 
         self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
