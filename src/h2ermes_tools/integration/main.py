@@ -12,7 +12,7 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.acs_propellant_mass = vr.acs_propellant_mass.value  # Unchanging
 
     integrator.sea_level_isp = vr.sea_level_isp.value  # Unchanging
-    integrator.vacuum_isp = vr.vacuum_isp.value  # Unchanging
+    integrator.vacuum_isp = 429.7477666666666  # Unchanging, from Diogo
 
     integrator.landing_delta_v = vr.landing_delta_v.value  # Unchanging
     integrator.deorbit_delta_v = vr.deorbit_delta_v.value  # Unchanging

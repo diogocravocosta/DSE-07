@@ -8,7 +8,6 @@ from h2ermes_tools.structures.tank_sizing import size_tanks
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
 from h2ermes_tools.header_tank import size_header_tank
 
-tank_material = 1
 class MassIntegrator:
     """
     Class to handle mass integration
