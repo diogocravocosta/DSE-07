@@ -91,12 +91,11 @@ class MassIntegrator:
         self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
         self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_power_mass
 
-        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
-
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
 
+        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
         self.total_oxygen_mass = self.main_oxygen_mass + self.header_oxygen_mass
 
     def calculate_dummy_dry_masses(self, oi: 'MassIntegrator') -> None:
@@ -124,7 +123,7 @@ class MassIntegrator:
                 mass_land=oi.dry_mass,
                 phi=oi.phi,
                 r_bottom=oi.bottom_radius,
-                material=oi.landingleg_material,
+                material=oi.landing_leg_material,
                 clearance_height=oi.clearance_height
             ),
             "turbopump": size_turbopump(tank_pressure=oi.min_tank_pressure,
@@ -142,6 +141,8 @@ class MassIntegrator:
                                             )
 
         }
+
+        self.dry_mass = sum(self.subsystem_dry_masses.values())
 
     def calculate_other_masses(self, oi: 'MassIntegrator') -> None:
         """

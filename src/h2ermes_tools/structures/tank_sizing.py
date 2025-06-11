@@ -375,23 +375,25 @@ def size_tanks(material: material.Material,
         safety_factor,
         gamma=0.65,
     )
-    print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
+    # print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
     mass_LH2_tank = calculate_tank_mass(
         bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, material, cap_height_radius_ratio
     )
-    print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
+    # print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
     mass_LOX_tank = calculate_tank_mass(
         middle_radius, top_radius, tank_length_LOX, thickness_LOX, material, cap_height_radius_ratio
     )
-    print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+    # print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
 
     # tank_overall_dimensions()
     natural_frequency = check_vibrations(
         mass_LH2_tank, thickness_LH2, material, tank_length_LH2
     )
-    print("Natural Frequency: " + str(natural_frequency) + " Hz")
+    # print("Natural Frequency: " + str(natural_frequency) + " Hz")
     # plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
     # plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
+
+    return mass_LH2_tank + mass_LOX_tank
 
 
 

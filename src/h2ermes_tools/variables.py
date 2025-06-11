@@ -77,7 +77,7 @@ orbit_insertion_delta_v = Variable(
     name="Orbit Insertion Delta V",
     value=5800.,
     unit="m/s",
-    latex_symbol="\Delta V_{oi}",
+    latex_symbol="\\Delta V_{oi}",
     confidence="fair",
     constraints="must be positive",
     margin=(0.95, 1.05),
@@ -87,7 +87,7 @@ orbit_raising_delta_v = Variable(
     name="Orbit Raising Delta V",
     value=114.,
     unit="m/s",
-    latex_symbol="\Delta V_{or}",
+    latex_symbol="\\Delta V_{or}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -97,7 +97,7 @@ target_orbit_circularization_delta_v = Variable(
     name="Target Orbit Circularization Delta V",
     value=113.,
     unit="m/s",
-    latex_symbol="\Delta V_{toc}",
+    latex_symbol="\\Delta V_{toc}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -107,7 +107,7 @@ deorbit_delta_v = Variable(
     name="Deorbit Delta V",
     value=160.,
     unit="m/s",
-    latex_symbol="\Delta V_{do}",
+    latex_symbol="\\Delta V_{do}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -117,7 +117,7 @@ landing_delta_v = Variable(
     name="Landing Delta V",
     value=500.,
     unit="m/s",
-    latex_symbol="\Delta V_{l}",
+    latex_symbol="\\Delta V_{l}",
     confidence="poor",
     constraints="must be positive",
     margin=(0.5, 1.05),
@@ -127,7 +127,7 @@ drag_compensation_delta_v = Variable(
     name="Drag Compensation Delta V",
     value=30.,
     unit="m/s",
-    latex_symbol="\Delta V_{dc}",
+    latex_symbol="\\Delta V_{dc}",
     confidence="poor",
     constraints="must be positive",
     margin=(0.5, 1.5),
@@ -337,6 +337,16 @@ total_dry_mass = Variable(
         margin=(0.8, 1.2),
     )
 
+gross_mass = Variable(
+        name="The total mass of the vehicle including propellant",
+        value=246_684.0317,
+        unit="kg",
+        latex_symbol="m_g",
+        confidence="low",
+        constraints="only positive values",
+        margin=(0.8, 1.2),
+    )
+
 payload_mass = Variable(
         name="The payload mass delivered to depot",
         value=10_000,
@@ -466,6 +476,27 @@ nose_cone_mass = Variable(
     constraints="must be positive",
     margin=(1.0, 1.5),
 )
+
+hydrogen_power_mass = Variable(
+    name="Hydrogen Power Mass",
+    value=225,
+    unit="kg",
+    latex_symbol="m_{H2, power}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(1.0, 1.5),
+)
+
+oxygen_power_mass = Variable(
+    name="Oxygen Power Mass",
+    value=225,
+    unit="kg",
+    latex_symbol="m_{O2, power}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(1.0, 1.5),
+)
+
 
 if __name__ == "__main__":
     # Example of how to create a variable
