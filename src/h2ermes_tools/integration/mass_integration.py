@@ -3,6 +3,7 @@ import numpy as np
 import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
+from h2ermes_tools.landinglegs import size_landing_legs
 
 
 class MassIntegrator:
@@ -114,4 +115,12 @@ class MassIntegrator:
         """
         self.subsystem_dry_masses = {
             "turbopump": size_turbopump(old_integrator.min_tank_pressure, old_integrator.total_vacuum_thrust),
+            'landing_legs': size_landing_legs(
+                n_legs=4,
+                mass_land=old_integrator.dry_mass,
+                phi=old_integrator.phi,
+                r_bottom=old_integrator.bottom_radius,
+                material=old_integrator.landingleg_material,
+                clearance_height=old_integrator.clearance_height
+            ),
         }
