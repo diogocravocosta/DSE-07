@@ -8,6 +8,7 @@ chamber_pressure = 6100000 #in Pa
 #tank_pressure = 270000 #in Pa, lowest pressure at tank
 prop_tank_pressure = 270000
 oxidizer_tank_pressure = 200000
+o = 1
 
 
 propellant_density = 70.85
