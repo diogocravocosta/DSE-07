@@ -167,15 +167,15 @@ def calculate_tank_thickness(
 
     # Check for transverse and hoop stress at maximum boil off pressure:
     t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.sin(phi))
-    t_press_hoop = (propellant_pressure * radius / (material.ys * np.sin(phi)))
+    t_press_hoop = (max_propellant_pressure * radius / (material.ys * np.sin(phi)))
     # check hoop stress
     if t_press_trans > t_guess:
         t_guess = t_press_trans
-        print("Transverse stress leading and hoop stress is: " + str(
+        print("Transverse stress leading and transverse stress is: " + str(
             (max_propellant_pressure * radius) / (2 * t_guess * np.sin(phi))))
     elif t_press_hoop > t_press_trans > t_guess:
         t_guess = t_press_hoop
-        print("Transverse stress leading and hoop stress is: " + str(
+        print("Hoop stress leading and hoop stress is: " + str(
             (max_propellant_pressure * radius) / (t_guess * np.sin(phi))))
     return t_guess
 
@@ -289,8 +289,6 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     middle_radius = bottom_radius * bottom_radius_ratio
     top_radius = middle_radius * top_radius_ratio
 
-    # Constraints
-
     LH2_pressure = LH2_design_pressure * safety_factor_pressure  # Pa
     max_pressure_boiloff = design_pressure * safety_factor_pressure
     LOX_pressure = LOX_design_pressure * safety_factor_pressure  # Pa
@@ -341,6 +339,12 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     )
     print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
     print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
+
+    phi_bottom = np.arctan((bottom_radius-middle_radius)/tank_length_LOX)
+    print("PHI BOTTOM IS: " + str(np.degrees(phi_bottom)) + "deg")
+    phi_top = np.arctan((middle_radius-top_radius)/tank_length_LH2)
+    print("PHI TOP IS: " + str(np.degrees(phi_top)) + "deg")
+
     thickness_LH2 = calculate_tank_thickness(
         wet_mass,
         LH2_pressure,
@@ -349,7 +353,7 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
         tank_length_LH2,
         bottom_radius,
         middle_radius,
-        phi,
+        phi_bottom,
         material,
         thrust_engines,
         safety_factor,
@@ -364,7 +368,7 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
         tank_length_LOX,
         middle_radius,
         top_radius,
-        phi,
+        phi_top,
         material,
         thrust_engines,
         safety_factor,
@@ -392,4 +396,4 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
 if __name__ == '__main__':
     mat = material.Material(youngs_modulus=200e9, density=7800, yield_strength=1060e6)
     size_tanks(mat, 20642.21346, 149913.1903, 15000, 2.7e5, 2.5e5, 10e5)
-
+    
