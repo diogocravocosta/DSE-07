@@ -443,7 +443,7 @@ if __name__ =="__main__":
         fracture_toughness=200,
         yield_strength=500e6)
 
-    # Mass Inputs
+    # Mass Inputss
     fuel_reentry_LH2 = 3000 # kg, fuel mass during re-entry
     dry_mass = 20000 # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
     launch_mass = 150000 # kg, total launch mass to be corrected
