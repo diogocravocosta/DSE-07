@@ -2,6 +2,7 @@ import numpy as np
 
 import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
+from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 
 
 class MassIntegrator:
@@ -106,3 +107,11 @@ class MassIntegrator:
         }
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
+
+    def calculate_dry_mass(self, old_integrator: 'MassIntegrator') -> None:
+        """
+        Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
+        """
+        self.subsystem_dry_masses = {
+            "turbopump": size_turbopump(old_integrator.min_tank_pressure, old_integrator.total_vacuum_thrust),
+        }
