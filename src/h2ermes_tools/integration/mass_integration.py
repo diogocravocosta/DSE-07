@@ -4,8 +4,9 @@ import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
+from h2ermes_tools.structures.tank_sizing import size_tanks
 
-
+tank_material = 1
 class MassIntegrator:
     """
     Class to handle mass integration
@@ -90,37 +91,51 @@ class MassIntegrator:
         self.main_hydrogen_mass = main_tank_propellant_mass * (1 / (1 + self.of_ratio)) + self.h2_boil_off_mass + self.coolant_mass + self.h2_power_mass
         self.main_oxygen_mass = main_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio)) + self.o2_boil_off_mass + self.o2_power_mass
 
+        self.total_hydrogen_mass = self.main_hydrogen_mass + self.header_hydrogen_mass
+
         header_tank_propellant_mass = self.landing_propellant_mass + self.deorbit_propellant_mass
         self.header_hydrogen_mass = header_tank_propellant_mass * (1 / (1 + self.of_ratio))  # + self.coolant_mass, potentially add coolant mass here
         self.header_oxygen_mass = header_tank_propellant_mass * (self.of_ratio / (1 + self.of_ratio))
 
-    def calculate_dummy_dry_masses(self, old_integrator: 'MassIntegrator') -> None:
+        self.total_oxygen_mass = self.main_oxygen_mass + self.header_oxygen_mass
+
+    def calculate_dummy_dry_masses(self, oi: 'MassIntegrator') -> None:
         """
         Calculate the dry masses of the subsystems based on the masses from previous iteration.
         """
-        self.acs_propellant_mass = dds.acs_propellant_mass(old_integrator.gross_mass)
+        self.acs_propellant_mass = dds.acs_propellant_mass(oi.gross_mass)
 
         self.subsystem_dry_masses = {
-            "main_tank": dds.main_tank_mass(old_integrator.main_hydrogen_mass + old_integrator.main_oxygen_mass),
-            "header_tank": dds.header_tank_mass(old_integrator.header_hydrogen_mass + old_integrator.header_oxygen_mass),
-            "landing_legs": dds.landing_leg_mass(old_integrator.dry_mass),
+            "main_tank": dds.main_tank_mass(oi.main_hydrogen_mass + oi.main_oxygen_mass),
+            "header_tank": dds.header_tank_mass(oi.header_hydrogen_mass + oi.header_oxygen_mass),
+            "landing_legs": dds.landing_leg_mass(oi.dry_mass),
             "acs": dds.acs_dry_mass(self.acs_propellant_mass),
         }
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
 
-    def calculate_dry_mass(self, old_integrator: 'MassIntegrator') -> None:
+    def calculate_dry_mass(self, oi: 'MassIntegrator') -> None:
         """
         Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
         """
         self.subsystem_dry_masses = {
-            "turbopump": size_turbopump(old_integrator.min_tank_pressure, old_integrator.total_vacuum_thrust),
+            "turbopump": size_turbopump(oi.min_tank_pressure, oi.total_vacuum_thrust),
             'landing_legs': size_landing_legs(
                 n_legs=4,
-                mass_land=old_integrator.dry_mass,
-                phi=old_integrator.phi,
-                r_bottom=old_integrator.bottom_radius,
-                material=old_integrator.landingleg_material,
-                clearance_height=old_integrator.clearance_height
+                mass_land=oi.dry_mass,
+                phi=oi.phi,
+                r_bottom=oi.bottom_radius,
+                material=oi.landingleg_material,
+                clearance_height=oi.clearance_height
             ),
+            "turbopump": size_turbopump(oi.min_tank_pressure,
+                                        oi.total_vacuum_thrust),
+            "main_tank": size_tanks(tank_material,
+                                    oi.gross_mass,
+                                    oi.total_hydrogen_mass,
+                                    oi.total_oxygen_mass,
+                                    oi.hydrogen_design_pressure,
+                                    oi.oxygen_design_pressure,
+                                    oi.total_vacuum_thrust),
+
         }
