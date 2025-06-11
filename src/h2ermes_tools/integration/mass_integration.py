@@ -5,6 +5,7 @@ import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
 from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks
+from h2ermes_tools.fatigue_calculation_tool import thickness_optimization_fatigue
 
 tank_material = 1
 class MassIntegrator:
@@ -146,3 +147,23 @@ class MassIntegrator:
         """
         self.h2_boil_off_mass = dds.h2_boil_off_mass(oi.main_hydrogen_mass)
         self.o2_boil_off_mass = dds.o2_boil_off_mass(oi.main_oxygen_mass)
+
+    def choose_tank_thickness(self, oi:'MassIntegrator') -> None:
+        """
+        Calculate thickness of the tank from fatigue and tank sizing, and select the higher one.
+
+        """
+        # fatigue thickness
+        tank_thickness = thickness_optimization_fatigue(oi.cone_angle,
+                                                        oi.tank_radius,
+                                                        oi.thickness_tank,
+                                                        oi.tank_material,
+                                                        oi.fuel_reentry_LH2,
+                                                        oi.dry_mass,
+                                                        oi.launch_mass,
+                                                        oi.payload_mass,
+                                                        oi.g_reentry_force_ratio,
+                                                        oi.g_launch_force_ratio,
+                                                        oi.max_thrust2weight)
+
+
