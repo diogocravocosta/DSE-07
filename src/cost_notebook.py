@@ -4,8 +4,6 @@ import pandas as pd
 #Load excel file with mass inputs
 df = pd.read_excel('mass_input_cost_model.xlsx')
 
-
-
 #Nomenclature
 #DEV = Development cost (engineering cost)
 #MAIT = Manufacturing, Assembly, Integration and Test
@@ -24,19 +22,6 @@ s_COM = 0.2 #scope of subcontracted work under commercial development
 q = 0.08 #average subcontractor profit
 c_p = (s_COM*q+1)/(s_BAU*q+1)
 M_PA_perc = 5.25 
-concept_number = input("Enter concept number (e.g., 1, 2, 3): ")
-
-if concept_number == "1" or concept_number == "2":
-    delta_TRL = 4
-elif concept_number == "3" or concept_number == "4":
-    delta_TRL = 2
-elif concept_number == "5" or concept_number == "6":
-    delta_TRL = 0
-else: 
-    print ("Invalid concept number. Please enter a number between 1 and 6.")
-
-#print(f"Development learning factor = {L_d}")
-#print(f"Profit retention cost reduction factor = {c_p}")
 
 
 #LISTS
@@ -64,16 +49,7 @@ equipment_names = ["Pressurizant Tank",
 a = [19.99465, 19.99465, 19.99465, 2.799300, 2.799300, 2.799300, 31.48271, 33.90978, 11.50618, 8.958770, 8.958770, 27.45211, 26.01794, 23.59239, 51.11253, 42.01174, 141.6820, 69.05491, 27.45211, 257.8420, 6.70369]
 b = [0.71253, 0.71253, 0.71253, 0.91199, 0.91199, 0.91199, 0.78811, 0.60977, 1.06948, 0.68815, 0.68815, 0.44623, 0.44623, 0.70000, 0.80000, 0.80000, 0.80000, 0.82458, 0.44623, 0.75000, 0.68041]
 
-if concept_number == "1":
-    M = df['CONCEPT 1'].iloc[1:22].tolist()
-elif concept_number == "2":
-    M = df['CONCEPT 2'].iloc[1:22].tolist()
-elif concept_number == "3":
-    M = df['CONCEPT 3'].iloc[1:22].tolist()
-elif concept_number == "4":
-    M = df['CONCEPT 4'].iloc[1:22].tolist()
-else: 
-    print ("Invalid concept number. Please enter a number between 1 and 4.")
+
 HW = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25] 
 #print (M)
 def calc_T1 (a, b, M):
@@ -159,48 +135,7 @@ Q_N = 0.4 * N #vehicle complexity factor
 c_press = 35.62 #cost per kg of helium
 I = 100 #public damage insurance in M€
 
-if concept_number == "1":
-    M_p = df.at[24, 'CONCEPT 1'] #mass of propellant and oxidiser in kg
-    M_0 = (df.at[23, 'CONCEPT 1'])/1000 #gross take-off-mass Mg
-    r = df.at[27, 'CONCEPT 1'] #mass mixture ratio
-    c_f = 7.08 #cost of liquefied hydrogen per kg, from https://www.sciencedirect.com/science/article/pii/S2949908923002789
-    M_press = df.at[25, 'CONCEPT 1'] #in kg
-elif concept_number == "2":
-    M_p = df.at[24, 'CONCEPT 2']
-    M_0 = (df.at[23, 'CONCEPT 2'])/1000
-    r = df.at[27, 'CONCEPT 2']
-    c_f = 1.56 #cost of liquefied methane per kg, from https://www.sciencedirect.com/science/article/pii/S1875510021002845
-    M_press = df.at[25, 'CONCEPT 2']
-elif concept_number == "3":
-    M_p = df.at[24, 'CONCEPT 3']
-    print(M_p)
-    M_0 = (df.at[23, 'CONCEPT 3'])/1000
-    print(M_0)
-    r = df.at[27, 'CONCEPT 3']
-    print(r)
-    c_f = 7.08
-    M_press = df.at[25, 'CONCEPT 3']
-    print(M_press)
-elif concept_number == "4":
-    M_p = df.at[24, 'CONCEPT 4']
-    M_0 = (df.at[23, 'CONCEPT 4'])/1000
-    r = df.at[27, 'CONCEPT 4']
-    c_f = 1.56
-    M_press = df.at[25, 'CONCEPT 4']
-elif concept_number == "5":
-    M_p = df.at[24, 'CONCEPT 5']
-    M_0 = (df.at[23, 'CONCEPT 5'])/1000
-    r = df.at[27, 'CONCEPT 5']
-    c_f = 7.08
-    M_press = df.at[25, 'CONCEPT 5']
-elif concept_number == "6":
-    M_p = df.at[24, 'CONCEPT 6']
-    M_0 = (df.at[23, 'CONCEPT 6'])/1000
-    r = df.at[27, 'CONCEPT 6']
-    c_f = 1.56
-    M_press = df.at[25, 'CONCEPT 6']
-else:
-    print ("Invalid concept number. Please enter a number between 1 and 6.")
+
 
 
 #print (T1)
