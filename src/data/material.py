@@ -39,7 +39,8 @@ class Material:
         yield_strength=None,
         roughness_height=None,
         fracture_strength=None,
-        absorptivity = None
+        absorptivity = None,
+        fracture_toughness = None
     ):
         """
         Initialize a Material instance with its properties.
@@ -58,6 +59,7 @@ class Material:
         self.Ra = roughness_height
         self.fs = fracture_strength
         self.abs = absorptivity
+        self.Kic = fracture_toughness
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """
