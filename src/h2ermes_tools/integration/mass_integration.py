@@ -128,8 +128,6 @@ class MassIntegrator:
                 material=oi.landingleg_material,
                 clearance_height=oi.clearance_height
             ),
-            "turbopump": size_turbopump(oi.min_tank_pressure,
-                                        oi.total_vacuum_thrust),
             "main_tank": size_tanks(tank_material,
                                     oi.gross_mass,
                                     oi.total_hydrogen_mass,
