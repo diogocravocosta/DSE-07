@@ -34,10 +34,32 @@ def mass_flow_rate(thrust, specific_impulse):
     g0 = 9.81  # Standard gravity in m/s^2
     return thrust / (specific_impulse * g0)
 
-if __name__ == "__main__":
-    thrust_sl = total_thrust_to_individual_chamber_thrust(2168252)[0]
-    thrust_space = total_thrust_to_individual_chamber_thrust(2168252)[1]
+def calculate_mass_flow(thrust, Isp_sl=393.3471, Isp_vac=447.9481, sea_level=8, total=24):
+    """
+    Wrapper to calculate total mass flow rate for use in turbopump sizing.
+    Args:
+        thrust: Total thrust [N]
+        Isp_sl: Sea level Isp [s]
+        Isp_vac: Vacuum Isp [s]
+        sea_level: Number of sea level thrusters [-]
+        total: Total amount of thrusters [-]
+    Returns:
+        float: Mass flow rate in kg/s.
+    """
+    t_sl, t_vac = total_thrust_to_individual_chamber_thrust(thrust, Isp_sl, Isp_vac, sea_level, total)
 
-    print(mass_flow_rate(thrust_sl, 393.3471))
-    print(mass_flow_rate(thrust_space, 447.9481))
-    #its right
+    m_dot_sl = mass_flow_rate(t_sl, Isp_sl)
+    m_dot_vac = mass_flow_rate(t_vac, Isp_sl)
+
+    return m_dot_sl * sea_level + m_dot_vac * (total - sea_level)
+
+if __name__ == "__main__":
+    # thrust_sl = total_thrust_to_individual_chamber_thrust(2168252)[0]
+    # thrust_space = total_thrust_to_individual_chamber_thrust(2168252)[1]
+    #
+    # print(mass_flow_rate(thrust_sl, 393.3471))
+    # print(mass_flow_rate(thrust_space, 447.9481))
+    # #its right
+
+    t = 2.17e6
+    print(calculate_mass_flow(t))

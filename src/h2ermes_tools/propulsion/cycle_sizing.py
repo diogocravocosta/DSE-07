@@ -1,21 +1,9 @@
 import numpy as np
 from h2ermes_tools.propulsion.pressure_simulation import pressure_profile_propulsion
-from pyfluids import Fluid, FluidsList, Input
-
-velocity_propellant = 10 #in m/s
-chamber_pressure = 6100000 #in Pa
-tank_pressure = 300000 #in Pa, lowest pressure at tank
-hydrogen = Fluid(FluidsList.Hydrogen).with_state(
-    Input.temperature(77), Input.pressure(300000)
-)
-propellant_density = 70.85
-x, required_pump_pressure_rise, pump_inlet_pressure = pressure_profile_propulsion(propellant_density, velocity_propellant, chamber_pressure, tank_pressure)
-allowable_pressure_rise_per_stage = 16000000 # in Pa, maximum pressure rise per stage of the pump
-mass_flow = 514.49 
-propellant_vapor_pressure = 133322
+from h2ermes_tools.propulsion.general_characteristics_calculation import calculate_mass_flow
 
 
-def sizing_pump(required_pump_pressure_rise, propellant_vapor_pressure, pump_inlet_pressure, propellant_density, mass_flow):
+def sizing_pump(required_pump_pressure_rise, propellant_vapor_pressure, pump_inlet_pressure, propellant_density, mass_flow, allowable_pressure_rise_per_stage):
     print('propellant density is', propellant_density)
     g_0 = 9.81  # gravitational acceleration in m/s^2
     volume_flow_rate = mass_flow / propellant_density  # in m^3/s
@@ -44,13 +32,38 @@ def sizing_pump(required_pump_pressure_rise, propellant_vapor_pressure, pump_inl
     #turbine_mean_pitch_diameter = (2 * u_m) / pump_rotational_speed
     return number_of_stages, pump_rotational_speed, stage_specific_speed, power_required_pump, net_positive_suction_head, turbopump_mass
 
+def size_turbopump(
+        tank_pressure: float,
+        thrust: float,
+        propellant_density: float = 70.85,
+        velocity_propellant: float = 10,
+        chamber_pressure: float = 300000,
+        allowable_pressure_rise_per_stage: float = 16000000,
+        propellant_vapor_pressure: float = 133322
+        ):
+    """
+    Wrapper for sizing the turbopumps
+    """
+    x, required_pump_pressure_rise, pump_inlet_pressure = pressure_profile_propulsion(propellant_density, velocity_propellant, chamber_pressure, tank_pressure)
+    mass_flow = calculate_mass_flow(thrust)
+
+    number_of_stages, pump_rotational_speed, stage_specific_speed, power_required_pump, net_positive_suction_head, turbopump_mass = sizing_pump(
+        required_pump_pressure_rise=required_pump_pressure_rise,
+        propellant_vapor_pressure=propellant_vapor_pressure,
+        pump_inlet_pressure=pump_inlet_pressure,
+        propellant_density=propellant_density,
+        mass_flow=mass_flow,
+        allowable_pressure_rise_per_stage=allowable_pressure_rise_per_stage
+    )
+
+    print(f'Rotational Speed: {pump_rotational_speed} rad/s\n'
+          f'Stage Specific Speed: {stage_specific_speed}\n'
+          f'Power Required: {power_required_pump} W\n'
+          f'Net Positive Suction Head: {net_positive_suction_head} m\n'
+          f'Turbopump Mass: {turbopump_mass} kg')
+
 
 if __name__ == "__main__":
-    number_of_stages, pump_rotational_speed, stage_specific_speed, power_required_pump, net_positive_suction_head, turbopump_mass = sizing_pump(required_pump_pressure_rise, propellant_vapor_pressure, pump_inlet_pressure, propellant_density, mass_flow)
-    print(f"Pump rotational speed: {pump_rotational_speed} rad/s")
-    print(f"Stage specific speed: {stage_specific_speed}")
-    print(f"Power required for pump: {power_required_pump} W")  # Output in MW
-    print(f"Net positive suction head: {net_positive_suction_head} m")
-    print(f"Turbopump mass: {turbopump_mass} kg")  # Output in kg
+    size_turbopump(3e5, 2.17e6)
 
     
