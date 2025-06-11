@@ -43,7 +43,7 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.middle_radius = 4.8 # m
     integrator.hydrogen_tank_height = 12.65 # m
     integrator.top_radius = 2.5 # m
-    integrator.landing_leg_material = random_steel
+    integrator.landing_leg_material = dm.Ti6Al4V
     integrator.tank_material = dm.random_steel
     integrator.header_tank_material = dm.random_steel
 
