@@ -15,7 +15,7 @@ def _(mo):
     - the kinetic energy of a re-entering second stage
     - the thermal energy the liquid hydrogen can contain
     - the mass-stepping simulation of the energy exchange between the vehicle and the liquid hydrogen
-    - amount of heat soaked by the vehicle during re-entry
+    - amount of heat soaked by the vehicle during reentry
     """
     )
     return
@@ -403,7 +403,7 @@ def _(entry_speed, np, vehicle_dry_mass):
     _diameter = 7  # m
     _area = np.pi * _diameter * _height + 2 * np.pi * _diameter**2 / 4  # m^2
 
-    # re-entry time
+    # reentry time
     _time = 600  # s
 
     _energy = _sigma * _radiation_temperature**4 * _area * _time
