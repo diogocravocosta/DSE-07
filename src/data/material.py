@@ -18,7 +18,10 @@ class Material:
         thermal_expansion_coeffient (float): Thermal expansion coefficient [1/K].
         emissivity (float): Thermal emissivity.
         ultimate_strength (float): Ultimate strength [Pa].
+        yield_strength (float): Yield strength [Pa].
         roughness_height (float): Effective roughness height [m].
+        fracture_strength (float): Fracture strength [Pa].
+        absorptivity (float): absorptivity [-]
     """
 
     def __init__(
@@ -33,8 +36,10 @@ class Material:
         thermal_expansion_coeffient=None,
         emissivity=None,
         ultimate_strength=None,
+        yield_strength=None,
         roughness_height=None,
-        yield_strength=None
+        fracture_strength=None,
+        absorptivity = None
     ):
         """
         Initialize a Material instance with its properties.
@@ -49,8 +54,10 @@ class Material:
         self.cte = thermal_expansion_coeffient
         self.eps = emissivity
         self.uts = ultimate_strength
-        self.Ra = roughness_height
         self.ys = yield_strength
+        self.Ra = roughness_height
+        self.fs = fracture_strength
+        self.abs = absorptivity
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """
