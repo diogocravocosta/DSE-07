@@ -1,9 +1,9 @@
+import numpy as np
+
 from data import (
     constants,
     material
 )
-
-import numpy as np
 
 
 class LandingLegs:
@@ -194,8 +194,6 @@ class LandingLegs:
         Args:
             n_legs (int): Number of legs [-]
             mass_land (float): Landing mass of the vehicle (without landing legs) [kg]
-            x_cog (float): X location of the center of the gravity [m]
-            y_cog (float): Y location of the center of the gravity [m]
             phi (float): Phi angle of the vehicle [deg]
             r_bottom (float): Radius of the bottom of the vehicle [m]
             material (Material): Material selected for the landing legs
@@ -497,7 +495,6 @@ class LandingLegs:
 
 def size_landing_legs(n_legs: int, mass_land: float, phi: float, r_bottom: float, material: material.Material,
                       clearance_height: float) -> float:
-
     ll = LandingLegs(n_legs, mass_land, phi, r_bottom, material, clearance_height)
     ll.run_sizing()
 
@@ -505,12 +502,12 @@ def size_landing_legs(n_legs: int, mass_land: float, phi: float, r_bottom: float
 
 
 if __name__ == '__main__':
-    testmaterial = material.Material(youngs_modulus=70e9, yield_strength=345e6, density=2800)
+    testmaterial = material.Ti6Al4V
 
     ll = LandingLegs(
         n_legs=4,
-        mass_land=25000,
-        phi=10,
+        mass_land=20000,
+        phi=np.deg2rad(10),
         r_bottom=5,
         material=testmaterial,
         clearance_height=2.5

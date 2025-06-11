@@ -98,11 +98,24 @@ rho = 4430  # density [kg/m^3]
 v = 0.342  # Poisson ratio
 E = 114e9  # Youngs modulus [Pa]
 cte = 9.7e-6  # coefficinent of thermal expansion [1/K]
-uts = 550e6  # ultimate strength [Pa]
+uts = 950e6  # ultimate strength [Pa]
+ys = 880e6
 eps = 0.8  # thermal emissivity
 Ra = 2e-5  # effective roughness height [m] from Materialise
 alpha = k / rho / Cp  # thermal diffusivity [m^2/s]
-Ti6Al4V = Material("Ti-6Al-4V", alpha, k, rho, Cp, v, E, cte, eps, uts, Ra)
+Ti6Al4V = Material(name="Ti-6Al-4V",
+                   thermal_diffusivity=alpha,
+                   thermal_conductivity=k,
+                   density=rho,
+                   specific_heat=Cp,
+                   poisson_ratio=v,
+                   youngs_modulus=E,
+                   thermal_expansion_coeffient=cte,
+                   emissivity=eps,
+                   ultimate_strength=uts,
+                   roughness_height=Ra,
+                   yield_strength=ys
+)
 
 # set variable material properties from https://www.researchgate.net/publication/299647114_Developments_in_cutting_tool_technology_in_improving_machinability_of_Ti6Al4V_alloy_A_review
 Ti6Al4V.set_thermal_conductivity(
@@ -147,6 +160,8 @@ random_steel = Material(
     density=7800,
     yield_strength=1060e6
 )
+
+
 
 
 if __name__ == "__main__":

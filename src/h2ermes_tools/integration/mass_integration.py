@@ -118,14 +118,14 @@ class MassIntegrator:
         Calculate the total dry mass of the vehicle by summing the subsystem dry masses.
         """
         self.subsystem_dry_masses = {
-            # 'landing_legs': size_landing_legs(
-            #     n_legs=4,
-            #     mass_land=oi.dry_mass,
-            #     phi=oi.phi,
-            #     r_bottom=oi.bottom_radius,
-            #     material=oi.landing_leg_material,
-            #     clearance_height=oi.clearance_height
-            # ),
+            'landing_legs': size_landing_legs(
+                n_legs=4,
+                mass_land=oi.dry_mass,
+                phi=oi.phi,
+                r_bottom=oi.bottom_radius,
+                material=oi.landing_leg_material,
+                clearance_height=oi.clearance_height
+            ),
             "turbopump": size_turbopump(tank_pressure=oi.min_tank_pressure,
                                         thrust=oi.total_vacuum_thrust),
             "main_tank": size_tanks(material=oi.tank_material,
