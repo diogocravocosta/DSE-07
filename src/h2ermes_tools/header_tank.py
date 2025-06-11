@@ -78,8 +78,8 @@ def mass_dimensions_header(m_h2_header, rho_h2, liquid_fraction, m_o2_header, rh
     mass_o2_header = mass_tank(radius_o2_header, material, thickness_o2_header)
     return radius_h2_header, radius_o2_header, mass_h2_header, mass_o2_header
 
-def size_header_tank(m_propellant,
-                     of_ratio,
+def size_header_tank(m_h2_header,
+                     m_o2_header,
                      material,
                      rho_h2=71,
                      rho_o2 = 1141,
@@ -88,24 +88,31 @@ def size_header_tank(m_propellant,
                      thickness_o2_header = 0.003,
                      pressure = 1e6,
                      safety_factor = 2,
-                     thermal_conductivity_insulation = 3.8e-3
                      ):
-    m_h2_header = m_propellant / OF_Ratio
-    m_o2_header = m_propellant - m_h2_header
 
-    radius_h2_header, radius_o2_header, mass_h2_header, mass_o2_header = mass_dimensions_header(m_h2_header, rho_h2,
-                                                                                                liquid_fraction,
-                                                                                                m_o2_header, rho_o2,
-                                                                                                material, pressure,
-                                                                                                thickness_h2_header,
-                                                                                                thickness_o2_header,
-                                                                                                safety_factor)
+    (radius_h2_header,
+     radius_o2_header,
+     mass_h2_header,
+     mass_o2_header) = mass_dimensions_header(
+        m_h2_header,
+        rho_h2,
+        liquid_fraction,
+        m_o2_header,
+        rho_o2,
+        material,
+        pressure,
+        thickness_h2_header,
+        thickness_o2_header,
+        safety_factor
+    )
+
+    return mass_o2_header + mass_h2_header
 
 
 
 if __name__ == '__main__':
     m_propellant = 3000
-    OF_Ratio = 7
+    OF_Ratio = 6
     m_h2_header = m_propellant / OF_Ratio
     m_o2_header = m_propellant - m_h2_header
     rho_h2 = 71  # kg/m3

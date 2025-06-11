@@ -137,8 +137,8 @@ class MassIntegrator:
                                     LH2_design_pressure=oi.hydrogen_design_pressure,
                                     LOX_design_pressure=oi.oxygen_design_pressure,
                                     thrust_engines=oi.total_vacuum_thrust),
-            "header_tank": size_header_tank(m_propellant = oi.propellant_mass,
-                                            of_ratio = oi.of_ratio,
+            "header_tank": size_header_tank(m_h2_header = oi.header_hydrogen_mass,
+                                            m_o2_header = oi.header_hydrogen_mass,
                                             material = oi.header_tank_material
                                             )
 
@@ -148,5 +148,14 @@ class MassIntegrator:
         """
         Calculate other masses that are not part of the dry mass.
         """
-        self.h2_boil_off_mass = dds.h2_boil_off_mass(oi.main_hydrogen_mass)
-        self.o2_boil_off_mass = dds.o2_boil_off_mass(oi.main_oxygen_mass)
+        self.h2_boil_off_mass = total_boil_off_h2(m_h2_tot=oi.total_hydrogen_mass,
+                                                  m_payload =oi.payload_mass,
+                                                  m_coolant =oi.coolant_mass,
+                                                  m_boil_off=oi.h2_boil_off_mass,
+                                                  middle_radius=oi.middle_radius,
+                                                  top_radius=oi.top_radius,
+                                                  height=oi.hydrogen_tank_height,
+                                                  material=oi.tank_material,
+                                                  phi=oi.phi,
+                                                  )
+
