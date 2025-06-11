@@ -74,10 +74,10 @@ def calculate_tank_thickness(
 
     def von_mises_cone(t):
         # hoop (circumferential) stress – tensile
-        sigma_theta = propellant_pressure * radius / (t * np.sin(phi))
+        sigma_theta = propellant_pressure * radius / (t * np.cos(phi))
 
         # meridional (along generator) stress
-        sigma_phi_pressure = propellant_pressure * radius / (2 * t * np.sin(phi))
+        sigma_phi_pressure = propellant_pressure * radius / (2 * t * np.cos(phi))
         wall_area = 2 * np.pi * radius * t
         sigma_phi_thrust = safety_factor * thrust / wall_area
         sigma_phi_mem = sigma_phi_pressure - sigma_phi_thrust
@@ -166,17 +166,17 @@ def calculate_tank_thickness(
         print("BUCKLES: moment_critical =", M_cr, "N*m  (increase t or add stiffeners)")
 
     # Check for transverse and hoop stress at maximum boil off pressure:
-    t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.sin(phi))
-    t_press_hoop = (max_propellant_pressure * radius / (material.ys * np.sin(phi)))
+    t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.cos(phi))
+    t_press_hoop = (max_propellant_pressure * radius / (material.ys * np.cos(phi)))
     # check hoop stress
     if t_press_trans > t_guess:
         t_guess = t_press_trans
         print("Transverse stress leading and transverse stress is: " + str(
-            (max_propellant_pressure * radius) / (2 * t_guess * np.sin(phi))))
+            (max_propellant_pressure * radius) / (2 * t_guess * np.cos(phi))))
     elif t_press_hoop > t_press_trans > t_guess:
         t_guess = t_press_hoop
         print("Hoop stress leading and hoop stress is: " + str(
-            (max_propellant_pressure * radius) / (t_guess * np.sin(phi))))
+            (max_propellant_pressure * radius) / (t_guess * np.cos(phi))))
     return t_guess
 
 
@@ -254,7 +254,7 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
                LH2_design_pressure: float, LOX_design_pressure: float, design_pressure: float,
                radius_ratio: float = 0.5,
                top_radius_ratio: float = 0.52, bottom_radius: float = 5.0, cap_height_radius_ratio: float = 0.5,
-               phi: float = 10.0, safety_factor: float = 1.5, safety_factor_pressure: float = 1.5,
+               phi: float = 10.0, safety_factor: float = 1.5, safety_factor_pressure: float = 2.0,
                LH2_ullage_margin: float = 1.1, LOX_ullage_margin: float = 1.1, LH2_density: float = 77,
                LOX_density: float = 1340, thrust_to_weight_ratio: float = 1.2, oxidizer_fuel_ratio: float = 6.0):
     """
@@ -396,4 +396,3 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
 if __name__ == '__main__':
     mat = material.Material(youngs_modulus=200e9, density=7800, yield_strength=1060e6)
     size_tanks(mat, 20642.21346, 149913.1903, 15000, 2.7e5, 2.5e5, 10e5)
-    
