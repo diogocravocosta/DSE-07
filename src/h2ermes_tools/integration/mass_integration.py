@@ -138,8 +138,9 @@ class MassIntegrator:
                                     LH2_design_pressure=oi.hydrogen_design_pressure,
                                     LOX_design_pressure=oi.oxygen_design_pressure,
                                     thrust_engines=oi.total_vacuum_thrust),
-            "header_tank": size_header_tank(m_propellant = 0,
-                                            of_ratio = 0,
+            "header_tank": size_header_tank(m_propellant = oi.propellant_mass,
+                                            of_ratio = oi.of_ratio,
+                                            material = oi.header_tank_material
                                             )
 
         }
