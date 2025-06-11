@@ -616,7 +616,7 @@ def acs_tank_design(htp_density, total_prop_mass):
     print(tank_thickness_AA_6000)
     tank_mass_SS_316 = 4 * np.pi * tank_radius**2 * tank_thickness_SS_316 * Materials['Stainless Steel 316']['density']  # Mass of the tank in kg
     tank_mass_AA_6000 = 4 * np.pi * tank_radius**2 * tank_thickness_AA_6000 * Materials['Aluminum AA6000 T6 Series']['density']  # Mass of the tank in kg
-    tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the maximum mass of the tank
+    tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the minimum mass of the tank
     tank_material = 'Aluminum AA6000 T6 Series' if tank_mass_AA_6000 < tank_mass_SS_316 else "Stainless Steel 316"  # Choosing the material with the lower mass
     return tank_mass, tank_material
 
