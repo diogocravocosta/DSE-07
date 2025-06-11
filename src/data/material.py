@@ -23,17 +23,18 @@ class Material:
 
     def __init__(
         self,
-        name,
-        thermal_diffusivity,
-        thermal_conductivity,
-        density,
-        specific_heat,
-        poisson_ratio,
-        youngs_modulus,
-        thermal_expansion_coeffient,
-        emissivity,
-        ultimate_strength,
-        roughness_height,
+        name=None,
+        thermal_diffusivity=None,
+        thermal_conductivity=None,
+        density=None,
+        specific_heat=None,
+        poisson_ratio=None,
+        youngs_modulus=None,
+        thermal_expansion_coeffient=None,
+        emissivity=None,
+        ultimate_strength=None,
+        roughness_height=None,
+        yield_strength=None
     ):
         """
         Initialize a Material instance with its properties.
@@ -49,6 +50,7 @@ class Material:
         self.eps = emissivity
         self.uts = ultimate_strength
         self.Ra = roughness_height
+        self.ys = yield_strength
 
     def set_thermal_conductivity(self, conductivity_values, temperature_values):
         """

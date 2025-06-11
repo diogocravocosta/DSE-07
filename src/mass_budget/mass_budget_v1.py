@@ -5,7 +5,7 @@ import numpy as np
 propellant = "cryogenic"
 rho_propellant = 1.0 #density of propellant in TONS/m^3
 n_engines = 2 #number of engines
-parachute = True #True or False depending on the re-entry method used
+parachute = True #True or False depending on the reentry method used
 landing_gear = True #True or False depending on the landing method used
 fairing = False #True or False depending on the use of a fairing
 if fairing == True:
