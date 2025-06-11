@@ -511,7 +511,7 @@ def tank_thickness(material: material.Material,
     # plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
     # plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
 
-    return (thickness_LH2, thickness_LOX)
+    return thickness_LH2, thickness_LOX
 
 
 if __name__ == '__main__':
