@@ -204,7 +204,7 @@ if __name__ == '__main__':
     start = time.time()
     specific_impulse = 450
 
-    trajectory = simulate_ascent(0.88,
+    trajectory = simulate_ascent(1.2,
                                  specific_impulse,
                                  2280,
                                  1040,
@@ -213,7 +213,7 @@ if __name__ == '__main__':
                                  simulation_time=5e3,
                                  target_orbital_altitude=2e5,
                                  guidance='gravity turn',
-                                 gravity_turn_offset=np.deg2rad(7.81),
+                                 gravity_turn_offset=np.deg2rad(0),
                                  enable_terminal_guidance=False
                                  )
 

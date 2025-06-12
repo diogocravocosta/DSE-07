@@ -437,6 +437,16 @@ docking_system_mass = Variable(
     margin=(1.0, 1.1),
 )
 
+minimum_tank_pressure = Variable(
+    name="Minimum Tank Pressure",
+    value=2e5,  # in Pa
+    unit="Pa",
+    latex_symbol="p_{min}",
+    confidence="good",
+    constraints="must be positive",
+    margin=(1.0, 1.05),
+)
+
 if __name__ == "__main__":
     # Example of how to create a variable
     hydrogen_tank_diameter = Variable(
