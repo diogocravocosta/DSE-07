@@ -354,6 +354,8 @@ def thickness_optimization_fatigue(phi,
                                    g_reentry_force_ratio,
                                    g_launch_force_ratio,
                                    max_thrust2weight,
+                                    const_miner,
+                                    exp_coeff_miner,
                                    number_of_launches=40,
                                    min_launches=25,
                                    safety_factor=2,
@@ -411,7 +413,7 @@ def thickness_optimization_fatigue(phi,
     a_crack = []  # to store crack growth
     a_crack_depth = a_crack_depth  # initial crack size in m
     count = 0
-    Damage = 0
+    damage = 0
 
     delta_T_earth = T_ambient_earth - T_lh2
     delta_T_tank = T_gh2 - T_lh2
@@ -422,11 +424,10 @@ def thickness_optimization_fatigue(phi,
     paris_exp_m = 7.02  # dimensionless
 
     # MAT200 paper --- 1884, -0.1555
-    const = 1884
-    exp_coeff = -0.1555
-    miner_m = -1 / exp_coeff
-    miner_c = 10 ** (np.log10(const) / -exp_coeff)
-    print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
+
+    miner_m_coefficient = -1 / exp_coeff_miner
+    miner_c_coefficient = 10 ** (np.log10(const_miner) / -exp_coeff_miner)
+    print("Miner m and c coefficients are:",miner_m_coefficient,miner_m_coefficient)
     # Conditions
     plot = False
     crack_cond = True
@@ -466,7 +467,8 @@ def thickness_optimization_fatigue(phi,
         plot,
         material,
         min_launches)
-
+    if count>min_launches:
+        print("Expected lifecycles due to Paris Growth Rate",count)
     while count < min_launches:
         print("Failure predicted due to Paris equation")
         thickness_tank = thickness_tank + 0.001
@@ -486,7 +488,7 @@ def thickness_optimization_fatigue(phi,
             min_launches)
 
     #applying miners rule 
-    damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, min_launches)[2]
+    damage = miners(stress_range, miner_c_coefficient, miner_m_coefficient, stress_cycle, safety_factor, min_launches)[2]
     if damage >1:
         print("Failure was predicted due to Miners Law. Thickness will be increased")
     while damage > 1:
@@ -512,11 +514,11 @@ def thickness_optimization_fatigue(phi,
                                               time_mission,
                                               plot)
         stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))
-        damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, min_launches)[2]
+        damage = miners(stress_range, miner_c_coefficient, miner_m_coefficient, stress_cycle, safety_factor, min_launches)[2]
 
         if thickness_tank > 0.01:
             raise RuntimeError("failed on Miners equation fatigue calculation")
-    damage,launches = fatigue_miner_estimation(stress_range,miner_c,miner_m,stress_cycle,safety_factor,min_launches,plot)
+    damage,launches = fatigue_miner_estimation(stress_range,miner_c_coefficient,miner_m_coefficient,stress_cycle,safety_factor,min_launches,plot)
     print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
     return thickness_tank
 
@@ -547,7 +549,7 @@ if __name__ == "__main__":
     # Geometry Properties
     phi = 6  # degrees, conical head angle, later import from tank sizing file in final sizing.
     tank_radius = 5  # 5 # m, tank radius, later import from tank sizing file in final sizing.
-    thickness_tank = 0.004  # m, tank thickness later import from tank sizing file in final sizing.
+    thickness_tank = 0.002  # m, tank thickness later import from tank sizing file in final sizing.
 
     # Material Properties
 
@@ -562,7 +564,7 @@ if __name__ == "__main__":
     # # Mass Inputss
     fuel_reentry_LH2 = 3000  # kg, fuel mass during re-entry
     dry_mass = 20000  # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
-    launch_mass = 220_000  # kg, total launch mass to be corrected
+    launch_mass = 220000  # kg, total launch mass to be corrected
     payload_mass = 15500
 
     # Forces and time inputs
@@ -604,11 +606,11 @@ if __name__ == "__main__":
     # Example Miner's law coefficients for stainless steel 304L
     # Cryogenic paper miner coeff --- 408,-0.02
     # MAT200 paper --- 1884, -0.1555
-    # const = 1884
-    # exp_coeff = -0.1555
-    # miner_m = -1 / exp_coeff
-    # miner_c = 10 ** (np.log10(const) / -exp_coeff)
-    # print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
+    const_miner = 1884
+    exp_coeff_miner = -0.1555
+    miner_m_coefficient = -1 / exp_coeff_miner
+    miner_c_coefficient = 10 ** (np.log10(const_miner) / -exp_coeff_miner)
+    print("The C coefficientsss for miner equation is", miner_c_coefficient, "and m coefficient is", miner_m_coefficient)
     # # Conditions
     # plot = True
     # crack_cond = True
@@ -625,6 +627,8 @@ if __name__ == "__main__":
                                        g_reentry_force_ratio,
                                        g_launch_force_ratio,
                                        max_thrust2weight,
+                                       const_miner = 1884,
+                                       exp_coeff_miner = -0.155,
                                        number_of_launches=40,
                                        min_launches=25,
                                        safety_factor=2,
