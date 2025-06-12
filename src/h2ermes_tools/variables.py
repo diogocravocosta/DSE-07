@@ -502,7 +502,7 @@ power_dry_mass = Variable(
     value=231.3,
     unit="kg",
     latex_symbol="m_{power,dry}",
-    confidence="midterm number",
+    confidence="",
     constraints="",
     margin=(1.0, 1.0)
 )
@@ -512,7 +512,7 @@ avionics_mass = Variable(
     value=361.1,
     unit="kg",
     latex_symbol="m_{power,dry}",
-    confidence="midterm number",
+    confidence="",
     constraints="",
     margin=(1.0, 1.0)
 )
@@ -522,7 +522,7 @@ wiring_mass = Variable(
     value=321.5,
     unit="kg",
     latex_symbol="m_{avionics}",
-    confidence="midterm number",
+    confidence="",
     constraints="",
     margin=(1.0, 1.0)
 )
@@ -532,7 +532,7 @@ interstage_mass = Variable(
     value=461.97,
     unit="kg",
     latex_symbol="m_{interstage}",
-    confidence="midterm number",
+    confidence="",
     constraints="",
     margin=(1.0, 1.0)
 )
