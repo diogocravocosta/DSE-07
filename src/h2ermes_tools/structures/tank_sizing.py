@@ -363,7 +363,7 @@ def size_tanks(material: material.Material,
     return mass_LH2_tank + mass_LOX_tank
 
 
-def tank_thickness(material: material.Material,
+def tank_dimensions(material: material.Material,
                wet_mass: float,
                LH2_mass: float,
                LOX_mass: float,
@@ -511,7 +511,15 @@ def tank_thickness(material: material.Material,
     # plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
     # plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
 
-    return thickness_LH2, thickness_LOX
+    return (thickness_LH2,
+            thickness_LOX,
+            phi_top,
+            phi_bottom,
+            tank_length_LH2,
+            tank_length_LOX,
+            top_radius,
+            middle_radius
+            )
 
 
 if __name__ == '__main__':

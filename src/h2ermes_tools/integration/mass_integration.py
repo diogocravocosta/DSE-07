@@ -4,10 +4,11 @@ import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
 from h2ermes_tools.propulsion.cycle_sizing import sizing_pump
 from h2ermes_tools.landinglegs import size_landing_legs
-from h2ermes_tools.structures.tank_sizing import size_tanks, tank_thickness
+from h2ermes_tools.structures.tank_sizing import size_tanks, tank_dimensions
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
 from h2ermes_tools.header_tank import size_header_tank
 from h2ermes_tools.fatigue_calculation_tool import thickness_optimization_fatigue
+from h2ermes_tools.integration.mass_helpers import calculate_tank_mass
 
 class MassIntegrator:
     """
@@ -170,7 +171,7 @@ class MassIntegrator:
                                                   )
 
 
-    def choose_tank_thickness(self, oi:'MassIntegrator') -> None:
+    def choose_tank_thickness(self, oi:'MassIntegrator') -> tuple[float, float]:
         """
         Calculate thickness of the tank from fatigue and tank sizing, and select the higher one.
 
@@ -189,27 +190,51 @@ class MassIntegrator:
                                                         oi.max_thrust2weight)
 
         # tank sizing thickness
-        LH2_thickness, LOX_thickness = tank_thickness(oi.tank_material,
-                                               wet_mass = oi.gross_mass,
-                                               LH2_mass= oi.total_hydrogen_mass,
-                                               LOX_mass= oi.total_oxygen_mass,
-                                               LH2_design_pressure=oi.hydrogen_design_pressure,
-                                               LOX_design_pressure=oi.oxygen_design_pressure,
-                                               boiloff_design_pressure=oi.boiloff_design_pressure,
-                                               thrust_engines=oi.total_vacuum_thrust)
+        (thickness_LH2,
+         thickness_LOX,
+         phi_top,
+         phi_bottom,
+         tank_length_LH2,
+         tank_length_LOX,
+         top_radius,
+         middle_radius
+         ) = tank_dimensions(oi.tank_material,
+                            wet_mass = oi.gross_mass,
+                            LH2_mass= oi.total_hydrogen_mass,
+                            LOX_mass= oi.total_oxygen_mass,
+                            LH2_design_pressure=oi.hydrogen_design_pressure,
+                            LOX_design_pressure=oi.oxygen_design_pressure,
+                            boiloff_design_pressure=oi.boiloff_design_pressure,
+                            thrust_engines=oi.total_vacuum_thrust)
 
 
-        if LH2_thickness > tank_thickness_fatigue:
-            LH2_thickness = LH2_thickness
-        else:
-            LH2_thickness = tank_thickness_fatigue
+        final_lh2_thickness = max(thickness_LH2, tank_thickness_fatigue)
+        final_lox_thickness = max(thickness_LOX, tank_thickness_fatigue)
 
-        if LOX_thickness > tank_thickness_fatigue:
-            LOX_thickness = LOX_thickness
-        else:
-            LOX_thickness = tank_thickness_fatigue
+        self.lh2_thickness = final_lh2_thickness
+        self.lox_thickness = final_lox_thickness
+        self.phi_top = phi_top
+        self.phi_bottom = phi_bottom
+        self.tank_length_lh2 = tank_length_LH2
+        self.tank_length_lox = tank_length_LOX
+        self.top_radius = top_radius
+        self.middle_radius = middle_radius
 
-        return LH2_thickness, LOX_thickness
+    def calculate_tank_mass(self):
+        """Calculates tank mass based on this integrator's dimensions"""
+        self.lh2_tank_mass = calculate_tank_mass(self.middle_radius,
+                                                 self.top_radius,
+                                                 self.tank_length_lh2,
+                                                 self.lh2_thickness,
+                                                 self.tank_material,
+                                                 )
+
+        self.lox_tank_mass = calculate_tank_mass(self.bottom_radius,
+                                                 self.middle_radius,
+                                                 self.tank_length_lox,
+                                                 self.lox_thickness,
+                                                 self.tank_material,
+                                                 )
 
 
 
