@@ -146,3 +146,10 @@ __marimo__
 external_tools/boil-off_tool/BO_tool_package/Output_data/
 BO_tool_main_body.c
 mass_and_boil-off_v15-1m.csv
+
+# Ignore all images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
