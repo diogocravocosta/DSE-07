@@ -429,7 +429,7 @@ acs_average_power = Variable(
 
 acs_dry_mass = Variable(
     name="ACS Dry Mass",
-    value=150,
+    value=158,
     unit="kg",
     latex_symbol="m_{acs}",
     confidence="low",
@@ -439,7 +439,7 @@ acs_dry_mass = Variable(
 
 acs_propellant_mass = Variable(
     name="ACS Propellant Mass",
-    value=800,
+    value=765,
     unit="kg",
     latex_symbol="m_{acs,prop}",
     confidence="low",
