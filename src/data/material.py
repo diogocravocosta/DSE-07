@@ -162,7 +162,9 @@ random_steel = Material(
     density=7800,
     yield_strength=1060e6,
     absorptivity=0.2,
-    emissivity=0.08
+    emissivity=0.08,
+    thermal_expansion_coefficient=1.5e-6,  # Changed from thermal_expansion_coefficient
+    fracture_toughness=200,
 )
 
 

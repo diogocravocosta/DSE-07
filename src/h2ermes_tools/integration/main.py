@@ -40,12 +40,13 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.tank_material = dm.random_steel
     integrator.header_tank_material = dm.random_steel
 
+    integrator.g_reentry_force_ratio = 6
+    integrator.g_launch_force_ratio = 6
+    integrator.max_thrust2weight = 4.3
+
     # Set parameters which will probably change in actuality
-    integrator.phi = np.deg2rad(10) # rad
     integrator.bottom_radius = 5 # m
-    integrator.middle_radius = 4.8 # m
-    integrator.hydrogen_tank_height = 12.65 # m
-    integrator.top_radius = 2.5 # m
+
 
     # Add unchanging subsystem dry masses
     integrator.unchanging_subsystem_dry_masses = {
@@ -74,6 +75,11 @@ def add_initial_values(integrator: mi.MassIntegrator) -> None:
     integrator.header_hydrogen_mass = 1000
     integrator.header_oxygen_mass = 5000
 
+    integrator.phi_top = np.deg2rad(10) # rad
+    integrator.middle_radius = 4.8 # m
+    integrator.hydrogen_tank_height = 12.65 # m
+    integrator.top_radius = 2.5 # m
+
 
 def main() -> None:
     """Main function to run the mass integration."""
@@ -93,6 +99,9 @@ def main() -> None:
     for i in range(5):
         new_integrator = mi.MassIntegrator()
         add_unchanging_variables(new_integrator)
+
+        new_integrator.choose_tank_thickness_dimensions(old_integrator)
+        new_integrator.calculate_tank_mass()
 
         new_integrator.calculate_dry_mass(old_integrator)
         new_integrator.calculate_non_propellant_consumables(old_integrator)

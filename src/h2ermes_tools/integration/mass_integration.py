@@ -129,7 +129,7 @@ class MassIntegrator:
             'landing_legs': size_landing_legs(
                 n_legs=4,
                 mass_land=oi.dry_mass,
-                phi=oi.phi,
+                phi=oi.phi_top,
                 r_bottom=oi.bottom_radius,
                 material=oi.landing_leg_material,
                 clearance_height=oi.clearance_height
@@ -138,14 +138,7 @@ class MassIntegrator:
                                      oxidizer_tank_pressure=oi.oxygen_design_pressure,
                                      maximum_thrust=oi.total_vacuum_thrust,
                                      specific_impulse=oi.vacuum_isp),
-            "main_tank": size_tanks(material=oi.tank_material,
-                                    wet_mass=oi.gross_mass,
-                                    LH2_mass=oi.total_hydrogen_mass,
-                                    LOX_mass=oi.total_oxygen_mass,
-                                    LH2_design_pressure=oi.hydrogen_design_pressure,
-                                    LOX_design_pressure=oi.oxygen_design_pressure,
-                                    boiloff_design_pressure=oi.boiloff_design_pressure,
-                                    thrust_engines=oi.total_vacuum_thrust),
+            "main_tank": self.lh2_tank_mass + self.lox_tank_mass,
             "header_tank": size_header_tank(m_h2_header = oi.header_hydrogen_mass,
                                             m_o2_header = oi.header_hydrogen_mass,
                                             material = oi.header_tank_material
@@ -167,27 +160,27 @@ class MassIntegrator:
                                                   top_radius=oi.top_radius,
                                                   height=oi.hydrogen_tank_height,
                                                   material=oi.tank_material,
-                                                  phi=oi.phi,
+                                                  phi=oi.phi_top,
                                                   )
 
 
-    def choose_tank_thickness(self, oi:'MassIntegrator') -> tuple[float, float]:
+    def choose_tank_thickness_dimensions(self, oi:'MassIntegrator') -> None:
         """
         Calculate thickness of the tank from fatigue and tank sizing, and select the higher one.
 
         """
         # fatigue thickness
-        tank_thickness_fatigue = thickness_optimization_fatigue(oi.cone_angle,
-                                                        oi.tank_radius,
-                                                        oi.thickness_tank,
-                                                        oi.tank_material,
-                                                        oi.fuel_reentry_LH2,
-                                                        oi.dry_mass,
-                                                        oi.launch_mass,
-                                                        oi.payload_mass,
-                                                        oi.g_reentry_force_ratio,
-                                                        oi.g_launch_force_ratio,
-                                                        oi.max_thrust2weight)
+        tank_thickness_fatigue = thickness_optimization_fatigue(phi= np.deg2rad(oi.phi_top),
+                                                        tank_radius= oi.bottom_radius,
+                                                        thickness_tank=0.001, # always start at 1 mm
+                                                        material=oi.tank_material,
+                                                        fuel_reentry_LH2=oi.coolant_mass,
+                                                        dry_mass= oi.dry_mass,
+                                                        launch_mass= oi.gross_mass,
+                                                        payload_mass= oi.payload_mass,
+                                                        g_reentry_force_ratio= oi.g_reentry_force_ratio,
+                                                        g_launch_force_ratio= oi.g_launch_force_ratio,
+                                                        max_thrust2weight= oi.max_thrust2weight)
 
         # tank sizing thickness
         (thickness_LH2,
@@ -215,8 +208,8 @@ class MassIntegrator:
         self.lox_thickness = final_lox_thickness
         self.phi_top = phi_top
         self.phi_bottom = phi_bottom
-        self.tank_length_lh2 = tank_length_LH2
-        self.tank_length_lox = tank_length_LOX
+        self.hydrogen_tank_height = tank_length_LH2
+        self.oxygen_tank_height = tank_length_LOX
         self.top_radius = top_radius
         self.middle_radius = middle_radius
 
@@ -224,18 +217,14 @@ class MassIntegrator:
         """Calculates tank mass based on this integrator's dimensions"""
         self.lh2_tank_mass = calculate_tank_mass(self.middle_radius,
                                                  self.top_radius,
-                                                 self.tank_length_lh2,
+                                                 self.hydrogen_tank_height,
                                                  self.lh2_thickness,
                                                  self.tank_material,
                                                  )
 
         self.lox_tank_mass = calculate_tank_mass(self.bottom_radius,
                                                  self.middle_radius,
-                                                 self.tank_length_lox,
+                                                 self.oxygen_tank_height,
                                                  self.lox_thickness,
                                                  self.tank_material,
                                                  )
-
-
-
-
