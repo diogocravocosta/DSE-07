@@ -355,7 +355,6 @@ def thickness_optimization_fatigue(phi,
                                    max_thrust2weight,
                                     const_miner,
                                     exp_coeff_miner,
-                                   number_of_launches=40,
                                    min_launches=25,
                                    safety_factor=2,
                                    time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
@@ -403,7 +402,6 @@ def thickness_optimization_fatigue(phi,
 
     """
 
-    force_launch = g_launch_force_ratio * cs.g_0 * launch_mass
     thrust_engines = max_thrust2weight * (
             dry_mass + payload_mass) * cs.g_0  # N, thrust of engines, later import from dictionary in main branch.
 
@@ -489,7 +487,6 @@ def thickness_optimization_fatigue(phi,
     if damage >1:
         print("Failure was predicted due to Miners Law. Thickness will be increased")
     while damage > 1:
-
         thickness_tank = thickness_tank + 0.0001
         sigma_global_loading = loading_phases(delta_T_earth,
                                               delta_T_tank,
@@ -549,7 +546,6 @@ if __name__ == "__main__":
 
     # Material Properties
 
-    # Mat = material.Material(youngs_modulus=material.E,density=material.rho,thermal_expansion_coefficient=material.cte)
     material = mat.Material(
         density=7850,
         youngs_modulus=200e9,
@@ -568,31 +564,6 @@ if __name__ == "__main__":
     g_reentry_force_ratio = 6
     g_launch_force_ratio = 6
     max_thrust2weight = 4.3
-    # force_launch = g_launch_force_ratio * cs.g_0 * launch_mass
-    # thrust_engines = max_thrust2weight * (
-    #             dry_mass + payload_mass) * cs.g_0  # N, thrust of engines, later import from dictionary in main branch.
-
-    # Crack Growth Parameters
-    # da_dn = []  # initialize da/dn as an empty list
-    # a_crack = []  # to store crack growth
-    # a_crack_depth = 0.001  # initial crack size in m
-    # count = 0
-    # Damage = 0
-
-    # Pressure Inputs
-    # pressure_launch_tank = 3e5
-    # pressure_dock_vent = 5e5
-    # pressure_vent = 1e6  # Pa, pressure at which tank is vented. Taken from boil-off file
-    # pressure_after_dock = 4.5e5
-    # Temperature Inputs
-    # T_lh2 = 20  #K
-    # T_space = 4  #K, temperature in space
-    # T_ambient_earth = 300  #K
-    # T_gh2 = 150  #K Temperature of gaseous hydrogen
-    # T_gh2_ext = 200  #K temperature of gaseous hydrogen at extreme
-    # delta_T_earth = T_ambient_earth - T_lh2
-    # delta_T_tank = T_gh2 - T_lh2
-    # delta_T_tank_extreme = T_gh2_ext - T_lh2
 
     #Extrapolated parameters
     # # Paris law
@@ -602,11 +573,8 @@ if __name__ == "__main__":
     # Example Miner's law coefficients for stainless steel 304L
     # Cryogenic paper miner coeff --- 408,-0.02
     # MAT200 paper --- 1884, -0.1555
-    const_miner = 1884
-    exp_coeff_miner = -0.1555
-    miner_m_coefficient = -1 / exp_coeff_miner
-    miner_c_coefficient = 10 ** (np.log10(const_miner) / -exp_coeff_miner)
-    print("The C coefficientsss for miner equation is", miner_c_coefficient, "and m coefficient is", miner_m_coefficient)
+
+
     # # Conditions
     # plot = True
     # crack_cond = True
@@ -625,7 +593,6 @@ if __name__ == "__main__":
                                        max_thrust2weight,
                                        const_miner = 1884,
                                        exp_coeff_miner = -0.155,
-                                       number_of_launches=40,
                                        min_launches=15,
                                        safety_factor=2,
                                        time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
