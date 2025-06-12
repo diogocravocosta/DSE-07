@@ -156,7 +156,7 @@ def radiative_temperature(radius,time,material,sigma_boltzman):
     return temp_wall
 
 
-def fdm(thickness_wall,
+def finite_difference_method_temperature_change(thickness_wall,
         thickness_insulation,
         n_node_steel,
         n_node_mli,
@@ -248,13 +248,13 @@ def thickness_optimization(thickness_wall,
         n_node_steel,
         n_node_mli,
         material_steel,
+        radius,
+        emissivity_mli,
         dt,
         t_end,
         T_initial,
         time,
-        radius,
         sigma_boltzman,
-        emissivity_mli,
         Cp_insulation,
         density_insulation,
         thermal_conductivity_insulation,
@@ -263,7 +263,7 @@ def thickness_optimization(thickness_wall,
         mass_per_area_insulation):
     
 
-    max_temperature = fdm(thickness_wall,
+    max_temperature = finite_difference_method_temperature_change(thickness_wall,
         thickness_insulation,
         n_node_steel,
         n_node_mli,
@@ -285,7 +285,7 @@ def thickness_optimization(thickness_wall,
 
         thickness_wall = thickness_wall + 0.0001
     
-        max_temperature = fdm(thickness_wall,
+        max_temperature = finite_difference_method_temperature_change(thickness_wall,
         thickness_insulation,
         n_node_steel,
         n_node_mli,
@@ -302,7 +302,7 @@ def thickness_optimization(thickness_wall,
         thermal_conductivity_insulation)[4]
 
     thickness_wall_final = thickness_wall * safety_factor
-    time,T_inner_record_steel,T_inner_record_mli, heat_radiation_propagation,max_T_inner_steel= fdm(thickness_wall_final,
+    time,T_inner_record_steel,T_inner_record_mli, heat_radiation_propagation,max_T_inner_steel= finite_difference_method_temperature_change(thickness_wall_final,
         thickness_insulation,
         n_node_steel,
         n_node_mli,
@@ -365,8 +365,6 @@ if __name__ =="__main__":
 
     material_steel = mat.Material(density = 7850,
                             youngs_modulus=200e9,
-                            fracture_strength=800e6,
-                            yield_strength=500e6,
                             thermal_conductivity = 16,
                             specific_heat = 500,
                             emissivity=0.5)
@@ -388,19 +386,19 @@ if __name__ =="__main__":
         n_node_steel,
         n_node_mli,
         material_steel,
-        dt,
-        t_end,
-        T_initial,
-        time,
         radius,
-        sigma_boltzman,
-        emissivity_mli,
-        Cp_insulation,
-        density_insulation,
-        thermal_conductivity_insulation,
-        safety_factor,
-        max_operating_temperature,
-        mass_per_area_insulation)
+        emissivity_mli=0.05,
+        dt=0.1,
+        t_end=170,
+        T_initial=300,
+        time=170,
+        sigma_boltzman=5.67-8,
+        Cp_insulation=1.2,
+        density_insulation=1072.5,
+        thermal_conductivity_insulation=0.004,
+        safety_factor=2,
+        max_operating_temperature=350,
+        mass_per_area_insulation=0.46)
     
     plt.figure(figsize=(8, 5))
     plt.plot(time, T_inner_record_steel, label="FDM Inner Temperature (Steel)")
