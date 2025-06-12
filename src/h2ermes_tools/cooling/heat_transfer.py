@@ -441,6 +441,7 @@ class HeatShield:
         contact_area = self.surface_area * fraction
         return contact_area / self.coolant.channel.width
 
+
 if __name__ == "__main__":
     # Example usage
     hydrogen = Fluid(FluidsList.Hydrogen).with_state(
@@ -473,4 +474,6 @@ if __name__ == "__main__":
 
     # Estimate coolant channel length for 50% surface area coverage
     coolant_channel_length = hs.estimate_coolant_channel_length(0.5)
-    print(f"Estimated Coolant Channel Length (50% coverage): {coolant_channel_length:.2f} m")
+    print(
+        f"Estimated Coolant Channel Length (50% coverage): {coolant_channel_length:.2f} m"
+    )

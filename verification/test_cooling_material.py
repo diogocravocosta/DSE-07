@@ -47,12 +47,12 @@ def test_material_thermal_expansion_coeff_callable():
     cte2 = SS304.thermal_expansion_coeffient(T)
     assert np.all(cte2 > 0)
 
-def test_material_ultimate_strength_callable():
+def test_material_yield_strength_callable():
     T = np.array([300, 500, 1000])
-    uts = SS310.ultimate_strength(T)
-    assert np.all(uts > 0)
-    uts2 = SS304.ultimate_strength(T)
-    assert np.all(uts2 > 0)
+    ys = SS310.yield_strength(T)
+    assert np.all(ys > 0)
+    ys2 = SS304.yield_strength(T)
+    assert np.all(ys2 > 0)
 
 def test_material_thermal_diffusivity_callable():
     T = np.array([300, 500, 1000])
