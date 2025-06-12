@@ -3,7 +3,7 @@ import numpy.testing as npt
 import numpy as np
 
 import data.constants as ct
-from h2ermes_tools.reentry import trajectory_simplified as traj
+from h2ermes_tools.reentry import gliding_trajectory as traj
 
 class TestTrajectory:
     height = 400

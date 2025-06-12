@@ -268,3 +268,20 @@ class GlidingEntry:
 
 
         return qc*1e-3, qc_max*1e-3, normalised_heat_flux
+
+glide = GlidingEntry("earth",
+                 100,
+                 7700,
+                 27000,
+                 80,
+                 5,
+                 1.6,
+                 0.205,
+                 0,
+                 0,
+                 lift_parameter = None,
+                 lift_drag_ratio = 0.13,
+                 atmosphere = "exponential",
+                 boundary_layer = "laminar")
+
+print(glide.a_max, glide.qc_max, glide.V_a_max)
