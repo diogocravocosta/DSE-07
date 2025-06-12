@@ -74,17 +74,17 @@ def calculate_tank_thickness(
 
     def von_mises_cone(t):
         # hoop (circumferential) stress – tensile
-        sigma_theta = propellant_pressure * radius / (t * np.sin(phi))
+        sigma_theta = propellant_pressure * radius / (t * np.cos(phi))
 
         # meridional (along generator) stress
-        sigma_phi_pressure = propellant_pressure * radius / (2 * t * np.sin(phi))
+        sigma_phi_pressure = propellant_pressure * radius / (2 * t * np.cos(phi))
         wall_area = 2 * np.pi * radius * t
         sigma_phi_thrust = safety_factor * thrust / wall_area
         sigma_phi_mem = sigma_phi_pressure - sigma_phi_thrust
 
         # --- meridional bending stress (extreme fibre)
         # thin-walled circular ring:  I = π r³ t   and   c = r
-        sigma_phi_bend = (fuel_mass * 2 * 9.81 / (tank_length) * tank_length ** 2 / 12) * radius / (
+        sigma_phi_bend = (fuel_mass * 2 * 9.81 / tank_length * tank_length ** 2 / 12) * radius / (
                 np.pi * radius ** 3 * t)  # ±
 
         # evaluate both fibres ( + and – )
@@ -128,6 +128,8 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_cone += 0.0001  # increment in 0.1 mm steps
+        if t_guess_cone > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the cone.")
 
     t_guess_top_ellipse = 0.001  # start at 1 mm
     while True:
@@ -135,6 +137,8 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_top_ellipse += 0.0001  # increment in 0.1 mm steps
+        if t_guess_top_ellipse > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the top ellipse.")
 
     t_guess_bottom_ellipse = 0.001  # start at 1 mm
     while True:
@@ -142,13 +146,15 @@ def calculate_tank_thickness(
         if sigma_vm <= sigma_allow:
             break
         t_guess_bottom_ellipse += 0.0001  # increment in 0.1 mm steps
+        if t_guess_bottom_ellipse > 0.05:
+            raise RuntimeError("Failed to converge on a suitable thickness for the bottom ellipse.")
 
     t_guess = max(t_guess_cone, t_guess_top_ellipse, t_guess_bottom_ellipse)
     # ------------------------------------------------------------------
     #  BUCKLING CHECKS
     # ------------------------------------------------------------------
     # Axial Stress
-    N_cr = 0.33 * (2 * np.pi * material.E * t_guess ** 2 * np.cos(phi)) / np.sqrt(3 * (1 - 0.33 ** 3))
+    N_cr = 0.33 * (2 * np.pi * material.E * t_guess ** 2 * np.cos(phi)) / np.sqrt(3 * (1 - 0.33 ** 2))
 
     if safety_factor * thrust / (2 * np.pi * radius * t_guess) > N_cr:
         print("BUCKLES: sigma_critical =", N_cr, "N  (increase t or add stiffeners)")
@@ -166,17 +172,17 @@ def calculate_tank_thickness(
         print("BUCKLES: moment_critical =", M_cr, "N*m  (increase t or add stiffeners)")
 
     # Check for transverse and hoop stress at maximum boil off pressure:
-    t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.sin(phi))
-    t_press_hoop = (propellant_pressure * radius / (material.ys * np.sin(phi)))
+    t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.cos(phi))
+    t_press_hoop = (max_propellant_pressure * radius / (material.ys * np.cos(phi)))
     # check hoop stress
     if t_press_trans > t_guess:
         t_guess = t_press_trans
-        print("Transverse stress leading and hoop stress is: " + str(
-            (max_propellant_pressure * radius) / (2 * t_guess * np.sin(phi))))
+        print("Transverse stress leading and transverse stress is: " + str(
+            (max_propellant_pressure * radius) / (2 * t_guess * np.cos(phi))))
     elif t_press_hoop > t_press_trans > t_guess:
         t_guess = t_press_hoop
-        print("Transverse stress leading and hoop stress is: " + str(
-            (max_propellant_pressure * radius) / (t_guess * np.sin(phi))))
+        print("Hoop stress leading and hoop stress is: " + str(
+            (max_propellant_pressure * radius) / (t_guess * np.cos(phi))))
     return t_guess
 
 
@@ -205,68 +211,37 @@ def check_vibrations(tank_mass, thickness, material, tank_length):
     f_natural = 1 / (2 * np.pi) * omega
     return f_natural
 
-
-# def plot_stress_vs_thickness(P, R, r, phi, thrust, strength, gamma):
-#     thicknesses = np.linspace(0.001, 0.1, 500)
-#     stresses = []
-
-#     for t in thicknesses:
-#         radius = (R + r) / 2
-#         sigma_h = (P * radius / (t)) * ((2 - np.sin(phi)**2) / np.sin(phi))
-#         sigma_m_p = (P * radius) / (t * np.sin(phi))
-#         A = 2 * np.pi * radius * t
-#         sigma_m_l = thrust / A
-#         sigma_m = sigma_m_p + sigma_m_l
-#         sigma_vm = np.sqrt(sigma_h**2 + sigma_m**2 - sigma_h * sigma_m)
-#         stresses.append(sigma_vm / 1e6)  # MPa
-
-#     plt.plot(thicknesses * 1000, stresses)
-#     plt.axhline(y=strength/gamma / 1e6, color='r', linestyle='--', label='Allowable')
-#     plt.xlabel("Wall Thickness (mm)")
-#     plt.ylabel("Von Mises Stress (MPa)")
-#     plt.title("Stress vs Thickness")
-#     plt.grid(True)
-#     plt.legend()
-#     plt.show()
-
-# def tank_overall_dimensions():
-#     ratio_radius = 0.5
-#     phi = np.arange(0, 91, 1)
-#     R = (
-#         (520 + 99)
-#         * 3
-#         * np.tan(np.radians(phi))
-#         / (np.pi * (1 - ratio_radius) * (1 + ratio_radius + ratio_radius**2))
-#     ) * (1 / 3)
-#     r = R * ratio_radius
-#     h = (R - r) / np.tan(np.radians(phi))
-#     sols = 0
-#     for i, val in enumerate(R):
-#         if 2 * val >= 10:
-#             continue
-#         if 2 * val < 7:
-#             continue
-#         sols += 1
-#         print(f"For {ratio_radius=}, {phi[i]=}:\n{R[i]=}\n{r[i]=}\n{h[i]=}\n")
-#     print(sols)
-
-def size_tanks(material: material.Material, structural_mass: float, propellant_mass: float, payload_mass: float,
-               LH2_design_pressure: float, LOX_design_pressure: float, design_pressure: float,
+def size_tanks(material: material.Material,
+               wet_mass: float,
+               LH2_mass: float,
+               LOX_mass: float,
+               LH2_design_pressure: float,
+               LOX_design_pressure: float,
+               boiloff_design_pressure: float,
+               thrust_engines: float,
                radius_ratio: float = 0.5,
-               top_radius_ratio: float = 0.52, bottom_radius: float = 5.0, cap_height_radius_ratio: float = 0.5,
-               phi: float = 10.0, safety_factor: float = 1.5, safety_factor_pressure: float = 1.5,
-               LH2_ullage_margin: float = 1.1, LOX_ullage_margin: float = 1.1, LH2_density: float = 77,
-               LOX_density: float = 1340, thrust_to_weight_ratio: float = 1.2, oxidizer_fuel_ratio: float = 6.0):
+               top_radius_ratio: float = 0.52,
+               bottom_radius: float = 5.0,
+               cap_height_radius_ratio: float = 0.5,
+               phi: float = 10.0,
+               safety_factor: float = 1.5,
+               safety_factor_pressure: float = 1.5,
+               LH2_ullage_margin: float = 1.1,
+               LOX_ullage_margin: float = 1.1,
+               LH2_density: float = 77,
+               LOX_density: float = 1340,
+               ):
     """
     Wrapper for the main function to size the tanks.
     Args:
+        thrust_engines:
+        LOX_mass:
+        LH2_mass:
+        wet_mass:
         material: Material to use for the tanks
-        structural_mass:
-        propellant_mass:
-        payload_mass:
         LH2_design_pressure: Pressure of the LH2 tank before safety factors [Pa]
         LOX_design_pressure: Pressure of the LOX tank before safety factors [Pa]
-        design_pressure: Max pressure for the boil-off before safety factors [Pa]
+        boiloff_design_pressure: Max pressure for the boil-off before safety factors [Pa]
         radius_ratio:
         top_radius_ratio:
         bottom_radius:
@@ -278,9 +253,6 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
         LOX_ullage_margin:
         LH2_density:
         LOX_density:
-        thrust_to_weight_ratio:
-        oxidizer_fuel_ratio:
-
     Returns:
 
     """
@@ -292,27 +264,21 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     # Constraints
 
     LH2_pressure = LH2_design_pressure * safety_factor_pressure  # Pa
-    max_pressure_boiloff = design_pressure * safety_factor_pressure
+    max_pressure_boiloff = boiloff_design_pressure * safety_factor_pressure
     LOX_pressure = LOX_design_pressure * safety_factor_pressure  # Pa
 
-    wet_mass = propellant_mass + structural_mass
-    thrust_engines = thrust_to_weight_ratio * wet_mass
-    LH2_mass = 1 / (oxidizer_fuel_ratio + 1) * propellant_mass + payload_mass
-    print("Mass LH2: " + str(LH2_mass) + " kg")
-    LOX_mass = oxidizer_fuel_ratio / (oxidizer_fuel_ratio + 1) * propellant_mass
-    print("Mass LOX: " + str(LOX_mass) + " kg")
     LH2_volume = LH2_mass / LH2_density * LH2_ullage_margin
-    print("Volume LH2: " + str(LH2_volume) + " m3")
+    # print("Volume LH2: " + str(LH2_volume) + " m3")
     LOX_volume = LOX_mass / LOX_density * LOX_ullage_margin
-    print("Volume LOX: " + str(LOX_volume) + " m3")
-    print(
-        "-----------------------------------------------------------------------------------------------------------------"
-    )
-
-    print(
-        "######################################################################################################"
-    )
-    print("Results: ")
+    # print("Volume LOX: " + str(LOX_volume) + " m3")
+    # print(
+    #     "-----------------------------------------------------------------------------------------------------------------"
+    # )
+    #
+    # print(
+    #     "######################################################################################################"
+    # )
+    # print("Results: ")
 
     tank_length_LH2 = calculate_frustum_tank_length(LH2_volume,
                                                     top_radius,
@@ -323,10 +289,10 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
     print("LH2 Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
     print("LH2 Tank Top Diameter: " + str(top_radius * 2) + " m")
-
-    print(
-        "----------------------------------------------------------------------------------------------"
-    )
+    #
+    # print(
+    #     "----------------------------------------------------------------------------------------------"
+    # )
     tank_length_LOX = calculate_frustum_tank_length(LOX_volume,
                                                     middle_radius,
                                                     bottom_radius,
@@ -336,20 +302,26 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     print("LOX Tank Length: " + str(tank_length_LOX) + " m")
     print("LOX Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
     print("LOX Tank Top Diameter: " + str(middle_radius * 2) + " m")
-    print(
-        "----------------------------------------------------------------------------------------------"
-    )
+    # print(
+    #     "----------------------------------------------------------------------------------------------"
+    # )
     print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
     print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
+
+    phi_bottom = np.arctan((bottom_radius-middle_radius)/tank_length_LOX)
+    print("PHI BOTTOM IS: " + str(np.degrees(phi_bottom)) + "deg")
+    phi_top = np.arctan((middle_radius-top_radius)/tank_length_LH2)
+    print("PHI TOP IS: " + str(np.degrees(phi_top)) + "deg")
+
     thickness_LH2 = calculate_tank_thickness(
         wet_mass,
         LH2_pressure,
         max_pressure_boiloff,
         LH2_mass,
         tank_length_LH2,
-        bottom_radius,
         middle_radius,
-        phi,
+        top_radius,
+        phi_top,
         material,
         thrust_engines,
         safety_factor,
@@ -362,9 +334,9 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
         LOX_pressure,
         LOX_mass,
         tank_length_LOX,
+        bottom_radius,
         middle_radius,
-        top_radius,
-        phi,
+        phi_bottom,
         material,
         thrust_engines,
         safety_factor,
@@ -384,12 +356,173 @@ def size_tanks(material: material.Material, structural_mass: float, propellant_m
     natural_frequency = check_vibrations(
         mass_LH2_tank, thickness_LH2, material, tank_length_LH2
     )
-    print("Natural Frequency: " + str(natural_frequency) + " Hz")
+    # print("Natural Frequency: " + str(natural_frequency) + " Hz")
     # plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
     # plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
+
+    return mass_LH2_tank + mass_LOX_tank
+
+
+def tank_thickness(material: material.Material,
+               wet_mass: float,
+               LH2_mass: float,
+               LOX_mass: float,
+               LH2_design_pressure: float,
+               LOX_design_pressure: float,
+               boiloff_design_pressure: float,
+               thrust_engines: float,
+               radius_ratio: float = 0.5,
+               top_radius_ratio: float = 0.52,
+               bottom_radius: float = 5.0,
+               cap_height_radius_ratio: float = 0.5,
+               safety_factor: float = 1.5,
+               safety_factor_pressure: float = 1.5,
+               LH2_ullage_margin: float = 1.1,
+               LOX_ullage_margin: float = 1.1,
+               LH2_density: float = 77,
+               LOX_density: float = 1340,
+               ):
+    """
+    Wrapper for the main function to size the tanks.
+    Args:
+        thrust_engines:
+        LOX_mass:
+        LH2_mass:
+        wet_mass:
+        material: Material to use for the tanks
+        LH2_design_pressure: Pressure of the LH2 tank before safety factors [Pa]
+        LOX_design_pressure: Pressure of the LOX tank before safety factors [Pa]
+        boiloff_design_pressure: Max pressure for the boil-off before safety factors [Pa]
+        radius_ratio:
+        top_radius_ratio:
+        bottom_radius:
+        cap_height_radius_ratio:
+        phi:
+        safety_factor:
+        safety_factor_pressure:
+        LH2_ullage_margin:
+        LOX_ullage_margin:
+        LH2_density:
+        LOX_density:
+    Returns:
+
+    """
+    bottom_radius_ratio = radius_ratio / top_radius_ratio
+
+    middle_radius = bottom_radius * bottom_radius_ratio
+    top_radius = middle_radius * top_radius_ratio
+
+    # Constraints
+
+    LH2_pressure = LH2_design_pressure * safety_factor_pressure  # Pa
+    max_pressure_boiloff = boiloff_design_pressure * safety_factor_pressure
+    LOX_pressure = LOX_design_pressure * safety_factor_pressure  # Pa
+
+    LH2_volume = LH2_mass / LH2_density * LH2_ullage_margin
+    # print("Volume LH2: " + str(LH2_volume) + " m3")
+    LOX_volume = LOX_mass / LOX_density * LOX_ullage_margin
+    # print("Volume LOX: " + str(LOX_volume) + " m3")
+    # print(
+    #     "-----------------------------------------------------------------------------------------------------------------"
+    # )
+    #
+    # print(
+    #     "######################################################################################################"
+    # )
+    # print("Results: ")
+
+    tank_length_LH2 = calculate_frustum_tank_length(LH2_volume,
+                                                    top_radius,
+                                                    middle_radius,
+                                                    cap_height_radius_ratio,
+                                                    subtract_bottom_cap=False,
+                                                    subtract_top_cap=False)
+    print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
+    print("LH2 Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
+    print("LH2 Tank Top Diameter: " + str(top_radius * 2) + " m")
+    #
+    # print(
+    #     "----------------------------------------------------------------------------------------------"
+    # )
+    tank_length_LOX = calculate_frustum_tank_length(LOX_volume,
+                                                    middle_radius,
+                                                    bottom_radius,
+                                                    cap_height_radius_ratio,
+                                                    subtract_bottom_cap=False,
+                                                    subtract_top_cap=True)
+    print("LOX Tank Length: " + str(tank_length_LOX) + " m")
+    print("LOX Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
+    print("LOX Tank Top Diameter: " + str(middle_radius * 2) + " m")
+    # print(
+    #     "----------------------------------------------------------------------------------------------"
+    # )
+    print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
+    print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
+
+    phi_bottom = np.arctan((bottom_radius-middle_radius)/tank_length_LOX)
+    print("PHI BOTTOM IS: " + str(np.degrees(phi_bottom)) + "deg")
+    phi_top = np.arctan((middle_radius-top_radius)/tank_length_LH2)
+    print("PHI TOP IS: " + str(np.degrees(phi_top)) + "deg")
+
+    thickness_LH2 = calculate_tank_thickness(
+        wet_mass,
+        LH2_pressure,
+        max_pressure_boiloff,
+        LH2_mass,
+        tank_length_LH2,
+        middle_radius,
+        top_radius,
+        phi_top,
+        material,
+        thrust_engines,
+        safety_factor,
+        gamma=0.65,
+    )
+    print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
+    thickness_LOX = calculate_tank_thickness(
+        wet_mass,
+        LOX_pressure,
+        LOX_pressure,
+        LOX_mass,
+        tank_length_LOX,
+        bottom_radius,
+        middle_radius,
+        phi_bottom,
+        material,
+        thrust_engines,
+        safety_factor,
+        gamma=0.65,
+    )
+    print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
+    mass_LH2_tank = calculate_tank_mass(
+        bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, material, cap_height_radius_ratio
+    )
+    print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
+    mass_LOX_tank = calculate_tank_mass(
+        middle_radius, top_radius, tank_length_LOX, thickness_LOX, material, cap_height_radius_ratio
+    )
+    print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+
+    # tank_overall_dimensions()
+    natural_frequency = check_vibrations(
+        mass_LH2_tank, thickness_LH2, material, tank_length_LH2
+    )
+    # print("Natural Frequency: " + str(natural_frequency) + " Hz")
+    # plot_stress_vs_thickness(LOX_pressure, bottom_radius, middle_radius, phi, thrust_engines, strength, gamma=0.65)
+    # plot_stress_vs_thickness(LH2_pressure, middle_radius, top_radius, phi, thrust_engines, strength, gamma=0.65)
+
+    return thickness_LH2, thickness_LOX
 
 
 if __name__ == '__main__':
     mat = material.Material(youngs_modulus=200e9, density=7800, yield_strength=1060e6)
-    size_tanks(mat, 20642.21346, 149913.1903, 15000, 2.7e5, 2.5e5, 10e5)
+    # The inputted values are just examples, most likely significantly higher than the actual values
+    size_tanks(mat,
+               220501.032,
+               29088,
+               150410,
+               2.7e5,
+               2.5e5,
+               10e5,
+               2595738)
 

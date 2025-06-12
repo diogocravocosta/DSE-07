@@ -12,7 +12,7 @@ class LandingLegs:
         Internal class to handle the vehicle properties. Stores mass without legs, center of gravity, and geometry.
         """
 
-        def __init__(self, mass_land: float, x_cog: float, y_cog: float, phi: float, r_bottom: float) -> None:
+        def __init__(self, mass_land: float, phi: float, r_bottom: float) -> None:
             """
             Internal vehicle class constructor. For X-Y plane, coordinate system defined as X along the length of
             the vehicle.
@@ -24,8 +24,6 @@ class LandingLegs:
                 r_bottom (float): Radius of the bottom of the vehicle [m]
             """
             self.mass_land = mass_land
-            self.x_cog = x_cog
-            self.y_cog = y_cog
             self.phi = phi
             self.r_bottom = r_bottom
 
@@ -189,7 +187,7 @@ class LandingLegs:
             self.mass = volume * self.material.rho
             return self.mass
 
-    def __init__(self, n_legs: int, mass_land: float, x_cog: float, y_cog: float, phi: float, r_bottom: float,
+    def __init__(self, n_legs: int, mass_land: float, phi: float, r_bottom: float,
                  material: material.Material, clearance_height: float) -> None:
         """
         Landing legs constructor.
@@ -206,13 +204,13 @@ class LandingLegs:
         """
         # Define number of legs, vehicle class, safety factors, material, and clearance height
         self.n_legs = n_legs
-        self.v = self.Vehicle(mass_land, x_cog, y_cog, phi, r_bottom)
+        self.v = self.Vehicle(mass_land, phi, r_bottom)
         self.sf = self.SafetyFactors()
         self.material = material
         self.h_clearance = clearance_height
 
         # Computes the minimum length of the legs based on the required clearance and the phi angle
-        self.min_length = self.h_clearance / np.cos(np.radians(self.v.phi))
+        self.min_length = self.h_clearance / np.cos(self.v.phi)
 
         # Initialize geometry parameters
         self.radius = 0
@@ -283,8 +281,8 @@ class LandingLegs:
         Internal method to determine the different loads based on the geometry and mass
         """
         self.force = self.mass_land * constants.g_0 / self.n_legs
-        self.force_transverse = self.force * np.sin(np.radians(self.v.phi))
-        self.force_axial = self.force * np.cos(np.radians(self.v.phi))
+        self.force_transverse = self.force * np.sin(self.v.phi)
+        self.force_axial = self.force * np.cos(self.v.phi)
 
     def _euler_buckling(self) -> float:
         """
@@ -497,14 +495,21 @@ class LandingLegs:
                 self.mass + self.aerocover.mass + self.shockabsorber.mass + self.deployment.mass)
 
 
+def size_landing_legs(n_legs: int, mass_land: float, phi: float, r_bottom: float, material: material.Material,
+                      clearance_height: float) -> float:
+
+    ll = LandingLegs(n_legs, mass_land, phi, r_bottom, material, clearance_height)
+    ll.run_sizing()
+
+    return ll.total_mass
+
+
 if __name__ == '__main__':
     testmaterial = material.Material(youngs_modulus=70e9, yield_strength=345e6, density=2800)
 
     ll = LandingLegs(
         n_legs=4,
         mass_land=25000,
-        x_cog=4,
-        y_cog=0.3,
         phi=10,
         r_bottom=5,
         material=testmaterial,
