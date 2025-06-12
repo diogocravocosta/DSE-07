@@ -28,7 +28,8 @@ dependencies = [
     "tqdm>=4.67.1",
     "scipy>=1.15.3",
     "pyatmos>=1.2.7",
-    "setuptools>=80.9.0"
+    "setuptools>=80.9.0",
+    "rocketcea>=1.2.1",
 ]
 optional-dependencies = { dev = [
         "ruff>=0.11.12",
