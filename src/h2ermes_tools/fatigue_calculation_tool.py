@@ -348,13 +348,11 @@ def thickness_optimization_fatigue(phi,
                                    tank_radius,
                                    thickness_tank,
                                    material,
-                                   fuel_reentry_LH2,
                                    dry_mass,
                                    launch_mass,
-                                   payload_mass,
+                                   thrust_engines,
                                    g_reentry_force_ratio,
                                    g_launch_force_ratio,
-                                   max_thrust2weight,
                                    number_of_launches=40,
                                    min_launches=25,
                                    safety_factor=2,
@@ -365,7 +363,6 @@ def thickness_optimization_fatigue(phi,
                                    pressure_vent=1e6,
                                    pressure_after_dock=4.5e5,
                                    T_lh2=20,
-                                   T_space=4,
                                    T_ambient_earth=300,
                                    T_gh2=150,
                                    T_gh2_ext=200
@@ -403,16 +400,9 @@ def thickness_optimization_fatigue(phi,
 
     """
 
-    force_launch = g_launch_force_ratio * cs.g_0 * launch_mass
-    thrust_engines = max_thrust2weight * (
-            dry_mass + payload_mass) * cs.g_0  # N, thrust of engines, later import from dictionary in main branch.
-
     # Crack Growth Parameters
-    da_dn = []  # initialize da/dn as an empty list
-    a_crack = []  # to store crack growth
     a_crack_depth = a_crack_depth  # initial crack size in m
     count = 0
-    Damage = 0
 
     delta_T_earth = T_ambient_earth - T_lh2
     delta_T_tank = T_gh2 - T_lh2
@@ -623,10 +613,8 @@ if __name__ == "__main__":
                                        fuel_reentry_LH2,
                                        dry_mass,
                                        launch_mass,
-                                       payload_mass,
                                        g_reentry_force_ratio,
                                        g_launch_force_ratio,
-                                       max_thrust2weight,
                                        number_of_launches=40,
                                        min_launches=25,
                                        safety_factor=2,

@@ -10,7 +10,7 @@ import h2ermes_tools.integration.mass_integration as mi
 # Add unchanging variables to the MassIntegrator
 def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     """Add unchanging variables to the MassIntegrator object."""
-    integrator.payload_mass = 12_000
+    integrator.payload_mass = 10_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value  
     integrator.o2_power_mass = vr.oxygen_power_mass.value  
     integrator.acs_propellant_mass = vr.acs_propellant_mass.value  
@@ -42,7 +42,6 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
 
     integrator.g_reentry_force_ratio = 8
     integrator.g_launch_force_ratio = 6
-    integrator.max_thrust2weight = 4.3
 
     # Set parameters which will probably change in actuality
     integrator.bottom_radius = 5 # m
@@ -112,6 +111,8 @@ def main() -> None:
         new_integrator.update_thrust()
 
         # Print the results
+        print(f"Hydrogen tank thickness: {new_integrator.lh2_thickness}")
+        print(f"Oxygen tank thickness: {new_integrator.lox_thickness}")
         print("--------------------------------------------------------------")
         print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
         print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")

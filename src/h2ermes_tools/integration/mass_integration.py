@@ -174,13 +174,12 @@ class MassIntegrator:
                                                         tank_radius= oi.bottom_radius,
                                                         thickness_tank=0.001, # always start at 1 mm
                                                         material=oi.tank_material,
-                                                        fuel_reentry_LH2=oi.coolant_mass,
                                                         dry_mass= oi.dry_mass,
                                                         launch_mass= oi.gross_mass,
-                                                        payload_mass= oi.payload_mass,
+                                                        thrust_engines= oi.total_vacuum_thrust,
                                                         g_reentry_force_ratio= oi.g_reentry_force_ratio,
                                                         g_launch_force_ratio= oi.g_launch_force_ratio,
-                                                        max_thrust2weight= oi.max_thrust2weight)
+                                                                )
 
         # tank sizing thickness
         (thickness_LH2,
