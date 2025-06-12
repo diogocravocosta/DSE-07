@@ -1,6 +1,6 @@
 import numpy as np
 
-def calc_development_manufacturing_cost(M, flights_per_vehicle):
+def calc_development_cost(M, flights_per_vehicle):
     L_d = 0.9
     s_BAU = 0.6
     s_COM = 0.2
@@ -47,7 +47,6 @@ def calc_development_manufacturing_cost(M, flights_per_vehicle):
     DEV = []
 
     for i in range(len(M)):
-        MAIT_list = []
         component_cost = a[i] * M[i]**b[i]
         T1 = []
         T1_component = component_cost * (n[i] ** (np.log(learning_factor)/np.log(2)))
@@ -63,32 +62,20 @@ def calc_development_manufacturing_cost(M, flights_per_vehicle):
         ENG = DD * FM1
         STH = 3.1
         MAIT = FM1 * STH * L_d * HW[i]
-        MAIT_list.append(MAIT)
+
         DEV_component = c_p * ((ENG + (MAIT + ENG) * M_PA_perc / 100) + (FM1 * STH * L_d * HW[i]))
         DEV.append(DEV_component)
     T1_total = np.sum(T1)
-    average_MAIT = np.mean(MAIT_list)
     print(f'T1_total: {T1_total/1000:.2f} M€')
     DEV_total = np.sum(DEV)
-
-    #print(c_p)
-    #print(MAIT)
-    #print(M_PA_perc)
-    #MANUFACTURING
-    L_m = 0.9
-    MAN = c_p*(FM1*L_m+M_PA_perc)*T1_total
-
-    return T1_total, equipment_names, DEV, DEV_total, MAN
+    return equipment_names, DEV, DEV_total
 
 # === MAIN TEST ===
 if __name__ == "__main__":
     M = [0, 24477, 3817, 0, 0, 0, 336, 0, 437.19, 92.7828, 92.7828, 0, 0, 850, 0.5, 240, 0, 60, 100, 923, 0]
-    T1_total, equipment_names, DEV_list, DEV_total, MAN = calc_development_manufacturing_cost(M, flights_per_vehicle=25)
+    equipment_names, DEV_list, DEV_total = calc_development_cost(M, flights_per_vehicle=25)
 
     for name, cost in zip(equipment_names, DEV_list):
         print(f'Component: {name:30} | Development cost: {cost:,.2f} k€')
     
     print(f'\nTotal development cost: {DEV_total/1000:.2f} M€')
-    print('Manufacturing cost:', MAN/1000, 'M€')
-
-
