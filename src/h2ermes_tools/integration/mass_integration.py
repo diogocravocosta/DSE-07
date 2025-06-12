@@ -149,9 +149,11 @@ class MassIntegrator:
             "header_tank": size_header_tank(m_h2_header = oi.header_hydrogen_mass,
                                             m_o2_header = oi.header_hydrogen_mass,
                                             material = oi.header_tank_material
-                                            )
-
+                                            ),
         }
+
+        self.subsystem_dry_masses['propulsion margin'] = 1.2 * (self.subsystem_dry_masses['turbopump']
+                                                                + self.unchanging_subsystem_dry_masses["thrust chambers"])
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
 

@@ -65,7 +65,7 @@ heat_shield_thickness = Variable(
 
 heat_shield_mass = Variable(
     name="Heat Shield Mass",
-    value=750.0,  # only the mass of the metallic structure
+    value=2500,  # only the mass of the metallic structure
     unit="kg",
     latex_symbol="M_{hs}",
     confidence="poor",
@@ -469,7 +469,7 @@ minimum_tank_pressure = Variable(
 
 nose_cone_mass = Variable(
     name="Nose Cone Mass",
-    value=650,
+    value=850,
     unit="kg",
     latex_symbol="m_{nose cone}",
     confidence="very low",

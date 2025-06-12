@@ -58,10 +58,10 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
         "docking system": vr.docking_system_mass.value,
         "nose cone": vr.nose_cone_mass.value,
         "power": vr.power_dry_mass.value,
-        "data handling": vr.data_handling_mass.value,
-        "avionics harness": vr.avionics_harness_mass.value,
+        "avionics": vr.avionics_mass.value,
+        "wiring": vr.wiring_mass.value,
         "interstage": vr.interstage_mass.value,
-        "gnc": vr.interstage_mass.value
+        "gnc": vr.gnc_mass.value
     }
 
 
