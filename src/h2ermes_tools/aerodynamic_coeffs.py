@@ -269,12 +269,6 @@ class BluntBody:
         self.time2 = np.arange(t_i, t_i + 10, 0.0001)
         self.alpha2 = (deviation * (np.pi / 180) * self.time2**mu * np.cos(nu * np.log(self.time2)))
 
-
-
-
-
-
-    
     def analysis(self):
         '''
         Function: Runs a bunch of stuff to visualise the impact of changing certain geometries
