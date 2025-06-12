@@ -249,11 +249,11 @@ def thickness_optimization(thickness_wall,
         n_node_mli,
         material_steel,
         radius,
+        time,
         emissivity_mli,
         dt,
         t_end,
         T_initial,
-        time,
         sigma_boltzman,
         Cp_insulation,
         density_insulation,
@@ -323,7 +323,7 @@ def thickness_optimization(thickness_wall,
 
 if __name__ =="__main__":
     radius = 2.5
-    thickness_wall = 0.003
+    thickness_wall = 0.001
 
     plot = False
     dt = 0.1 #s
@@ -387,11 +387,11 @@ if __name__ =="__main__":
         n_node_mli,
         material_steel,
         radius,
+        time,
         emissivity_mli=0.05,
         dt=0.1,
         t_end=170,
         T_initial=300,
-        time=170,
         sigma_boltzman=5.67-8,
         Cp_insulation=1.2,
         density_insulation=1072.5,
