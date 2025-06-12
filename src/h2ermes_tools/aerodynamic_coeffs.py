@@ -310,9 +310,9 @@ def run():
     # base_arc_height = 0.5
     # mass = 28000
 
-    cone_length = 13.95
-    cone_max_radius = 4.95
-    cone_min_radius = 2.46
+    cone_length = 20.250
+    cone_max_radius = 5
+    cone_min_radius = 2.5
     base_arc_height = 2
     mass = 28000
 
@@ -322,6 +322,8 @@ def run():
     body.stability(file_name = "HermesV1-RASAero.csv")
     body.analysis()
     body.plots()
+
+    print("sphere radius: ", body.sphere_radius)
 
 if __name__ == "__main__":
     run()
