@@ -479,7 +479,7 @@ nose_cone_mass = Variable(
 
 hydrogen_power_mass = Variable(
     name="Hydrogen Power Mass",
-    value=225,
+    value=15.6,
     unit="kg",
     latex_symbol="m_{H2, power}",
     confidence="low",
@@ -489,7 +489,7 @@ hydrogen_power_mass = Variable(
 
 oxygen_power_mass = Variable(
     name="Oxygen Power Mass",
-    value=225,
+    value=132.8,
     unit="kg",
     latex_symbol="m_{O2, power}",
     confidence="low",
@@ -499,7 +499,7 @@ oxygen_power_mass = Variable(
 
 power_dry_mass = Variable(
     name="Power subsystem dry mass",
-    value=719,
+    value=231.3,
     unit="kg",
     latex_symbol="m_{power,dry}",
     confidence="midterm number",
@@ -507,9 +507,9 @@ power_dry_mass = Variable(
     margin=(1.0, 1.0)
 )
 
-data_handling_mass = Variable(
+avionics_mass = Variable(
     name="Data handling subsystem mass",
-    value=100,
+    value=361.1,
     unit="kg",
     latex_symbol="m_{power,dry}",
     confidence="midterm number",
@@ -517,9 +517,9 @@ data_handling_mass = Variable(
     margin=(1.0, 1.0)
 )
 
-avionics_harness_mass = Variable(
+wiring_mass = Variable(
     name="Avionics harness mass",
-    value=403.32,
+    value=321.5,
     unit="kg",
     latex_symbol="m_{avionics}",
     confidence="midterm number",

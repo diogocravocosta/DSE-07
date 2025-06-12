@@ -52,6 +52,6 @@ def power_plant_mass(average_power: float, mission_length_days: float, safety_fa
 
 
 if __name__ == "__main__":
-    our_power = 3573 # W
+    our_power = 7000 # W
     oxygen_mass, hydrogen_mass, cell_mass = power_plant_mass(average_power=our_power, mission_length_days=2, safety_factor=1)
-    print(mass_reactant + mass_cell)
+    print(oxygen_mass, hydrogen_mass, cell_mass)
