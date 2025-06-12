@@ -10,7 +10,7 @@ import h2ermes_tools.integration.mass_integration as mi
 # Add unchanging variables to the MassIntegrator
 def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     """Add unchanging variables to the MassIntegrator object."""
-    integrator.payload_mass = 10_000
+    integrator.payload_mass = 9_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value  
     integrator.o2_power_mass = vr.oxygen_power_mass.value  
     integrator.acs_propellant_mass = vr.acs_propellant_mass.value  
@@ -32,7 +32,6 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.vacuum_twr = vr.t_w_vac.value
     
     integrator.clearance_height = 2.5 # m
-    integrator.min_tank_pressure = 2e5 # Pa
 
     integrator.hydrogen_design_pressure = 2e5
     integrator.oxygen_design_pressure = 2.5e5
@@ -61,7 +60,6 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
         "avionics": vr.avionics_mass.value,
         "wiring": vr.wiring_mass.value,
         "interstage": vr.interstage_mass.value,
-        "gnc": vr.gnc_mass.value
     }
 
 

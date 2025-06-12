@@ -508,7 +508,7 @@ power_dry_mass = Variable(
 )
 
 avionics_mass = Variable(
-    name="Data handling subsystem mass",
+    name="Avionics mass",
     value=361.1,
     unit="kg",
     latex_symbol="m_{power,dry}",
@@ -518,7 +518,7 @@ avionics_mass = Variable(
 )
 
 wiring_mass = Variable(
-    name="Avionics harness mass",
+    name="Wiring mass",
     value=321.5,
     unit="kg",
     latex_symbol="m_{avionics}",
@@ -532,16 +532,6 @@ interstage_mass = Variable(
     value=461.97,
     unit="kg",
     latex_symbol="m_{interstage}",
-    confidence="midterm number",
-    constraints="",
-    margin=(1.0, 1.0)
-)
-
-gnc_mass = Variable(
-    name="GNC mass",
-    value=100,
-    unit="kg",
-    latex_symbol="m_{GNC}",
     confidence="midterm number",
     constraints="",
     margin=(1.0, 1.0)
