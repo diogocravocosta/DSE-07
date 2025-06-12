@@ -18,6 +18,8 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
 
     integrator.sea_level_isp = vr.engine_specific_impulse_sl_opt.value  
     integrator.vacuum_isp = 429.7477666666666  # from Diogo
+    integrator.sea_level_thrust_chambers_number = vr.n_chambers_sl.value
+    integrator.vacuum_thrust_chambers_number = vr.n_chambers_vac.value
 
     integrator.landing_delta_v = vr.landing_delta_v.value  
     integrator.deorbit_delta_v = vr.deorbit_delta_v.value + 50
@@ -51,7 +53,8 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.unchanging_subsystem_dry_masses = {
         "acs": vr.acs_dry_mass.value,
         "heat shield": vr.heat_shield_mass.value,
-        "thrust chambers": vr.thrust_chamber_sl_mass.value * vr.n_chambers_sl.value + vr.thrust_chamber_vac_mass.value * vr.n_chambers_vac.value,
+        "thrust chambers": vr.thrust_chamber_sl_mass.value * integrator.sea_level_thrust_chambers_number
+                           + vr.thrust_chamber_vac_mass.value * integrator.vacuum_thrust_chambers_number,
         "docking system": vr.docking_system_mass.value,
         "nose cone": vr.nose_cone_mass.value,
         "power": vr.power_dry_mass.value,
@@ -103,7 +106,7 @@ def main() -> None:
         new_integrator.calculate_tank_mass()
 
         new_integrator.calculate_dry_mass(old_integrator)
-        new_integrator.calculate_non_propellant_consumables(old_integrator)
+        new_integrator.calculate_non_propellant_consumables_landing_delta_v(old_integrator)
 
         new_integrator.calculate_propellant_mass()
         new_integrator.calculate_hydrogen_oxygen_mass()

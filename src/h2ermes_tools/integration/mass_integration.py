@@ -106,6 +106,13 @@ class MassIntegrator:
         """
         self.total_vacuum_thrust = self.gross_mass * cn.g_0 * self.vacuum_twr
 
+        mass_flow = self.total_vacuum_thrust / cn.g_0 / self.vacuum_isp
+
+        self.total_sea_level_thrust = (mass_flow
+                                       * self.sea_level_thrust_chambers_number
+                                       /(self.sea_level_thrust_chambers_number + self.vacuum_thrust_chambers_number)
+                                       * cn.g_0 * self.sea_level_isp)
+
     def calculate_dummy_dry_masses(self, oi: 'MassIntegrator') -> None:
         """
         Calculate the dry masses of the subsystems based on the masses from previous iteration.
@@ -148,7 +155,7 @@ class MassIntegrator:
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
 
-    def calculate_non_propellant_consumables(self, oi: 'MassIntegrator') -> None:
+    def calculate_non_propellant_consumables_landing_delta_v(self, oi: 'MassIntegrator') -> None:
         """
         Calculate other masses that are not part of the dry mass.
         """

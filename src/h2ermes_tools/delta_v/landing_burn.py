@@ -116,10 +116,10 @@ def landing_burn_with_drag(initial_velocity: float,
 
 if __name__ == "__main__":
     # Example usage
-    initial_velocity = 100  # m/s
-    thrust_to_weight_ratio = 2.2  # dimensionless
-    ballistic_coefficient = 500  # kg/m^2, example value, float('inf') for no drag
-    specific_impulse = 103  # seconds, example value
+    initial_velocity = 400  # m/s
+    thrust_to_weight_ratio = 2.9  # dimensionless
+    ballistic_coefficient = 2600  # kg/m^2, example value, float('inf') for no drag
+    specific_impulse = 361  # seconds, example value
 
     landing_burn_distance, delta_v = landing_burn_no_drag(initial_velocity, thrust_to_weight_ratio)
     print(f"Landing burn distance (no drag): {landing_burn_distance:.2f} m, Delta V: {delta_v:.2f} m/s")
