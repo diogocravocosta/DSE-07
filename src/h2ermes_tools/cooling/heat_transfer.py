@@ -15,8 +15,11 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 from data.constants import boltzmann
 from scipy.interpolate import interp1d
+from pyfluids import Fluid, FluidsList, Input
 
 from h2ermes_tools.cooling.material import SS310
+from h2ermes_tools.cooling.coolant import Coolant
+from h2ermes_tools.cooling.channel import RectangularChannel
 
 
 class HeatShield:
@@ -41,6 +44,7 @@ class HeatShield:
         coolant=None,
         material=None,
         heat_shield_diameter=None,
+        sphere_height=2.0,
     ):
         self.wall_thickness = wall_thickness
         self.num_nodes = num_nodes
@@ -54,6 +58,8 @@ class HeatShield:
         self.thermal_conductivity = material.thermal_conductivity
         self.stefan_boltzmann = boltzmann
         self.diameter = heat_shield_diameter
+        self.height = sphere_height
+        self.surface_area = np.pi * self.diameter * self.height
 
     def run_simulation(self):
         density = self.heat_shield_density
@@ -383,33 +389,88 @@ class HeatShield:
             f"Final cooled face temperature (node N-1): {temperature[num_nodes - 1]:.1f} K"
         )
 
-    def estimate_spherical_mass(self, h, radius=None):
+    def estimate_heat_shield_spherical_mass(self) -> float:
         """
-        Estimate the mass of a spherical cap (partial sphere) heat shield.
+        Estimate the mass of a spherical cap heat shield as a function of diameter.
         Args:
             h (float): Height of the spherical cap [m] (vertical distance from base to top of cap)
-            radius (float, optional): Inner radius of the sphere [m]. If None, uses self.diameter/2.
+            diameter (float, optional): Inner diameter of the sphere [m]. If None, uses self.diameter.
         Returns:
             float: Mass [kg]
         """
-        if radius is None:
-            if self.diameter is None:
-                raise ValueError("No radius or diameter specified for spherical mass estimate.")
-            radius = self.diameter / 2
-        r_outer = radius + self.wall_thickness
-        # Volume of a spherical cap: V = (1/3) * pi * h^2 * (3R - h)
-        V_inner = (1/3) * np.pi * h**2 * (3*radius - h)
-        V_outer = (1/3) * np.pi * h**2 * (3*r_outer - h)
-        mass = (V_outer - V_inner) * self.heat_shield_density
+        mass = self.surface_area * self.wall_thickness * self.heat_shield_density
         return mass
-    
-    def estimate_heat_shield_mass(self, h, radius=None):
+
+    def estimate_heat_shield_mass(self) -> float:
         """
         Estimate the heat shield mass. This mass is composed of two spherical masses.
         The first mass is the solid, full heat shield wall and the second mass is the
         portion of the wall that has coolant channels inside it.
 
-        The coolant channels are assumed to be layed underneath 50% of the surface.
+        The second part is essentially hollowed out by the cooling channels. The coolant
+        channels are assumed to be layed through 50% of the surface.
+
+        Note that the 1e-3 is added as an estimated wall thickness of the coolant channel
+        on the cold side of the coolant.
         """
-        first_mass = self.estimate_spherical_mass(h, radius)
-        r_outer = rad
+        coolant_cold_side_wall_thickness = 1e-3
+        first_mass = self.estimate_heat_shield_spherical_mass()
+        radius = (
+            self.diameter / 2
+            - self.coolant.channel.height
+            - coolant_cold_side_wall_thickness
+        )
+        area = 2 * np.pi * radius * self.height * 0.5  # 50% of the surface
+        second_mass = (
+            area
+            * (self.coolant.channel.height + coolant_cold_side_wall_thickness)
+            * self.heat_shield_density
+        )
+        return first_mass + second_mass
+
+    def estimate_coolant_channel_length(self, fraction) -> float:
+        """
+        This estimation assumes the coolant channels cover a certain portion of the
+        surface area of the heat shield. Their length is estimated as if there was
+        one long coolant channel whose total contact area is equal to the portion of the
+        surface area that is covered by the coolant channels.
+
+        Returns:
+            float: Estimated length of the coolant channel [m]
+        """
+        contact_area = self.surface_area * fraction
+        return contact_area / self.coolant.channel.width
+
+if __name__ == "__main__":
+    # Example usage
+    hydrogen = Fluid(FluidsList.Hydrogen).with_state(
+        Input.pressure(50e5),  # Pa
+        Input.temperature(13.8),  # K
+    )
+    channel = RectangularChannel(width=10e-3, height=2e-3, length=5.0, roughness=1e-5)
+    coolant = Coolant(fluid=hydrogen, channel=channel, mass_flow=0.001)
+
+    hs = HeatShield(
+        wall_thickness=2e-3,
+        num_nodes=3,
+        incident_heat_flux=np.array(
+            [[0, 100_000], [150, 666_000], [450, 666_000], [900, 0]]
+        ),
+        initial_temperature=300.0,
+        total_time=900.0,
+        coolant=coolant,
+        material=SS310,
+        heat_shield_diameter=10.0,
+        sphere_height=2.0,
+    )
+    # all_temperatures, all_times, x, fourier_number, time_step, node_spacing = hs.run_simulation()
+    # hs.plot_profiles(all_temperatures, all_times, x)
+    # hs.animate_profiles(all_temperatures, all_times, x)
+    # hs.print_summary(all_temperatures[-1], node_spacing, time_step, fourier_number)
+
+    mass = hs.estimate_heat_shield_mass()
+    print(f"Estimated Heat Shield Mass: {mass:.2f} kg")
+
+    # Estimate coolant channel length for 50% surface area coverage
+    coolant_channel_length = hs.estimate_coolant_channel_length(0.5)
+    print(f"Estimated Coolant Channel Length (50% coverage): {coolant_channel_length:.2f} m")
