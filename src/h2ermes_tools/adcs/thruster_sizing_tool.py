@@ -574,7 +574,7 @@ def acs_tank_design(htp_density, total_prop_mass):
     
 
     ullage_factor = 1.1  # Ullage factor to account for propellant expansion and sloshing
-    tank_volume = total_prop_mass / htp_density  # in m^3
+    tank_volume = 0.5 * (total_prop_mass / htp_density)  # in m^3
     # print(tank_volume)
     new_tank_volume = tank_volume * ullage_factor  # Adjusting the tank volume for ullage factor
     # print("The volume of the ACS tank is: ", new_tank_volume, "m^3")
@@ -587,7 +587,11 @@ def acs_tank_design(htp_density, total_prop_mass):
     tank_mass_AA_6000 = 4 * np.pi * tank_radius**2 * tank_thickness_AA_6000 * Materials['Aluminum AA6000 T6 Series']['density']  # Mass of the tank in kg
     tank_mass = min(tank_mass_SS_316, tank_mass_AA_6000)  # Taking the minimum mass of the tank
     tank_material = 'Aluminum AA6000 T6 Series' if tank_mass_AA_6000 < tank_mass_SS_316 else "Stainless Steel 316"  # Choosing the material with the lower mass
-    return tank_mass, tank_material
+    if tank_material == 'Aluminum AA6000 T6 Series':
+        tank_thickness = tank_thickness_AA_6000
+    else:
+        tank_thickness = tank_thickness_SS_316
+    return tank_mass, tank_material, tank_thickness
 
 # tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
 # print("The mass of the ACS tank is: ", tank_mass, "kg")
@@ -620,15 +624,15 @@ def aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_
     number_of_thrusters = thruster_sizing(thrusters, ang_acc_max, MMOI_vehicle, torque_list, moment_arm_thrusters)
 
     # Estimate the mass consumption of the thrusters
-    _, total_mass_thrusters, _, total_prop_mass_thrusters = mass_and_power_estimation(number_of_thrusters, rcs_dry_mass, thrusters, burn_time)
+    total_power_thrusters, total_mass_thrusters, _, total_prop_mass_thrusters = mass_and_power_estimation(number_of_thrusters, rcs_dry_mass, thrusters, burn_time)
 
     # Design the ACS tank
-    tank_mass, _ = acs_tank_design(htp_density, total_prop_mass_thrusters)
+    tank_mass, _, thickness_tank = acs_tank_design(htp_density, total_prop_mass_thrusters)
 
     # Calculate the total mass of the ACS system
-    total_mass_acs_system = total_mass_thrusters + tank_mass
+    total_mass_acs_system = total_mass_thrusters + (2 * tank_mass)
 
-    return total_mass_acs_system
+    return total_mass_acs_system, total_power_thrusters, tank_mass, thickness_tank
 
 
 # total_mass_aocs = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate)
@@ -672,8 +676,11 @@ if __name__ == "__main__":
     # maneuver_time = burn_time  # in seconds, assuming a third of the maximum burn time for maneuvering
     # ang_acc_max = slew_rate / (maneuver_time)  # in rad/s^2
 
-    total_mass_aocs = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
+    total_mass_aocs, total_power, singular_tank_mass, thickness_tank = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
     print("The total mass of the Attitude and Orbit Control System (AOCS) is: ", total_mass_aocs, "kg")
+    print("The total power requirement of the AOCS is: ", total_power, "W")
+    # print("The mass of one tank is: ", singular_tank_mass, "kg")
+    # print("The thickness of the tank is: ", thickness_tank, "m")
 
 
 # List of all torques
