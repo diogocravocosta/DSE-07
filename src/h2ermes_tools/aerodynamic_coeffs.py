@@ -69,7 +69,9 @@ class BluntBody:
         '''
         calculating axial and normal coefficients
         '''
-        self.aoa_all = np.arange(0.1 * np.pi/180, self.alpha_max , 100)
+        self.aoa_all = np.linspace(0.1 * np.pi / 180, self.alpha_max, 100)
+        print('alpha max', self.alpha_max)
+        print("angle", self.aoa_all)
         self.c_x_cap = 0.5 * (np.sin(self.aoa_all)**2) * (np.sin(self.mu_b)**2) + \
         (1 + np.cos(self.mu_b)**2) * (np.cos(self.aoa_all)**2)
         self.c_y_cap = np.sin(self.aoa_all) * np.cos(self.aoa_all) * (np.sin(self.mu_b)**2)
@@ -95,7 +97,7 @@ class BluntBody:
                 self.c_x_cone.append(0)
                 self.c_y_cone.append(0)
         
-        self.c_axial = (self.c_x_cap + self.c_x_cone)
+        self.c_axial = self.c_x_cap + self.c_x_cone
         self.c_normal = self.c_y_cap + self.c_y_cone
         
         '''
@@ -250,6 +252,7 @@ class BluntBody:
 
         print(aoa * np.pi / 180)
         cmq_cmadot = -0.4 #remember to change later
+        c_a = 0.1 #remember to change later
         print(self.aoa_all)
         eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2)**2 ) * cmq_cmadot / (8 * self.moment_inertia)
         omega = np.sqrt(-1 * density * velocity**2 * self.reference_area * (self.cone_max_radius * 2) * self.cm_alpha / (2 * self.moment_inertia))
@@ -259,7 +262,12 @@ class BluntBody:
         '''
         Oscillations decelleration, constant density
         '''
-        t_i = density * velocity * self.reference_area * 1
+        t_i = density * velocity * self.reference_area * c_a / (2 * self.mass)
+        mu = ((self.mass * (self.cone_max_radius * 2)**2 * cmq_cmadot) / (4 * self.moment_inertia * c_a)) + 1
+        nu = np.sqrt(mu**2 - ((2 * self.mass * (self.cone_max_radius * 2) * self.cm_alpha) / (density * self.reference_area * self.moment_inertia * c_a**2)))
+
+        self.time2 = np.arange(t_i, t_i + 10, 0.0001)
+        self.alpha2 = (deviation * (np.pi / 180) * self.time2**mu * np.cos(nu * np.log(self.time2)))
 
 
 
@@ -347,6 +355,11 @@ class BluntBody:
         plt.plot(self.aoa_all * 180/np.pi, self.c_d, label="drag coefficient", color = 'blue')
         plt.legend()
 
+        plt.figure()
+        plt.plot(self.aoa_all * 180/np.pi, self.c_axial, label="axial coefficient", color = 'green')
+        plt.plot(self.aoa_all * 180/np.pi, self.c_normal, label="normal coefficient", color = 'blue')
+        plt.legend()
+
         # plt.figure()
         # plt.plot(self.RASAero_mach, self.cd_4, label='C_d vs Mach at a = 4 / RASAero')
         # plt.legend()
@@ -367,7 +380,7 @@ class BluntBody:
         plt.legend()
 
         plt.figure()
-        plt.plot(self.time, self.alpha * 180/np.pi, label='alpha stability')
+        plt.plot(self.time2, self.alpha2 * 180/np.pi, label='alpha stability')
         plt.legend()
         plt.show()
 
