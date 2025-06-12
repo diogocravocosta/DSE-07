@@ -51,3 +51,6 @@ I = 100 #public damage insurance in M€
 if __name__ == "__main__":
     ops_cost_per_flight = calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press=0, r=5, I=I, P=P, c_payl=c_payl, F=F, T_s=T_s, S=S, c_f=7.08, c_ox=c_ox, c_press=c_press)
     print(f"Operational cost per flight: {ops_cost_per_flight/1000} M€")
+
+
+
