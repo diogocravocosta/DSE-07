@@ -469,7 +469,7 @@ minimum_tank_pressure = Variable(
 
 nose_cone_mass = Variable(
     name="Nose Cone Mass",
-    value=700,
+    value=650,
     unit="kg",
     latex_symbol="m_{nose cone}",
     confidence="very low",
