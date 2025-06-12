@@ -136,7 +136,6 @@ def fatigue_paris_estimation(
         sigma_global_loading,
         stress_range,
         stress_cycle,
-        launches,
         paris_coeff_C,
         paris_exp_m,
         plot,
@@ -150,7 +149,7 @@ def fatigue_paris_estimation(
 
     critical_crack_depth = critical_crack_depth_calc(material, Y_geometry_factor, max(sigma_global_loading))
     print('Critical crack depth is:', critical_crack_depth, "m")
-    stress_cycle = cycle_launch(stress_cycle, launches)
+    stress_cycle = cycle_launch(stress_cycle, min_launches)
     stress_range = cycle_launch(stress_range, 1e6)  # convert to pascals
     a_crack = []
     for i in range(len(stress_range)):
@@ -287,7 +286,7 @@ def loading_phases(delta_T_earth,
     sigma_global_loading = [stress_comb_start, stress_comb_maxq, stress_comb_launch, stress_comb_orbit,
                             stress_comb_dock, stress_comb_reentry, stress_comb_launchpad]
     R_load_ratio_global = R_calculation(sigma_global_loading)
-    print("Global Load ratio R = ", R_load_ratio_global)
+    #print("Global Load ratio R = ", R_load_ratio_global)
 
     #R for thermal stress 
     sigma_thermal_load = [sigma_thermal_start, sigma_thermal_maxq, sigma_thermal_launch, sigma_thermal_orbit,
@@ -461,7 +460,6 @@ def thickness_optimization_fatigue(phi,
         sigma_global_loading,
         stress_range,
         stress_cycle,
-        number_of_launches,
         paris_coeff_C,
         paris_exp_m,
         plot,
@@ -480,7 +478,6 @@ def thickness_optimization_fatigue(phi,
             sigma_global_loading,
             stress_range,
             stress_cycle,
-            number_of_launches,
             paris_coeff_C,
             paris_exp_m,
             plot,
@@ -521,7 +518,6 @@ def thickness_optimization_fatigue(phi,
     damage,launches = fatigue_miner_estimation(stress_range,miner_c_coefficient,miner_m_coefficient,stress_cycle,safety_factor,min_launches,plot)
     print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
     return thickness_tank
-
 
 def miner_coefficients(stress, cycles):
     log_stress = np.log10(stress)
@@ -630,7 +626,7 @@ if __name__ == "__main__":
                                        const_miner = 1884,
                                        exp_coeff_miner = -0.155,
                                        number_of_launches=40,
-                                       min_launches=25,
+                                       min_launches=15,
                                        safety_factor=2,
                                        time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
                                        a_crack_depth=0.001,
