@@ -1,7 +1,16 @@
+import numpy as np
 
 
 def calc_development_cost(M):
+    L_d = 0.9 #as a default in Drenthe’s SOLSTICE cost estimating model
+    s_BAU = 0.6 #scope of subcontracted work under Business As Usual
+    s_COM = 0.2 #scope of subcontracted work under commercial development
+    q = 0.08 #average subcontractor profit
+    c_p = (s_COM*q+1)/(s_BAU*q+1)
+    M_PA_perc = 0.0525 
     learning_factor = 0.9 # Learning factor for development cost
+    delta_TRL = 1
+    M_PA_perc = 
     equipment_names = ["Pressurizant Tank",
     "Fuel Tank",
     "Oxidizer Tank",
@@ -23,6 +32,7 @@ def calc_development_cost(M):
     "Avionics Harness",
     "Attitude Control Module",
     "Interstage Structure"]
+    n = []
     a = [19.99465, 19.99465, 19.99465, 2.799300, 2.799300, 2.799300, 31.48271, 33.90978, 11.50618, 8.958770, 8.958770, 27.45211, 26.01794, 23.59239, 51.11253, 42.01174, 141.6820, 69.05491, 27.45211, 257.8420, 6.70369]
     b = [0.71253, 0.71253, 0.71253, 0.91199, 0.91199, 0.91199, 0.78811, 0.60977, 1.06948, 0.68815, 0.68815, 0.44623, 0.44623, 0.70000, 0.80000, 0.80000, 0.80000, 0.82458, 0.44623, 0.75000, 0.68041]
     for i in range len(equipment_names): 
@@ -40,9 +50,12 @@ def calc_development_cost(M):
 
     ENG = DD_prime * FM1
     STH = DM + EM + PFM
-    MAIT = FM1 * STH * L_d * HW_i
+    MAIT = FM1 * STH * L_d * HW
 
-    DEV = c_p * ((ENG + (MAIT + ENG) * M_PA_perc) + (FM1 * STH * L_d * HW_i))
+    DEV = c_p * ((ENG + (MAIT + ENG) * M_PA_perc) + (FM1 * STH * L_d * HW))
 
+    return DEV 
 
-M = [0, 24477, 3817]
+if __name__ == "__main__":
+    M = [0, 24477, 3817]
+    print(calc_development_cost(M))
