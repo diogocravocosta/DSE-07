@@ -10,7 +10,7 @@ import h2ermes_tools.integration.mass_integration as mi
 # Add unchanging variables to the MassIntegrator
 def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     """Add unchanging variables to the MassIntegrator object."""
-    integrator.payload_mass = 15_000
+    integrator.payload_mass = 12_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value  
     integrator.o2_power_mass = vr.oxygen_power_mass.value  
     integrator.acs_propellant_mass = vr.acs_propellant_mass.value  
@@ -20,7 +20,7 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.vacuum_isp = 429.7477666666666  # from Diogo
 
     integrator.landing_delta_v = vr.landing_delta_v.value  
-    integrator.deorbit_delta_v = vr.deorbit_delta_v.value  
+    integrator.deorbit_delta_v = vr.deorbit_delta_v.value + 50
     integrator.circularization_delta_v = vr.target_orbit_circularization_delta_v.value  
     integrator.orbit_raising_delta_v = vr.orbit_raising_delta_v.value  
     integrator.orbit_insertion_delta_v = vr.orbit_insertion_delta_v.value  
@@ -96,7 +96,7 @@ def main() -> None:
     old_integrator.calculate_propellant_mass()
     old_integrator.calculate_hydrogen_oxygen_mass()
 
-    for i in range(5):
+    for i in range(20):
         new_integrator = mi.MassIntegrator()
         add_unchanging_variables(new_integrator)
 
@@ -115,7 +115,6 @@ def main() -> None:
         print("--------------------------------------------------------------")
         print(f"Total mass: {new_integrator.gross_mass:.2f} kg")
         print(f"Dry mass: {new_integrator.dry_mass:.2f} kg")
-        print(f"Propellant mass: {new_integrator.propellant_mass:.2f} kg")
         print(f"Hydrogen mass: {new_integrator.total_hydrogen_mass:.2f} kg")
         print(f"Oxygen mass: {new_integrator.total_oxygen_mass:.2f} kg")
         print(f"ACS propellant mass: {new_integrator.acs_propellant_mass} kg")
