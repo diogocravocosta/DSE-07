@@ -428,7 +428,7 @@ class HeatShield:
         )
         return first_mass + second_mass
 
-    def estimate_coolant_channel_length(self, fraction) -> float:
+    def estimate_coolant_loop_length(self, fraction) -> float:
         """
         This estimation assumes the coolant channels cover a certain portion of the
         surface area of the heat shield. Their length is estimated as if there was
@@ -441,6 +441,30 @@ class HeatShield:
         contact_area = self.surface_area * fraction
         return contact_area / self.coolant.channel.width
 
+    def calculate_coolant_loop_volume(self, fraction) -> float:
+        """
+        Calculate the volume of the coolant loop based on the coolant channel dimensions.
+        
+        Returns:
+            float: Volume of the coolant loop [m^3]
+        """
+        # Assuming a rectangular channel for simplicity
+        return (
+            self.coolant.channel.cross_sectional_area
+            * self.estimate_coolant_loop_length(fraction)
+        )
+    
+    def estimate_coolant_mass_of_filled_loop(self, fraction) -> float:
+        """
+        Estimate the mass of the coolant in the loop based on the coolant channel volume
+        and the fluid density.
+        
+        Returns:
+            float: Mass of the coolant in the loop [kg]
+        """
+        coolant_volume = self.calculate_coolant_loop_volume(fraction)  # Full loop
+        return coolant_volume * self.coolant.fluid.density
+
 
 if __name__ == "__main__":
     # Example usage
@@ -452,7 +476,7 @@ if __name__ == "__main__":
     coolant = Coolant(fluid=hydrogen, channel=channel, mass_flow=0.001)
 
     hs = HeatShield(
-        wall_thickness=2e-3,
+        wall_thickness=4.3e-3,
         num_nodes=3,
         incident_heat_flux=np.array(
             [[0, 100_000], [150, 666_000], [450, 666_000], [900, 0]]
@@ -473,7 +497,11 @@ if __name__ == "__main__":
     print(f"Estimated Heat Shield Mass: {mass:.2f} kg")
 
     # Estimate coolant channel length for 50% surface area coverage
-    coolant_channel_length = hs.estimate_coolant_channel_length(0.5)
+    coolant_channel_length = hs.estimate_coolant_loop_length(0.5)
     print(
         f"Estimated Coolant Channel Length (50% coverage): {coolant_channel_length:.2f} m"
     )
+
+    # Estimate coolant mass in the loop
+    coolant_mass = hs.estimate_coolant_mass_of_filled_loop(0.5)
+    print(f"Estimated Coolant Mass in Loop (50% coverage): {coolant_mass:.2f} kg")
