@@ -511,8 +511,7 @@ def thickness_optimization_fatigue(phi,
                                               time_mission,
                                               plot)
         stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))
-        damage, number_of_launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor,
-                                                    number_of_launches,plot)
+        damage, number_of_launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor, number_of_launches,plot)
         if thickness_tank > 0.01:
             raise RuntimeError("failed on Miners equation fatigue calculation")
     return thickness_tank
@@ -544,7 +543,7 @@ if __name__ == "__main__":
     # Geometry Properties
     phi = 6  # degrees, conical head angle, later import from tank sizing file in final sizing.
     tank_radius = 5  # 5 # m, tank radius, later import from tank sizing file in final sizing.
-    thickness_tank = 0.005  # m, tank thickness later import from tank sizing file in final sizing.
+    thickness_tank = 0.004  # m, tank thickness later import from tank sizing file in final sizing.
 
     # Material Properties
 
