@@ -114,7 +114,7 @@ class Material:
             temperature_values (np.ndarray): Array of temperatures [K].
             yield_strength_values (np.ndarray): Array of yield strength values [Pa].
         """
-        self.ultimate_strength = interpolate.interp1d(
+        self.yield_strength = interpolate.interp1d(
             temperature_values,
             yield_strength_values,
             kind="linear",
@@ -314,7 +314,7 @@ if __name__ == "__main__":
         "Thermal Expansion Coefficient [1/K]",
     )
     SS310.plot_property(
-        temperature_range, SS310.ultimate_strength, "Ultimate Strength [Pa]"
+        temperature_range, SS310.yield_strength, "Yield Strength [Pa]"
     )
     SS310.plot_property(temperature_range, SS310.youngs_modulus, "Young's Modulus [Pa]")
     SS310.plot_property(
@@ -333,6 +333,6 @@ if __name__ == "__main__":
         "Thermal Expansion Coefficient [1/K]",
     )
     SS304.plot_property(
-        temperature_range, SS304.ultimate_strength, "Ultimate Strength [Pa]"
+        temperature_range, SS304.yield_strength, "Yield Strength [Pa]"
     )
     SS304.plot_property(temperature_range, SS304.youngs_modulus, "Young's Modulus [Pa]")
