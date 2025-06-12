@@ -179,7 +179,7 @@ class Coolant:
         dP = f * (L / D) * (rho * v**2 / 2)
 
         return dP
-    
+
     def reduce_pressure(self, pressure_drop):
         """
         Reduce the coolant pressure by a specified amount.
@@ -194,11 +194,12 @@ class Coolant:
         )
 
 
+hydrogen = Fluid(FluidsList.Hydrogen).with_state(
+    Input.pressure(coolant_inlet_pressure.value),  # Pa
+    Input.temperature(coolant_inlet_temperature.value),  # K
+)  # Initialize hydrogen coolant with inlet conditions, useful for testing
+
 if __name__ == "__main__":
-    hydrogen = Fluid(FluidsList.Hydrogen).with_state(
-        Input.pressure(coolant_inlet_pressure.value),  # Pa
-        Input.temperature(coolant_inlet_temperature.value),  # K
-    )
     channel = RectangularChannel(width=10e-3, height=5e-3, length=5.0, roughness=1e-5)
     channel = CircularChannel(diameter=10e-3, length=5.0, roughness=1e-5)
     coolant = Coolant(fluid=hydrogen, channel=channel, mass_flow=0.1)
@@ -226,6 +227,6 @@ if __name__ == "__main__":
     print(f"Pressure Drop over {section_length} m: {pressure_drop} Pa")
 
     # Reduce coolant pressure
-    print(f"Old Coolant Pressure: {coolant.fluid.pressure*1e-5} bar")
+    print(f"Old Coolant Pressure: {coolant.fluid.pressure * 1e-5} bar")
     coolant.reduce_pressure(pressure_drop)
-    print(f"New Coolant Pressure: {coolant.fluid.pressure*1e-5} bar")
+    print(f"New Coolant Pressure: {coolant.fluid.pressure * 1e-5} bar")
