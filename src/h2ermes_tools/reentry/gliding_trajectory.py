@@ -284,4 +284,4 @@ glide = GlidingEntry("earth",
                  atmosphere = "exponential",
                  boundary_layer = "laminar")
 
-print(glide.a_max, glide.qc_max, glide.V_a_max)
+print(glide.a_max, glide.qc_max, glide.V_a_max, glide.flight_range_ratio*glide.R_e)
