@@ -152,10 +152,11 @@ class MassIntegrator:
                                             ),
         }
 
-        self.subsystem_dry_masses['propulsion margin'] = 1.2 * (self.subsystem_dry_masses['turbopump']
+        self.subsystem_dry_masses['propulsion margin'] = 0.2 * (self.subsystem_dry_masses['turbopump']
                                                                 + self.unchanging_subsystem_dry_masses["thrust chambers"])
 
         self.dry_mass = sum(self.subsystem_dry_masses.values())
+        self.dry_mass += sum(self.unchanging_subsystem_dry_masses.values())
 
     def calculate_non_propellant_consumables_landing_delta_v(self, oi: 'MassIntegrator') -> None:
         """

@@ -98,7 +98,7 @@ def main() -> None:
     old_integrator.calculate_propellant_mass()
     old_integrator.calculate_hydrogen_oxygen_mass()
 
-    for i in range(20):
+    for i in range(30):
         new_integrator = mi.MassIntegrator()
         add_unchanging_variables(new_integrator)
 
@@ -124,7 +124,12 @@ def main() -> None:
         print(f"ACS propellant mass: {new_integrator.acs_propellant_mass} kg")
         print("--------------------------------------------------------------")
 
+        if abs(new_integrator.gross_mass/old_integrator.gross_mass - 1) < 0.001:
+            break
+
         old_integrator = new_integrator
+
+    pass
 
 if __name__ == "__main__":
     main()
