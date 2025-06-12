@@ -300,7 +300,7 @@ if __name__ == "__main__":
     # print(SS316L.thermal_conductivity(500))  # Get thermal conductivity at 500 K
 
     temperature_range = np.linspace(
-        10, 1273, 100
+        13.8, 1273, 100
     )  # Temperature range from 300 K to 1273 K
     SS310.plot_property(
         temperature_range, SS310.specific_heat, "Specific Heat [J/kg/K]"
