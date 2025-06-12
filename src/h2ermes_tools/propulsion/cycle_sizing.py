@@ -1,91 +1,84 @@
 import numpy as np
 from h2ermes_tools.propulsion.pressure_simulation import pressure_profile_propulsion
-from h2ermes_tools.propulsion.general_characteristics_calculation import calculate_mass_flow
+from h2ermes_tools.propulsion.general_characteristics_calculation import mass_flow_rate
+from pyfluids import Fluid, FluidsList, Input
 
 
-def sizing_pump(required_pump_pressure_rise,
-                propellant_vapor_pressure,
-                pump_inlet_pressure,
-                propellant_density,
-                mass_flow,
-                allowable_pressure_rise_per_stage):
-    # print('propellant density is', propellant_density)
+chamber_pressure = 6100000 #in Pa
+#tank_pressure = 270000 #in Pa, lowest pressure at tank
+prop_tank_pressure = 270000
+oxidizer_tank_pressure = 200000
+o = 1
+
+
+propellant_density = 70.85
+oxidizer_density = 1141
+
+mass_flow = 514.49
+
+
+
+def sizing_pump(prop_tank_pressure, oxidizer_tank_pressure, maximum_thrust, specific_impulse, chamber_pressure=61e5):
+
+    mass_flow = mass_flow_rate(maximum_thrust, specific_impulse)
+    #constants
     g_0 = 9.81  # gravitational acceleration in m/s^2
-    volume_flow_rate = mass_flow / propellant_density  # in m^3/s
-    # print ('pump inlet pressure is ', pump_inlet_pressure, 'Pa')
-    # print('propellant vapor pressure is', propellant_vapor_pressure, 'Pa')
-    net_positive_suction_head = (pump_inlet_pressure - propellant_vapor_pressure) / (g_0 * propellant_density)
-    pump_head_pressure_rise = required_pump_pressure_rise / (g_0 * propellant_density) # in m
-    # print(pump_head_pressure_rise, ' pump head pressure rise in m')
-    # print(required_pump_pressure_rise, ' required pump pressure rise in Pa')
-    number_of_stages = (required_pump_pressure_rise / allowable_pressure_rise_per_stage) 
-    number_of_stages = int(np.ceil(number_of_stages)) + 1 # round up to the nearest whole number
-    # print(number_of_stages, 'number of stages')
-    stage_specific_speed = 2.0 #value for liquid hydrogen
-    pump_efficiency = 0.79
-    #pump_rotational_speed = (stage_specific_speed * (pump_head_pressure_rise/number_of_stages)**0.75)/np.sqrt(volume_flow_rate)
-    pump_rotational_speed = (130 * net_positive_suction_head**0.75) / np.sqrt(volume_flow_rate)
-    power_required_pump = (g_0*mass_flow*pump_head_pressure_rise)/pump_efficiency
-    pump_shaft_torque = power_required_pump / pump_rotational_speed  
-    # print(pump_shaft_torque, ' pump shaft torque in Nm')
+    velocity_propellant = 10 #in m/s
+    velocity_oxidizer = 10 #m/s
+    propellant_density = 70.85
+    oxidizer_density = 1141
+
+    x, required_pump_pressure_rise_prop, pump_inlet_pressure_prop = pressure_profile_propulsion(propellant_density, velocity_propellant, chamber_pressure, prop_tank_pressure)
+    y, required_pump_pressure_rise_oxidizer, pump_inlet_pressure_oxidizer = pressure_profile_propulsion(oxidizer_density, velocity_oxidizer, chamber_pressure, oxidizer_tank_pressure)
+    print(pump_inlet_pressure_oxidizer)
+    #SIZING FOR PROPELLANT TURBOPUMP
+    propellant_vapor_pressure = 84000 #found for LH2 at 20K
+    allowable_pressure_rise_per_stage_prop = 16000000 #for LH2 from SPAD
+    mass_flow_propellant = mass_flow/7
+    volume_flow_rate_propellant = mass_flow_propellant / propellant_density  # in m^3/s
+    net_positive_suction_head_prop = (pump_inlet_pressure_prop - propellant_vapor_pressure) / (g_0 * propellant_density)
+    pump_head_pressure_rise_prop = required_pump_pressure_rise_prop / (g_0 * propellant_density) # in m
+    number_of_stages_prop = (required_pump_pressure_rise_prop / allowable_pressure_rise_per_stage_prop) 
+    number_of_stages_prop = int(np.ceil(number_of_stages_prop)) + 1 # round up to the nearest whole number
+    stage_specific_speed_prop = 2.0 #value for liquid hydrogen
+    pump_efficiency_prop = 0.79
+    pump_rotational_speed_prop = (130 * net_positive_suction_head_prop**0.75) / np.sqrt(volume_flow_rate_propellant)
+    power_required_pump_prop = (g_0*mass_flow_propellant*pump_head_pressure_rise_prop)/pump_efficiency_prop
+    pump_shaft_torque_prop = power_required_pump_prop / pump_rotational_speed_prop  
     A = 1.5 #empirical coefficient
     B = 0.6 #empirical exponent
-    turbopump_mass = A * (pump_shaft_torque ** B)
+    turbopump_mass_prop = A * (pump_shaft_torque_prop ** B)
+
+
+    #SIZING FOR OXIDIZER TURBOPUMP
+    oxidizer_density = 1141
+    oxidizer_vapor_pressure = 19707
+    allowable_pressure_rise_per_stage_oxidizer = 47000000 #for all others from SPAD
+    mass_flow_oxidizer = (mass_flow*6)/7
+    volume_flow_rate_oxidizer= mass_flow_oxidizer / oxidizer_density  # in m^3/s
+    net_positive_suction_head_oxidizer = (pump_inlet_pressure_oxidizer - oxidizer_vapor_pressure) / (g_0 * oxidizer_density)
+    pump_head_pressure_rise_oxidizer = required_pump_pressure_rise_oxidizer / (g_0 * oxidizer_density) # in m
+    number_of_stages_oxidizer = (required_pump_pressure_rise_oxidizer / allowable_pressure_rise_per_stage_oxidizer) 
+    number_of_stages_oxidizer = int(np.ceil(number_of_stages_oxidizer)) + 1 # round up to the nearest whole number
+    stage_specific_speed_oxidizer = 2.0 #value for liquid hydrogen
+    pump_efficiency_oxidizer = 0.79
+    pump_rotational_speed_oxidizer = (130 * net_positive_suction_head_oxidizer**0.75) / np.sqrt(volume_flow_rate_oxidizer)
+    power_required_pump_oxidizer = (g_0*mass_flow_oxidizer*pump_head_pressure_rise_oxidizer)/pump_efficiency_oxidizer
+    pump_shaft_torque_oxidizer = power_required_pump_oxidizer / pump_rotational_speed_oxidizer  
+    A = 1.5 #empirical coefficient
+    B = 0.6 #empirical exponent
+    turbopump_mass_oxidizer = A * (pump_shaft_torque_oxidizer ** B)
+    print(turbopump_mass_prop, turbopump_mass_oxidizer)
+
     
-    turbine_pressure_ratio =  1.75 # pressure ratio across the turbine
-    #isentropic_spouting_velocity = np.sqrt(2*c_p*turbine_inlet_temperature*(1-(1/turbine_pressure_ratio)**(gamma/(gamma-1))))
+
+    mass_turbopumps = turbopump_mass_prop + turbopump_mass_oxidizer
+
     #turbine_mean_pitch_diameter = (2 * u_m) / pump_rotational_speed
-    return number_of_stages, pump_rotational_speed, stage_specific_speed, power_required_pump, net_positive_suction_head, turbopump_mass
-
-def size_turbopump(
-        tank_pressure: float,
-        thrust: float,
-        propellant_density: float = 70.85,
-        velocity_propellant: float = 10,
-        chamber_pressure: float = 300000,
-        allowable_pressure_rise_per_stage: float = 16000000,
-        propellant_vapor_pressure: float = 133322
-        ):
-    """
-    Wrapper for sizing the turbopumps
-    """
-    (x,
-     required_pump_pressure_rise,
-     pump_inlet_pressure
-     ) = pressure_profile_propulsion(
-        propellant_density,
-        velocity_propellant,
-        chamber_pressure,
-        tank_pressure
-    )
-    mass_flow = calculate_mass_flow(thrust)
-
-    (
-        number_of_stages,
-        pump_rotational_speed,
-        stage_specific_speed,
-        power_required_pump,
-        net_positive_suction_head,
-        turbopump_mass
-    ) = sizing_pump(
-        required_pump_pressure_rise=required_pump_pressure_rise,
-        propellant_vapor_pressure=propellant_vapor_pressure,
-        pump_inlet_pressure=pump_inlet_pressure,
-        propellant_density=propellant_density,
-        mass_flow=mass_flow,
-        allowable_pressure_rise_per_stage=allowable_pressure_rise_per_stage
-    )
-
-    # print(f'Rotational Speed: {pump_rotational_speed} rad/s\n'
-    #       f'Stage Specific Speed: {stage_specific_speed}\n'
-    #       f'Power Required: {power_required_pump} W\n'
-    #       f'Net Positive Suction Head: {net_positive_suction_head} m\n'
-    #       f'Turbopump Mass: {turbopump_mass} kg')
-
-    return turbopump_mass
-
+    return mass_turbopumps
 
 if __name__ == "__main__":
-    size_turbopump(3e5, 2.17e6)
+    mass_turbopumps = sizing_pump(mass_flow, chamber_pressure, prop_tank_pressure, oxidizer_tank_pressure)
+    print(f"Mass of turbopumps: {mass_turbopumps:.2f} kg")
+    # Output the mass of the turbopumps in kg
 
-    
