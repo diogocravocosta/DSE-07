@@ -486,11 +486,12 @@ def thickness_optimization_fatigue(phi,
             min_launches)
 
     #applying miners rule 
-    damage, number_of_launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor,
-                                                          number_of_launches, plot)
-    while number_of_launches < min_launches:
-        print("Failure predicted due to Miners equation")
-        thickness_tank = thickness_tank + 0.001
+    damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, min_launches)[2]
+    if damage >1:
+        print("Failure was predicted due to Miners Law. Thickness will be increased")
+    while damage > 1:
+
+        thickness_tank = thickness_tank + 0.0001
         sigma_global_loading = loading_phases(delta_T_earth,
                                               delta_T_tank,
                                               delta_T_tank_extreme,
@@ -511,9 +512,12 @@ def thickness_optimization_fatigue(phi,
                                               time_mission,
                                               plot)
         stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))
-        damage, number_of_launches = fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safety_factor, number_of_launches,plot)
+        damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, min_launches)[2]
+
         if thickness_tank > 0.01:
             raise RuntimeError("failed on Miners equation fatigue calculation")
+    damage,launches = fatigue_miner_estimation(stress_range,miner_c,miner_m,stress_cycle,safety_factor,min_launches,plot)
+    print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
     return thickness_tank
 
 
@@ -635,4 +639,4 @@ if __name__ == "__main__":
                                        T_ambient_earth=300,
                                        T_gh2=150,
                                        T_gh2_ext=200)
-    print("min thickness", thickness_minimum_tank)
+    print("Min thickness of tank:", thickness_minimum_tank,"m")
