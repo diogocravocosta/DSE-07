@@ -45,7 +45,7 @@ class Variable:
 # Enter your variables here
 coolant_mass = Variable(
     name="Coolant Mass",
-    value=0.0,
+    value=3000.0,
     unit="kg",
     latex_symbol="M_c",
     confidence="poor",
@@ -55,12 +55,22 @@ coolant_mass = Variable(
 
 heat_shield_thickness = Variable(
     name="Heat Shield Thickness",
-    value=4e-3,
+    value=10e-3,  # includes the coolant channels
     unit="m",
     latex_symbol="t_{s}",
     confidence="good",
     constraints="must be greater than 0",
-    margin=(1.0, 1.1),
+    margin=(0.8, 1.2),
+)
+
+heat_shield_mass = Variable(
+    name="Heat Shield Mass",
+    value=750.0,  # only the mass of the metallic structure
+    unit="kg",
+    latex_symbol="M_{hs}",
+    confidence="poor",
+    constraints="must be greater than zero",
+    margin=(1.0, 1.5),
 )
 
 coolant_inlet_pressure = Variable(
@@ -416,6 +426,56 @@ t_w_vac = Variable(
         constraints="only positive values",
         margin=(1, 1),
     )
+
+acs_peak_power = Variable(
+    name="ACS Peak Power",
+    value=2100,
+    unit="W",
+    latex_symbol="P_{acs,peak}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_average_power = Variable(
+    name="ACS Average Power",
+    value=1200,
+    unit="W",
+    latex_symbol="P_{acs,avg}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_dry_mass = Variable(
+    name="ACS Dry Mass",
+    value=150,
+    unit="kg",
+    latex_symbol="m_{acs}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+acs_propellant_mass = Variable(
+    name="ACS Propellant Mass",
+    value=800,
+    unit="kg",
+    latex_symbol="m_{acs,prop}",
+    confidence="low",
+    constraints="must be positive",
+    margin=(0.5, 2.0),
+)
+
+docking_system_mass = Variable(
+    name='Docking System Mass',
+    value=370,
+    unit='kg',
+    latex_symbol='m_{docking system}',
+    confidence='good',
+    constraints='>0',
+    margin=(1.0, 1.1),
+)
 
 if __name__ == "__main__":
     # Example of how to create a variable
