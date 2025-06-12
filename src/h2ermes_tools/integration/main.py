@@ -51,7 +51,7 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     integrator.unchanging_subsystem_dry_masses = {
         "acs": vr.acs_dry_mass.value,
         "heat shield": vr.heat_shield_mass.value,
-        "thrust chambers": vr.thrust_chamber_sl_mass.value * 8 + vr.thrust_chamber_sl_mass.value * 16,
+        "thrust chambers": vr.thrust_chamber_sl_mass.value * vr.n_chambers_sl.value + vr.thrust_chamber_vac_mass.value * vr.n_chambers_vac.value,
         "docking system": vr.docking_system_mass.value,
         "nose cone": vr.nose_cone_mass.value,
         "power": vr.power_dry_mass.value,

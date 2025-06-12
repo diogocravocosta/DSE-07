@@ -2,7 +2,7 @@ import numpy as np
 
 import data.constants as cn
 import h2ermes_tools.integration.dummy_dry_mass as dds
-from h2ermes_tools.propulsion.cycle_sizing import size_turbopump
+from h2ermes_tools.propulsion.cycle_sizing import sizing_pump
 from h2ermes_tools.landinglegs import size_landing_legs
 from h2ermes_tools.structures.tank_sizing import size_tanks, tank_thickness
 from h2ermes_tools.boil_off_estimation import total_boil_off_h2
@@ -133,8 +133,10 @@ class MassIntegrator:
                 material=oi.landing_leg_material,
                 clearance_height=oi.clearance_height
             ),
-            "turbopump": size_turbopump(tank_pressure=oi.min_tank_pressure,
-                                        thrust=oi.total_vacuum_thrust),
+            "turbopump": sizing_pump(prop_tank_pressure=oi.hydrogen_design_pressure,
+                                     oxidizer_tank_pressure=oi.oxygen_design_pressure,
+                                     maximum_thrust=oi.total_vacuum_thrust,
+                                     specific_impulse=oi.vacuum_isp),
             "main_tank": size_tanks(material=oi.tank_material,
                                     wet_mass=oi.gross_mass,
                                     LH2_mass=oi.total_hydrogen_mass,
