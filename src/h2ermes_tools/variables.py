@@ -65,7 +65,7 @@ heat_shield_thickness = Variable(
 
 heat_shield_mass = Variable(
     name="Heat Shield Mass",
-    value=2500,  # only the mass of the metallic structure
+    value=2200,  # only the mass of the metallic structure
     unit="kg",
     latex_symbol="M_{hs}",
     confidence="poor",
@@ -359,7 +359,7 @@ payload_mass = Variable(
 
 thrust_chamber_sl_mass = Variable(
         name="The mass of a sea level optimized Thrust Chamber",
-        value=4.063444786849481, 
+        value=9.666,
         unit="kg",
         latex_symbol="m_{tc_{sl}}",
         confidence="medium, conservative value",
@@ -369,7 +369,7 @@ thrust_chamber_sl_mass = Variable(
 
 thrust_chamber_vac_mass = Variable(
         name="The mass of a vacuum optimized Thrust Chamber",
-        value=19.666088892712068, 
+        value=66.04,
         unit="kg",
         latex_symbol="m_{tc_{vac}}",
         confidence="medium, conservative value",
