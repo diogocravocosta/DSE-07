@@ -48,8 +48,8 @@ def obtain_cross_sectional_areas(total_mass_flow, prop_tank_pressure, oxidizer_t
             thickness = new_thickness
         return thickness
 
-    small_pressure_prop, o = pressure_profile_propulsion(propellant_density, velocity_propellant_turbopump_exit, chamber_pressure, prop_tank_pressure)
-    internal_pressure_small_oxidizer, u = pressure_profile_propulsion(LOX.density, velocity_oxidizer_turbopump_exit, chamber_pressure, oxidizer_tank_pressure)
+    small_pressure_prop, _, _ = pressure_profile_propulsion(propellant_density, velocity_propellant_turbopump_exit, chamber_pressure, prop_tank_pressure)
+    internal_pressure_small_oxidizer, _, _ = pressure_profile_propulsion(LOX.density, velocity_oxidizer_turbopump_exit, chamber_pressure, oxidizer_tank_pressure)
     chamber_pressure = 6100000  # in Pa, chamber pressure
     thickness_big_propellant = calculate_thickness(main_propellant_channel_diameter, prop_tank_pressure, 210 * 10 **6)
     thickness_big_oxidizer = calculate_thickness(main_oxidizer_channel_diameter, oxidizer_tank_pressure, 210 * 10 **6)
