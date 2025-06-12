@@ -149,7 +149,7 @@ def fatigue_paris_estimation(
     Y_geometry_factor = y_calculation(a_crack_depth, thickness)
 
     critical_crack_depth = critical_crack_depth_calc(material, Y_geometry_factor, max(sigma_global_loading))
-    print('Critical crack depth is:', critical_crack_depth, "m")
+    # print('Critical crack depth is:', critical_crack_depth, "m")
     stress_cycle = cycle_launch(stress_cycle, launches)
     stress_range = cycle_launch(stress_range, 1e6)  # convert to pascals
     a_crack = []
@@ -168,7 +168,7 @@ def fatigue_paris_estimation(
             a_crack.append(a_crack_depth)
             count += 1
             if a_crack_depth > critical_crack_depth:
-                print('Expected lifecycles: ', count)
+                # print('Expected lifecycles: ', count)
                 if count < min_launches:
                     thickness = thickness + 0.001
                 break
@@ -193,11 +193,12 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safet
     """
     Di, cycle, damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, launches)
     if damage > 1:
-        print('Failure was predicted due to Miners rule.')
+        pass
+        # print('Failure was predicted due to Miners rule.')
     while damage > 1:
         launches = launches - 1
         damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, launches)[2]
-    print('Damage count is:', damage, ". Expected number of launches:", launches)
+    # print('Damage count is:', damage, ". Expected number of launches:", launches)
     if plot == True:
         plt.figure(figsize=(8, 5))
         plt.plot(cycle, Di, marker='o')
@@ -287,25 +288,25 @@ def loading_phases(delta_T_earth,
     sigma_global_loading = [stress_comb_start, stress_comb_maxq, stress_comb_launch, stress_comb_orbit,
                             stress_comb_dock, stress_comb_reentry, stress_comb_launchpad]
     R_load_ratio_global = R_calculation(sigma_global_loading)
-    print("Global Load ratio R = ", R_load_ratio_global)
+    # print("Global Load ratio R = ", R_load_ratio_global)
 
     #R for thermal stress 
     sigma_thermal_load = [sigma_thermal_start, sigma_thermal_maxq, sigma_thermal_launch, sigma_thermal_orbit,
                           sigma_thermal_dock, sigma_thermal_reentry, sigma_thermal_launchpad]
     R_load_ratio_thermal = R_calculation(sigma_thermal_load)
-    #print("Maximum stress ratio R thermal: ", R_load_ratio_thermal)
+    ## print("Maximum stress ratio R thermal: ", R_load_ratio_thermal)
 
     #R for mechanical stress
     sigma_mechanical_load = [sigma_axial_start, sigma_axial_maxq, sigma_axial_launch, 0, 0, sigma_axial_reentry,
                              sigma_axial_launchpad]
     R_load_ratio_mechanical = R_calculation(sigma_mechanical_load)
-    #print("Maximum stress ratio R mechanical: ", R_load_ratio_mechanical)
+    ## print("Maximum stress ratio R mechanical: ", R_load_ratio_mechanical)
 
     #R for pressure stress
     sigma_pressure_load = [sigma_pressure_start, sigma_pressure_maxq, sigma_pressure_launch, sigma_pressure_orbit,
                            sigma_pressure_dock, sigma_pressure_reentry, 0]
     R_load_ratio_pressure = R_calculation(sigma_pressure_load)
-    #print("Maximum stress ratio R pressure: ", R_load_ratio_pressure)
+    ## print("Maximum stress ratio R pressure: ", R_load_ratio_pressure)
     if plot is True:
         plt.figure(figsize=(8, 5))
         plt.plot(time_mission, np.array(sigma_pressure_load) / 1e6, marker='o', label='Pressure Stress')
@@ -426,7 +427,7 @@ def thickness_optimization_fatigue(phi,
     exp_coeff = -0.1555
     miner_m = -1 / exp_coeff
     miner_c = 10 ** (np.log10(const) / -exp_coeff)
-    print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
+    # print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
     # Conditions
     plot = False
     crack_cond = True
@@ -468,7 +469,7 @@ def thickness_optimization_fatigue(phi,
         min_launches)
 
     while count < min_launches:
-        print("Failure predicted due to Paris equation")
+        # print("Failure predicted due to Paris equation")
         thickness_tank = thickness_tank + 0.001
 
         count = fatigue_paris_estimation(
@@ -488,7 +489,8 @@ def thickness_optimization_fatigue(phi,
     #applying miners rule 
     damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, min_launches)[2]
     if damage >1:
-        print("Failure was predicted due to Miners Law. Thickness will be increased")
+        pass
+        # print("Failure was predicted due to Miners Law. Thickness will be increased")
     while damage > 1:
 
         thickness_tank = thickness_tank + 0.0001
@@ -517,7 +519,7 @@ def thickness_optimization_fatigue(phi,
         if thickness_tank > 0.01:
             raise RuntimeError("failed on Miners equation fatigue calculation")
     damage,launches = fatigue_miner_estimation(stress_range,miner_c,miner_m,stress_cycle,safety_factor,min_launches,plot)
-    print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
+    # print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
     return thickness_tank
 
 
@@ -608,7 +610,7 @@ if __name__ == "__main__":
     # exp_coeff = -0.1555
     # miner_m = -1 / exp_coeff
     # miner_c = 10 ** (np.log10(const) / -exp_coeff)
-    # print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
+    # # print("The C coefficient for miner equation is", miner_c, "and m coefficient is", miner_m)
     # # Conditions
     # plot = True
     # crack_cond = True
@@ -639,4 +641,4 @@ if __name__ == "__main__":
                                        T_ambient_earth=300,
                                        T_gh2=150,
                                        T_gh2_ext=200)
-    print("Min thickness of tank:", thickness_minimum_tank,"m")
+    # print("Min thickness of tank:", thickness_minimum_tank,"m")

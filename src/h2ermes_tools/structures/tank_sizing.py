@@ -157,7 +157,8 @@ def calculate_tank_thickness(
     N_cr = 0.33 * (2 * np.pi * material.E * t_guess ** 2 * np.cos(phi)) / np.sqrt(3 * (1 - 0.33 ** 2))
 
     if safety_factor * thrust / (2 * np.pi * radius * t_guess) > N_cr:
-        print("BUCKLES: sigma_critical =", N_cr, "N  (increase t or add stiffeners)")
+        # print("BUCKLES: sigma_critical =", N_cr, "N  (increase t or add stiffeners)")
+        pass
 
     # Pressure Buckling
     # P_cr = (0.92 * E) / ((tank_length/radius) * (radius/t_guess)**2.5 * np.sqrt(3*(1-0.33**2)))
@@ -169,7 +170,8 @@ def calculate_tank_thickness(
     M_cr = 0.41 * (np.pi * material.E * t_guess ** 2 * r * np.cos(phi) ** 2) / np.sqrt(3 * (1 - 0.33 ** 2))
 
     if (fuel_mass * 2 * 9.81 / (tank_length) * tank_length ** 2 / 12) > M_cr:
-        print("BUCKLES: moment_critical =", M_cr, "N*m  (increase t or add stiffeners)")
+        pass
+        # print("BUCKLES: moment_critical =", M_cr, "N*m  (increase t or add stiffeners)")
 
     # Check for transverse and hoop stress at maximum boil off pressure:
     t_press_trans = (max_propellant_pressure * radius) / (2 * material.ys * np.cos(phi))
@@ -177,12 +179,12 @@ def calculate_tank_thickness(
     # check hoop stress
     if t_press_trans > t_guess:
         t_guess = t_press_trans
-        print("Transverse stress leading and transverse stress is: " + str(
-            (max_propellant_pressure * radius) / (2 * t_guess * np.cos(phi))))
+        # print("Transverse stress leading and transverse stress is: " + str(
+        #     (max_propellant_pressure * radius) / (2 * t_guess * np.cos(phi))))
     elif t_press_hoop > t_press_trans > t_guess:
         t_guess = t_press_hoop
-        print("Hoop stress leading and hoop stress is: " + str(
-            (max_propellant_pressure * radius) / (t_guess * np.cos(phi))))
+        # print("Hoop stress leading and hoop stress is: " + str(
+        #     (max_propellant_pressure * radius) / (t_guess * np.cos(phi))))
     return t_guess
 
 
@@ -437,9 +439,9 @@ def tank_dimensions(material: material.Material,
                                                     cap_height_radius_ratio,
                                                     subtract_bottom_cap=False,
                                                     subtract_top_cap=False)
-    print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
-    print("LH2 Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
-    print("LH2 Tank Top Diameter: " + str(top_radius * 2) + " m")
+    # print("LH2 Tank Length: " + str(tank_length_LH2) + " m")
+    # print("LH2 Tank Bottom Diameter: " + str(middle_radius * 2) + " m")
+    # print("LH2 Tank Top Diameter: " + str(top_radius * 2) + " m")
     #
     # print(
     #     "----------------------------------------------------------------------------------------------"
@@ -450,19 +452,19 @@ def tank_dimensions(material: material.Material,
                                                     cap_height_radius_ratio,
                                                     subtract_bottom_cap=False,
                                                     subtract_top_cap=True)
-    print("LOX Tank Length: " + str(tank_length_LOX) + " m")
-    print("LOX Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
-    print("LOX Tank Top Diameter: " + str(middle_radius * 2) + " m")
+    # print("LOX Tank Length: " + str(tank_length_LOX) + " m")
+    # print("LOX Tank Bottom Diameter: " + str(bottom_radius * 2) + " m")
+    # print("LOX Tank Top Diameter: " + str(middle_radius * 2) + " m")
     # print(
     #     "----------------------------------------------------------------------------------------------"
     # )
-    print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
-    print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
+    # print("LH2 Tanks Volume: " + str(LH2_volume) + " m^3")
+    # print("LOX Tanks Volume: " + str(LOX_volume) + " m^3")
 
     phi_bottom = np.arctan((bottom_radius-middle_radius)/tank_length_LOX)
-    print("PHI BOTTOM IS: " + str(np.degrees(phi_bottom)) + "deg")
+    # print("PHI BOTTOM IS: " + str(np.degrees(phi_bottom)) + "deg")
     phi_top = np.arctan((middle_radius-top_radius)/tank_length_LH2)
-    print("PHI TOP IS: " + str(np.degrees(phi_top)) + "deg")
+    # print("PHI TOP IS: " + str(np.degrees(phi_top)) + "deg")
 
     thickness_LH2 = calculate_tank_thickness(
         wet_mass,
@@ -478,7 +480,7 @@ def tank_dimensions(material: material.Material,
         safety_factor,
         gamma=0.65,
     )
-    print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
+    # print("Thickness LH2 Tank: " + str(thickness_LH2) + " m")
     thickness_LOX = calculate_tank_thickness(
         wet_mass,
         LOX_pressure,
@@ -493,15 +495,15 @@ def tank_dimensions(material: material.Material,
         safety_factor,
         gamma=0.65,
     )
-    print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
+    # print("Thickness LOX Tank: " + str(thickness_LOX) + " m")
     mass_LH2_tank = calculate_tank_mass(
         bottom_radius, middle_radius, tank_length_LH2, thickness_LH2, material, cap_height_radius_ratio
     )
-    print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
+    # print("Mass LH2 Tank: " + str(mass_LH2_tank) + " kg")
     mass_LOX_tank = calculate_tank_mass(
         middle_radius, top_radius, tank_length_LOX, thickness_LOX, material, cap_height_radius_ratio
     )
-    print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
+    # print("Mass LOX Tank: " + str(mass_LOX_tank) + " kg")
 
     # tank_overall_dimensions()
     natural_frequency = check_vibrations(

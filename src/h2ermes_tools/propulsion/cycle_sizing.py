@@ -1,7 +1,6 @@
 import numpy as np
 from h2ermes_tools.propulsion.pressure_simulation import pressure_profile_propulsion
 from h2ermes_tools.propulsion.general_characteristics_calculation import mass_flow_rate
-from pyfluids import Fluid, FluidsList, Input
 
 
 chamber_pressure = 6100000 #in Pa
@@ -29,7 +28,7 @@ def sizing_pump(prop_tank_pressure, oxidizer_tank_pressure, maximum_thrust, spec
 
     x, required_pump_pressure_rise_prop, pump_inlet_pressure_prop = pressure_profile_propulsion(propellant_density, velocity_propellant, chamber_pressure, prop_tank_pressure)
     y, required_pump_pressure_rise_oxidizer, pump_inlet_pressure_oxidizer = pressure_profile_propulsion(oxidizer_density, velocity_oxidizer, chamber_pressure, oxidizer_tank_pressure)
-    print(pump_inlet_pressure_oxidizer)
+    # print(pump_inlet_pressure_oxidizer)
     #SIZING FOR PROPELLANT TURBOPUMP
     propellant_vapor_pressure = 84000 #found for LH2 at 20K
     allowable_pressure_rise_per_stage_prop = 16000000 #for LH2 from SPAD
@@ -67,7 +66,7 @@ def sizing_pump(prop_tank_pressure, oxidizer_tank_pressure, maximum_thrust, spec
     A = 1.5 #empirical coefficient
     B = 0.6 #empirical exponent
     turbopump_mass_oxidizer = A * (pump_shaft_torque_oxidizer ** B)
-    print(turbopump_mass_prop, turbopump_mass_oxidizer)
+    # print(turbopump_mass_prop, turbopump_mass_oxidizer)
 
     
 

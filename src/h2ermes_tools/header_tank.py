@@ -50,15 +50,15 @@ def stress_sphere_tank(pressure, radius, thickness):
 def thickness_optimization(material, pressure, radius, thickness, safety_factor):
     sigma_critical = material.ys / safety_factor
     sigma = stress_sphere_tank(pressure, radius, thickness)
-    if sigma > sigma_critical:
-        print("Thickness must be increased as failure is predicted")
-    else:
-        print("Thickness is good. Sigma in walls is", sigma / 1e6, "MPa and sigma critical with safety factor of",
-              safety_factor, "is", sigma_critical / 1e6, "Pa")
+    # if sigma > sigma_critical:
+    #     print("Thickness must be increased as failure is predicted")
+    # else:
+    #     print("Thickness is good. Sigma in walls is", sigma / 1e6, "MPa and sigma critical with safety factor of",
+    #           safety_factor, "is", sigma_critical / 1e6, "Pa")
     while sigma > sigma_critical:
         thickness = thickness + 0.0001
         sigma = stress_sphere_tank(pressure, radius, thickness)
-    print("Final thickness is:", thickness, "m")
+    # print("Final thickness is:", thickness, "m")
     return thickness
 
 

@@ -90,7 +90,7 @@ def linear_regression(heat_load_data, boil_off_mass, heat_load_h2go):
     return boil_off_specific
 
 def vanderwaals(P, V, R, T, a, b, h2_nm):
-    n = 600000
+    n = 300000
     f = ((P + a * (n / V) ** 2) * (V - n * b)) / (n * R * T)
     iter_count = 0
     while not (0.99 <= f <= 1.01):
@@ -182,10 +182,10 @@ def boil_off_refueling(p_vent, T_vapor,T_vapor_refuel, a,b,R,h2_nm,rho_lh2_20k,m
     p = pres_vanderwaals(nh2, V2, R, T2, a, b)
     m_gh2_refuel = vanderwaals(p,V2, R, T2,a, b,h2_nm)
 
-    print("No boil off is expected in this region as pressure will drop from ",P1/10e5, "bar to ",p/10e5,"bar")
+    # print("No boil off is expected in this region as pressure will drop from ",P1/10e5, "bar to ",p/10e5,"bar")
     m_boiloff_worst_case = vanderwaals(P1,V2, R, T2, a, b,h2_nm) - m_gh2_orbit
 
-    print('Worst case boil off if pressure is held constant ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar. The change in mass is ',m_gh2_refuel/m_gh2_orbit)
+    # print('Worst case boil off if pressure is held constant ',m_boiloff_worst_case,'kg at pressure: ', P1/10e5, 'bar. The change in mass is ',m_gh2_refuel/m_gh2_orbit)
 
     return m_boiloff_worst_case
 
@@ -195,7 +195,7 @@ def boiloff_reentry(ro,ri,h,m_h2_reentry,material,T_skin_reentry,T_lh2,rho_lh2_3
     radiation_load = rad_load(T_skin_reentry, T_lh2, material,area_gh2)  # Example temperatures in Kelvin
     m_boil_off_reentry = linear_regression(heat_load_data, boil_off_mass, radiation_load)
 
-    print('Boil off in reentry due to tank wall heating up: ',m_boil_off_reentry,'kg for radiation load: ',radiation_load,"W")
+    # print('Boil off in reentry due to tank wall heating up: ',m_boil_off_reentry,'kg for radiation load: ',radiation_load,"W")
     return m_boil_off_reentry
 
 def total_boil_off_h2(m_h2_tot,
