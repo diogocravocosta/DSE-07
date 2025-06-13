@@ -8,7 +8,7 @@ import h2ermes_tools.integration.mass_integration as mi
 
 
 # Add unchanging variables to the MassIntegrator
-def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
+def add_default_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     """Add unchanging variables to the MassIntegrator object."""
     integrator.payload_mass = 8_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value  
@@ -80,7 +80,8 @@ def add_default_initial_values(integrator: mi.MassIntegrator) -> None:
     integrator.hydrogen_tank_height = 12.65 # m
     integrator.top_radius = 2.5 # m
 
-def run_integration(add_initial_values=add_default_initial_values) -> None:
+def run_integration(add_initial_values=add_default_initial_values,
+                    add_unchanging_variables=add_default_unchanging_variables) -> None:
     """Main function to run the mass integration."""
     # Create a MassIntegrator instance
     old_integrator = mi.MassIntegrator()
