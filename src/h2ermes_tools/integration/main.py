@@ -127,7 +127,13 @@ def run_integration(add_initial_values=add_default_initial_values,
 
         old_integrator = new_integrator
 
-    pass
+    return (
+        new_integrator.gross_mass,
+        new_integrator.dry_mass,
+        new_integrator.total_hydrogen_mass,
+        new_integrator.total_oxygen_mass,
+        new_integrator.acs_propellant_mass,
+    )
 
 if __name__ == "__main__":
     run_integration()
