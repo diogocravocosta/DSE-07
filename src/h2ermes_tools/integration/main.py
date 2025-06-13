@@ -64,7 +64,7 @@ def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
 
 
 # Define initial values for the MassIntegrator
-def add_initial_values(integrator: mi.MassIntegrator) -> None:
+def add_default_initial_values(integrator: mi.MassIntegrator) -> None:
     """Add initial values to the MassIntegrator object."""
     integrator.dry_mass = vr.total_dry_mass.value
     integrator.h2_boil_off_mass = 1000
@@ -80,8 +80,7 @@ def add_initial_values(integrator: mi.MassIntegrator) -> None:
     integrator.hydrogen_tank_height = 12.65 # m
     integrator.top_radius = 2.5 # m
 
-
-def main() -> None:
+def run_integration(add_initial_values=add_default_initial_values) -> None:
     """Main function to run the mass integration."""
     # Create a MassIntegrator instance
     old_integrator = mi.MassIntegrator()
@@ -130,4 +129,4 @@ def main() -> None:
     pass
 
 if __name__ == "__main__":
-    main()
+    run_integration()
