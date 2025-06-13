@@ -386,7 +386,7 @@ def run():
     # base_arc_height = 0.5
     # mass = 28000
 
-    cone_length = 25.250
+    cone_length = 28.63
     cone_max_radius = 5
     cone_min_radius = 2.5
     base_arc_height = 0.5
