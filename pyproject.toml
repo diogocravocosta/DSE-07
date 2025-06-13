@@ -30,6 +30,8 @@ dependencies = [
     "pyatmos>=1.2.7",
     "setuptools>=80.9.0",
     "rocketcea>=1.2.1",
+    "skicit-learn>=1.7.0",
+    "rainflow>=3.2.0",
 ]
 optional-dependencies = { dev = [
         "ruff>=0.11.12",
