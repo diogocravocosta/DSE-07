@@ -73,11 +73,51 @@ heat_shield_mass = Variable(
     margin=(1.0, 1.5),
 )
 
+coolant_inlet_pressure = Variable(
+    name="Coolant Inlet Pressure",
+    value=50e5,  # 50 bar
+    unit="Pa",
+    latex_symbol="P_{c_{in}}",
+    confidence="a guess at this point",
+    constraints="must be positive, depends on the pump/propulsion system",
+    margin=(1.0, 1.05),
+)
+
+coolant_inlet_temperature = Variable(
+    name="Coolant Inlet Temperature",
+    value=13.8,  # K
+    unit="K",
+    latex_symbol="T_{c_{in}}",
+    confidence="a guess at this point, assuming subcooled liquid hydrogen",
+    constraints="must be positive, depends on the pump/propulsion system and the coolant",
+    margin=(1.0, 1.05),
+)
+
+coolant_inlet_pressure = Variable(
+    name="Coolant Inlet Pressure",
+    value=50e5,  # 50 bar
+    unit="Pa",
+    latex_symbol="P_{c_{in}}",
+    confidence="a guess at this point",
+    constraints="must be positive, depends on the pump/propulsion system",
+    margin=(1.0, 1.05),
+)
+
+coolant_inlet_temperature = Variable(
+    name="Coolant Inlet Temperature",
+    value=13.8,  # K
+    unit="K",
+    latex_symbol="T_{c_{in}}",
+    confidence="a guess at this point, assuming subcooled liquid hydrogen",
+    constraints="must be positive, depends on the pump/propulsion system and the coolant",
+    margin=(1.0, 1.05),
+)
+
 orbit_insertion_delta_v = Variable(
     name="Orbit Insertion Delta V",
     value=5800.,
     unit="m/s",
-    latex_symbol="\Delta V_{oi}",
+    latex_symbol=r"\Delta V_{oi}",
     confidence="fair",
     constraints="must be positive",
     margin=(0.95, 1.05),
@@ -87,7 +127,7 @@ orbit_raising_delta_v = Variable(
     name="Orbit Raising Delta V",
     value=114.,
     unit="m/s",
-    latex_symbol="\Delta V_{or}",
+    latex_symbol=r"\Delta V_{or}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -97,7 +137,7 @@ target_orbit_circularization_delta_v = Variable(
     name="Target Orbit Circularization Delta V",
     value=113.,
     unit="m/s",
-    latex_symbol="\Delta V_{toc}",
+    latex_symbol=r"\Delta V_{toc}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -107,7 +147,7 @@ deorbit_delta_v = Variable(
     name="Deorbit Delta V",
     value=160.,
     unit="m/s",
-    latex_symbol="\Delta V_{do}",
+    latex_symbol=r"\Delta V_{do}",
     confidence="good",
     constraints="must be positive",
     margin=(1.0, 1.05),
@@ -117,7 +157,7 @@ landing_delta_v = Variable(
     name="Landing Delta V",
     value=500.,
     unit="m/s",
-    latex_symbol="\Delta V_{l}",
+    latex_symbol=r"\Delta V_{l}",
     confidence="poor",
     constraints="must be positive",
     margin=(0.5, 1.05),
@@ -127,7 +167,7 @@ drag_compensation_delta_v = Variable(
     name="Drag Compensation Delta V",
     value=30.,
     unit="m/s",
-    latex_symbol="\Delta V_{dc}",
+    latex_symbol=r"\Delta V_{dc}",
     confidence="poor",
     constraints="must be positive",
     margin=(0.5, 1.5),
@@ -361,7 +401,7 @@ mass_flow_main = Variable(
         name="Mass Flow of the Main Engine, including all of the Thrust Chambers",
         value=514.4880, 
         unit="kg/s",
-        latex_symbol="\dot{m}_{main}",
+        latex_symbol=r"\dot{m}_{main}",
         confidence="result of other parameters, can change",
         constraints="only positive values",
         margin=(0.8, 1.2),

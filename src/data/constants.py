@@ -1,7 +1,10 @@
 """This file contains all constants used throughout our codebase"""
 
 # General physics
-gravitational_constant = 6.67430e-11  # N*m2/kg2
+gravitational_constant = 6.67430e-11 #N*m2/kg2
+boltzmann = 5.67e-8  # stefan boltzmann constant
+
+
 
 # Earth parameters
 g_0 = 9.80665  # m/s2, standard gravity
