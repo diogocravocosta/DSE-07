@@ -591,7 +591,7 @@ def acs_tank_design(htp_density, total_prop_mass):
         tank_thickness = tank_thickness_AA_6000
     else:
         tank_thickness = tank_thickness_SS_316
-    return tank_mass, tank_material, tank_thickness
+    return tank_mass, tank_material, tank_thickness, tank_radius
 
 # tank_mass, tank_material = acs_tank_design(htp_density, total_prop_mass_thrusters)
 # print("The mass of the ACS tank is: ", tank_mass, "kg")
@@ -627,12 +627,12 @@ def aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_
     total_power_thrusters, total_mass_thrusters, _, total_prop_mass_thrusters = mass_and_power_estimation(number_of_thrusters, rcs_dry_mass, thrusters, burn_time)
 
     # Design the ACS tank
-    tank_mass, _, thickness_tank = acs_tank_design(htp_density, total_prop_mass_thrusters)
+    tank_mass, _, thickness_tank, radius_tank = acs_tank_design(htp_density, total_prop_mass_thrusters)
 
     # Calculate the total mass of the ACS system
     total_mass_acs_system = total_mass_thrusters + (2 * tank_mass)
 
-    return total_mass_acs_system, total_power_thrusters, tank_mass, thickness_tank
+    return total_mass_acs_system, total_power_thrusters, tank_mass, thickness_tank, radius_tank
 
 
 # total_mass_aocs = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate)
@@ -676,11 +676,12 @@ if __name__ == "__main__":
     # maneuver_time = burn_time  # in seconds, assuming a third of the maximum burn time for maneuvering
     # ang_acc_max = slew_rate / (maneuver_time)  # in rad/s^2
 
-    total_mass_aocs, total_power, singular_tank_mass, thickness_tank = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
+    total_mass_aocs, total_power, singular_tank_mass, thickness_tank, radius_tank = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
     print("The total mass of the Attitude and Orbit Control System (AOCS) is: ", total_mass_aocs, "kg")
     print("The total power requirement of the AOCS is: ", total_power, "W")
     # print("The mass of one tank is: ", singular_tank_mass, "kg")
     # print("The thickness of the tank is: ", thickness_tank, "m")
+    print("The radius of the tank is: ", radius_tank, "m")
 
 
 # List of all torques
