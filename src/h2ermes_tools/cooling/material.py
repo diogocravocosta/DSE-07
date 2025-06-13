@@ -313,9 +313,7 @@ if __name__ == "__main__":
         SS310.thermal_expansion_coeffient,
         "Thermal Expansion Coefficient [1/K]",
     )
-    SS310.plot_property(
-        temperature_range, SS310.yield_strength, "Yield Strength [Pa]"
-    )
+    SS310.plot_property(temperature_range, SS310.yield_strength, "Yield Strength [Pa]")
     SS310.plot_property(temperature_range, SS310.youngs_modulus, "Young's Modulus [Pa]")
     SS310.plot_property(
         temperature_range, SS310.thermal_diffusivity, "Thermal Diffusivity [m^2/s]"
@@ -332,7 +330,5 @@ if __name__ == "__main__":
         SS304.thermal_expansion_coeffient,
         "Thermal Expansion Coefficient [1/K]",
     )
-    SS304.plot_property(
-        temperature_range, SS304.yield_strength, "Yield Strength [Pa]"
-    )
+    SS304.plot_property(temperature_range, SS304.yield_strength, "Yield Strength [Pa]")
     SS304.plot_property(temperature_range, SS304.youngs_modulus, "Young's Modulus [Pa]")

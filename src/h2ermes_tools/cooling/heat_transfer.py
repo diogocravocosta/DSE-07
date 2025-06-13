@@ -7,18 +7,22 @@ Material: AISI 310 (properties assumed T-independent)
 Scheme  : Explicit FTCS, uniform grid
 """
 
-import numpy as np
+# plotting
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import Normalize
 import matplotlib
 from matplotlib.animation import FuncAnimation
+
+# calculations
+import numpy as np
 from data.constants import boltzmann
 from scipy.interpolate import interp1d
 from pyfluids import Fluid, FluidsList, Input
 
-from h2ermes_tools.cooling.material import SS310
-from h2ermes_tools.cooling.coolant import Coolant
+# h2ermes_tools imports
+from h2ermes_tools.cooling.coolant import Coolant, hydrogen
+from h2ermes_tools.cooling.material import Material, SS310
 from h2ermes_tools.cooling.channel import RectangularChannel
 
 
@@ -36,15 +40,15 @@ class HeatShield:
 
     def __init__(
         self,
-        wall_thickness=10e-3,
-        num_nodes=3,
-        incident_heat_flux=np.array([[0, 100_000]]),
-        initial_temperature=20.0,
-        total_time=900.0,
-        coolant=None,
-        material=None,
-        heat_shield_diameter=None,
-        sphere_height=2.0,
+        wall_thickness: float = 10e-3,
+        num_nodes: int = 3,
+        incident_heat_flux: np.ndarray = np.array([[0, 100_000]]),
+        initial_temperature: float = 20.0,
+        total_time: float = 900.0,
+        coolant: Coolant = hydrogen,
+        material: Material = SS310,
+        heat_shield_diameter: float = 10.0,
+        sphere_height: float = 2.0,
     ):
         self.wall_thickness = wall_thickness
         self.num_nodes = num_nodes
@@ -60,6 +64,179 @@ class HeatShield:
         self.diameter = heat_shield_diameter
         self.height = sphere_height
         self.surface_area = np.pi * self.diameter * self.height
+
+        # Validate parameters
+        if self.num_nodes < 3:
+            raise ValueError("num_nodes must be at least 3 for a valid simulation.")
+        if self.wall_thickness <= 0:
+            raise ValueError("wall_thickness must be a positive value.")
+        if self.initial_temperature < 13.8:
+            raise ValueError("initial_temperature must be above 13.8 K.")
+        if self.total_time <= 0:
+            raise ValueError("total_time must be a positive value.")
+        if not isinstance(self.incident_heat_flux, np.ndarray):
+            raise ValueError(
+                "incident_heat_flux must be a numpy array with shape (N, 2) for time and value."
+            )
+        if self.incident_heat_flux.shape[1] != 2:
+            raise ValueError(
+                "incident_heat_flux must have two columns: time and heat flux value."
+            )
+        if not isinstance(self.coolant, Coolant):
+            raise ValueError("coolant must be an instance of the Coolant class.")
+        if not isinstance(self.material, Material):
+            raise ValueError("material must be an instance of the Material class.")
+        if self.diameter <= 0:
+            raise ValueError("heat_shield_diameter must be a positive value.")
+        if self.height <= 0:
+            raise ValueError("sphere_height must be a positive value.")
+        print("HeatShield class initialized. All parameters are valid.")
+
+    def run_1d_simulation(self):
+        """
+        The following code will look similar to the run_simulation method,
+        except it will calculate the area over which the incident heat flux is applied
+        and the area over which the cooling flux is applied.
+
+        TODO:
+        - why I am copying all all the numbers into their variables?
+        - make the initial temperature an array of temperature distribution
+        """
+        # 0. Initial Conditions, Constants & Setup
+        T_i = self.initial_temperature
+        temperature = np.full(self.num_nodes, T_i, dtype=float)
+        temperature_next = temperature.copy()
+        x = np.linspace(0, self.wall_thickness, self.num_nodes)
+
+        node_spacing = self.wall_thickness / (self.num_nodes - 1)
+        stefan_boltzmann = self.stefan_boltzmann
+
+        # For animation: store all profiles
+        all_temperatures = []
+        all_times = []
+
+        # 1. Heat shield material properties
+        density = self.heat_shield_density
+        specific_heat = self.specific_heat
+        thermal_conductivity = self.thermal_conductivity
+
+        # 2. Time step calculation (for stability)
+        T_ref = 30  # Reference temperature for material properties
+        # Below this reference temperature, the thermal diffusivity spikes
+        # and a much lower time step is needed for stability
+        cp_ref = specific_heat(T_ref)
+        k_ref = thermal_conductivity(T_ref)
+        thermal_diffusivity = k_ref / (density * cp_ref)
+        max_dt = 0.5 * node_spacing**2 / thermal_diffusivity
+
+        # If the coolant temperature drops below T_ref, manual adjustment to the time step
+        # is needed to maintain numerical stability, 0.05 is generally sufficient
+        # time_step = 0.05 * max_dt
+        time_step = 0.9 * max_dt
+
+        num_time_steps = int(np.ceil(self.total_time / time_step))
+        fourier_number = thermal_diffusivity * time_step / node_spacing**2
+
+        # 3. Incident heat flux input
+        incident_heat_flux = self.incident_heat_flux
+        times = incident_heat_flux[:, 0]  # expecting shape (N, 2): time, value
+        values = incident_heat_flux[:, 1]
+        incident_flux_func = interp1d(times, values)
+
+        # 4. Start temporal simulation loop
+        for step in range(num_time_steps):
+            t_now = step * time_step
+            # Evaluate temperature-dependent properties at current node temperatures
+            cp_nodes = specific_heat(temperature)
+            k_nodes = thermal_conductivity(temperature)
+
+            # Internal nodes
+            for idx in range(1, self.num_nodes - 1):
+                # Use average k for conduction between nodes
+                k_left = k_nodes[idx - 1]
+                k_right = k_nodes[idx]
+                k_avg = 0.5 * (k_left + k_right)
+
+                # Update temperature using FTCS scheme
+                temperature_next[idx] = temperature[idx] + (
+                    time_step
+                    * k_avg
+                    / (density * cp_nodes[idx] * node_spacing**2)
+                    * (
+                        temperature[idx + 1]
+                        - 2 * temperature[idx]
+                        + temperature[idx - 1]
+                    )
+                )
+
+            # Node 0: incident flux – radiation – conduction to node 1
+            radiative_loss = (
+                self.material.emissivity * stefan_boltzmann * temperature[0] ** 4
+            )
+            q_incident = incident_flux_func(
+                t_now
+            )  # TODO: this is what I want to adjust
+            net_heat_flux_0 = (
+                q_incident
+                - radiative_loss
+                - k_nodes[0] * (temperature[0] - temperature[1]) / node_spacing
+            )
+            control_volume_0 = node_spacing / 2.0
+            temperature_next[0] = temperature[0] + time_step * net_heat_flux_0 / (
+                density * cp_nodes[0] * control_volume_0
+            )
+
+            # Node N-1: conduction from node N-2 – cooling flux
+            kN = k_nodes[-1]
+            cpN = cp_nodes[-1]
+
+            # Coolant cooling logic
+            cold_wall_temp = temperature[self.num_nodes - 1]
+
+            # Coolant bulk temperature
+            T_bulk = self.coolant.fluid.temperature
+
+            # Calculate heat transfer coefficient (update every time step!)
+            h_cool = self.coolant.get_heat_transfer_coefficient()
+
+            # Cooling heat flux (Fourier's law at interface)
+            cooling_flux = h_cool * (cold_wall_temp - T_bulk)
+
+            # Net heat flux at the last node
+            net_heat_flux_last = (
+                kN
+                * (temperature[self.num_nodes - 2] - temperature[self.num_nodes - 1])
+                / node_spacing
+                - cooling_flux
+            )
+            control_volume_last = node_spacing / 2.0
+            temperature_next[self.num_nodes - 1] = temperature[
+                self.num_nodes - 1
+            ] + time_step * net_heat_flux_last / (density * cpN * control_volume_last)
+            temperature_next[self.num_nodes - 1] -= (
+                cooling_flux * time_step / (density * cpN * control_volume_last)
+            )
+
+            # --- Coolant heating logic ---
+            # segment_length = coolant.channel.length
+            # area = coolant.channel.get_contact_area(segment_length)  # m^2
+            # energy_to_coolant = cooling_flux * area * time_step  # Joules
+            # coolant.add_energy(energy_to_coolant, time_step)
+
+            # --- Pressure drop calculation: update coolant pressure ---
+            # Use Darcy-Weisbach or other method in coolant class
+            # This should update coolant.fluid.pressure and store history
+            # coolant.update_pressure_drop(time_step)
+
+
+            # Update temperature array
+            temperature[:] = temperature_next[:]
+
+            # Store for animation
+            all_temperatures.append(temperature.copy())
+            all_times.append(step * time_step)
+
+            return (all_times, all_temperatures)
 
     def run_simulation(self):
         density = self.heat_shield_density
@@ -444,7 +621,7 @@ class HeatShield:
     def calculate_coolant_loop_volume(self, fraction) -> float:
         """
         Calculate the volume of the coolant loop based on the coolant channel dimensions.
-        
+
         Returns:
             float: Volume of the coolant loop [m^3]
         """
@@ -453,12 +630,12 @@ class HeatShield:
             self.coolant.channel.cross_sectional_area
             * self.estimate_coolant_loop_length(fraction)
         )
-    
+
     def estimate_coolant_mass_of_filled_loop(self, fraction) -> float:
         """
         Estimate the mass of the coolant in the loop based on the coolant channel volume
         and the fluid density.
-        
+
         Returns:
             float: Mass of the coolant in the loop [kg]
         """
@@ -476,17 +653,17 @@ if __name__ == "__main__":
     coolant = Coolant(fluid=hydrogen, channel=channel, mass_flow=0.001)
 
     hs = HeatShield(
-        wall_thickness=4.3e-3,
+        wall_thickness=3e-3,
         num_nodes=3,
         incident_heat_flux=np.array(
             [[0, 100_000], [150, 666_000], [450, 666_000], [900, 0]]
         ),
-        initial_temperature=300.0,
+        initial_temperature=30.0,
         total_time=900.0,
         coolant=coolant,
         material=SS310,
         heat_shield_diameter=10.0,
-        sphere_height=2.0,
+        sphere_height=2.5,
     )
     # all_temperatures, all_times, x, fourier_number, time_step, node_spacing = hs.run_simulation()
     # hs.plot_profiles(all_temperatures, all_times, x)
@@ -505,3 +682,6 @@ if __name__ == "__main__":
     # Estimate coolant mass in the loop
     coolant_mass = hs.estimate_coolant_mass_of_filled_loop(0.5)
     print(f"Estimated Coolant Mass in Loop (50% coverage): {coolant_mass:.2f} kg")
+
+    # Run a 1-D simulation
+    all_times, all_temperatures = hs.run_1d_simulation()

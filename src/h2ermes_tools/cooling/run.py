@@ -38,7 +38,7 @@ if __name__ == "__main__":
             [900, 0],
         ]
     )
-    initial_temperature = 300.0
+    initial_temperature = 30.0
     total_time = 900.0
     hs = HeatShield(
         wall_thickness=wall_thickness,
@@ -52,14 +52,14 @@ if __name__ == "__main__":
         sphere_height= 2.0,
     )
 
-    print(hs.estimate_heat_shield_mass(h=2))
+    print(hs.estimate_heat_shield_mass())
     print(hs.coolant.channel.width)
     print(hs.coolant.channel.height)
     print(hs.wall_thickness)
 
-    # all_temperatures, all_times, x, fourier_number, time_step, node_spacing = (
-    #     hs.run_simulation()
-    # )
+    all_temperatures, all_times, x, fourier_number, time_step, node_spacing = (
+        hs.run_simulation()
+    )
 
     # if do_animation:
     #     HeatShield.animate_profiles(
