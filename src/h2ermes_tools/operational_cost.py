@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 #inputs needed from the integration
-M_0 = 200 #gross-take off mass in Mg
-M_p = 100000 #propellant mass in kg
+M_0 = 300 #gross-take off mass in Mg
+M_p = 236806.335 #propellant mass in kg
 
 def calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, P, c_payl, F, T_s, S, c_f, c_ox, c_press):
     #Direct Operations Cost (DOC)
@@ -27,7 +27,7 @@ def calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press, r, I, 
 
 #https://www.ark-invest.com/newsletters/issue-335 refurbishment cost, on the code it has been converted to euros
 #INPUTS FOR OPS COSTS
-LpA = 25 #launches per year
+LpA = 500/15 #launches per year
 W = 286.425 #work-year costs in k€
 N = 1 #number of stages
 f_c = 0.85 #assembly and integration factor
@@ -36,7 +36,7 @@ L_0 = 0.64 #average learning factor operations
 f_8 = 1 #country productivity factor 
 f_11 = 0.55 #commercial factor
 c_ox = 0.12 #according to https://www.sciencedirect.com/science/article/pii/S036031992400627X
-P = 12500 #payload mass in kg
+P = 15000 #payload mass in kg
 c_payl = 5.51 #payload charge site fee in eur per kg
 F = 1220 #launch site fee in k€
 T_s = 5.365 #specific transportation cost in eur per kg
@@ -49,8 +49,34 @@ I = 100 #public damage insurance in M€
 #M_p is the propellant mass in kg
 
 if __name__ == "__main__":
+    iteration = 'old'
+    iteration = 'new'
+
+    if iteration == 'old':
+        M_0 = 200  # gross-take off mass in Mg
+        M_p = 100000  # propellant mass in kg
+        LpA = 50
+        P = 15500
+    elif iteration == 'new':
+        M_0 = 300  # gross-take off mass in Mg
+        M_p = 236806.335  # propellant mass in kg
+        LpA = 500/15
+        P = 21200
+
     ops_cost_per_flight = calc_OPS(LpA, f_c, f_8, f_v, Q_N, f_11, L_0, W, N, M_p, M_0, M_press=0, r=5, I=I, P=P, c_payl=c_payl, F=F, T_s=T_s, S=S, c_f=7.08, c_ox=c_ox, c_press=c_press)
-    print(f"Operational cost per flight: {ops_cost_per_flight/1000} M€")
+    new_glenn_cost = 68000*0.7
+
+    margin = 0.25 # fraction not percentage
+
+    ops_cost_per_flight += new_glenn_cost
+    ops_cost_per_flight *= 1.15 # EUR to USD
+    ops_cost_per_flight *= (1+margin)
+
+    print(f'Iteration: {iteration}')
+
+    print(f"Operational cost per flight: {ops_cost_per_flight/1000} M$")
+    print(f'Cost per year: {ops_cost_per_flight*LpA/1000} M$')
+
 
 
 
