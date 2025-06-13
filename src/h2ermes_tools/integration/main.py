@@ -10,7 +10,7 @@ import h2ermes_tools.integration.mass_integration as mi
 # Add unchanging variables to the MassIntegrator
 def add_unchanging_variables(integrator: mi.MassIntegrator) -> None:
     """Add unchanging variables to the MassIntegrator object."""
-    integrator.payload_mass = 9_000
+    integrator.payload_mass = 8_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value  
     integrator.o2_power_mass = vr.oxygen_power_mass.value  
     integrator.acs_propellant_mass = vr.acs_propellant_mass.value  
