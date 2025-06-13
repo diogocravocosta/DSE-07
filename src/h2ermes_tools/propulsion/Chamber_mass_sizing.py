@@ -108,27 +108,27 @@ if __name__ == "__main__":
     pressure = 6100000  # Pa
     strength = 1151424468 # Pa (Inconel 718 UTS)
     rho_material = 8220.9316989 # kg/m^3 (Inconel 718 density)
-    r_throat = (85.59*1e-3) /2  
-    r_chamber = (159.66 * 1e-3) /2
+    r_throat = (129.71*1e-3) /2  
+    r_chamber = (241.97 * 1e-3) /2
     t_wall = obtain_chamber_thickness(pressure, r_chamber, UTS_strength=strength, safety_factor=2)  # m
     theta_cc = np.deg2rad(30)  # Half angle of the combustion chamber in radians
-    l_cc = 222.05*1e-3 #lcyl
-    l_nozzle = 955.95 * 1e-3 #le
+    l_cc = 185.42*1e-3 #lcyl
+    l_nozzle = 1448.83 * 1e-3 #le
     theta_cn = np.deg2rad(38.41)  # Tn Half angle of the nozzle in radians
-    r_exit = 765.50 * 1e-3 / 2  # de/2
+    r_exit = 1160.18 * 1e-3 / 2  # de/2
     # Calculate the mass of the combustion chamber and nozzle
     m_eng = engine_mass(r_throat, r_chamber, t_wall, theta_cc, l_cc, rho_material, l_nozzle, theta_cn, r_exit)
     print("The mass of the engine for vaccuum is ",m_eng)
 
     #for sea level
-    r_throat = (91.33*1e-3) /2  
-    r_chamber = (170.38 * 1e-3) /2
+    r_throat = (129.71*1e-3) /2  
+    r_chamber = (241.97 * 1e-3) /2
     t_wall = obtain_chamber_thickness(pressure, r_chamber, UTS_strength=strength, safety_factor=2)  # m
     theta_cc = np.deg2rad(30)  # Half angle of the combustion chamber in radians
-    l_cc = 217.28*1e-3 #lcyl
-    l_nozzle = 235.51 * 1e-3 #le
+    l_cc = 185.42*1e-3 #lcyl
+    l_nozzle = 334.48 * 1e-3 #le
     theta_cn = np.deg2rad(23.23)  # Tn Half angle of the nozzle in radians
-    r_exit = 258.33 * 1e-3 / 2  # de/2
+    r_exit = 366.88 * 1e-3 / 2  # de/2
     # Calculate the mass of the combustion chamber and nozzle
     m_eng = engine_mass(r_throat, r_chamber, t_wall, theta_cc, l_cc, rho_material, l_nozzle, theta_cn, r_exit)
     print("The mass of the engine for sea level is ",m_eng)

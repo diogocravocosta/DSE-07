@@ -49,7 +49,9 @@ def calculate_mass_flow(thrust, Isp_sl=393.3471, Isp_vac=447.9481, sea_level=8, 
     t_sl, t_vac = total_thrust_to_individual_chamber_thrust(thrust, Isp_sl, Isp_vac, sea_level, total)
 
     m_dot_sl = mass_flow_rate(t_sl, Isp_sl)
+    print(f"Mass flow rate at sea level: {m_dot_sl:.2f} kg/s")
     m_dot_vac = mass_flow_rate(t_vac, Isp_sl)
+    print(f"Mass flow rate in vacuum: {m_dot_vac:.2f} kg/s")
 
     return m_dot_sl * sea_level + m_dot_vac * (total - sea_level)
 
@@ -61,5 +63,5 @@ if __name__ == "__main__":
     # print(mass_flow_rate(thrust_space, 447.9481))
     # #its right
 
-    t = 2.17e6
+    t = 3531600
     print(calculate_mass_flow(t))
