@@ -12,6 +12,7 @@ sidereal_rotation_period = 23 * 3600 + 56 * 60 + 4.1  # s, period of one Earths 
 density_sea_level = 1.225  # kg/m3
 temperature_sea_level = 288.15
 pressure_sea_level = 101325
+tropical_year = 3.156e+7 # s
 
 # Atmospheric constants
 R_star = 8314.32  # J/(kmol K), universal gas constant
