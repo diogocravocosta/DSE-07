@@ -96,7 +96,7 @@ def add_sensitivity_unchanging_variables(
 
 def add_sensitivity_analysis_initial_values(integrator: mi.MassIntegrator) -> None:
     """Add initial values to the MassIntegrator object."""
-    multiplier = 0.5
+    multiplier = 1.0
 
     integrator.dry_mass = vr.total_dry_mass.value * multiplier
     integrator.h2_boil_off_mass = 2000 * multiplier
@@ -123,8 +123,43 @@ if __name__ == "__main__":
         * vr.hydrogen_power_mass.value
     )
 
+    acs_propellant_mass_values = (
+        np.linspace(
+            min(vr.acs_propellant_mass.margin), max(vr.acs_propellant_mass.margin), 3
+        )
+        * vr.acs_propellant_mass.value
+    )
+
+    sl_isp_values = (
+        np.linspace(
+            min(vr.engine_specific_impulse_sl_opt.margin),
+            max(vr.engine_specific_impulse_sl_opt.margin),
+            3,
+        )
+        * vr.engine_specific_impulse_sl_opt.value
+    )
+    vac_isp_values = (
+        np.linspace(
+            min(vr.engine_specific_impulse_vac_opt.margin),
+            max(vr.engine_specific_impulse_vac_opt.margin),
+            5,
+        )
+        * vr.engine_specific_impulse_vac_opt.value
+    )
+
+    landing_delta_v_values = (
+        np.linspace(min(vr.landing_delta_v.margin), max(vr.landing_delta_v.margin), 5)
+        * vr.landing_delta_v.value
+    )
+
     # Example usage of the first value in the range for demonstration
-    for h2pmv in h2_power_mass_values:
+    gross_masses = []
+    dry_masses = []
+    total_hydrogen_masses = []
+    total_oxygen_masses = []
+    acs_propellant_masses = []
+
+    for ldv in landing_delta_v_values:
         (
             gross_mass,
             dry_mass,
@@ -134,7 +169,26 @@ if __name__ == "__main__":
         ) = run_integration(
             add_sensitivity_analysis_initial_values,
             lambda integrator: add_sensitivity_unchanging_variables(
-                integrator, h2_power_mass=h2pmv
+                integrator, landing_delta_v=ldv
             ),
         )
-        print(gross_mass)
+        gross_masses.append(gross_mass)
+        dry_masses.append(dry_mass)
+        total_hydrogen_masses.append(total_hydrogen_mass)
+        total_oxygen_masses.append(total_oxygen_mass)
+        acs_propellant_masses.append(acs_propellant_mass)
+
+    # write the results to a file
+    with open("sensitivity_analysis_results.txt", "w") as f:
+        f.write("Landing DeltaV:\n")
+        f.write(str(landing_delta_v_values) + "\n\n")
+        f.write("Gross Masses:\n")
+        f.write(str(gross_masses) + "\n\n")
+        f.write("Dry Masses:\n")
+        f.write(str(dry_masses) + "\n\n")
+        f.write("Total Hydrogen Masses:\n")
+        f.write(str(total_hydrogen_masses) + "\n\n")
+        f.write("Total Oxygen Masses:\n")
+        f.write(str(total_oxygen_masses) + "\n\n")
+        f.write("ACS Propellant Masses:\n")
+        f.write(str(acs_propellant_masses) + "\n")
