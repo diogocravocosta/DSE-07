@@ -214,7 +214,7 @@ engine_specific_impulse_sl_opt = Variable(
         latex_symbol="I_{sp_{sl_{OPT}}}",
         confidence="Result of the Desgin, can change",
         constraints="only positive values",
-        margin=(1.0, 1.0),
+        margin=(0.9, 1.1),
     )
 
 engine_specific_impulse_sl_non_opt = Variable(
@@ -234,7 +234,7 @@ engine_specific_impulse_vac_opt = Variable(
         latex_symbol="I_{sp_{sl_{OPT}}}",
         confidence="Result of the Desgin, can change",
         constraints="only positive values",
-        margin=(1.0, 1.0),
+        margin=(0.95, 1.05),
     )
 
 engine_specific_impulse_vac_non_opt = Variable(
@@ -304,7 +304,7 @@ expansion_ratio_sl = Variable(
         latex_symbol="A_e/A_t_{sl}",
         confidence="Design Parameter, can change",
         constraints="only positive values",
-        margin=(1.0, 1.0),
+        margin=(0.75, 1.25),
     )
 
 n_chambers_sl = Variable(
