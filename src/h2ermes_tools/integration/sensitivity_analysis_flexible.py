@@ -21,19 +21,19 @@ def add_unchanging_variables(integrator: mi.MassIntegrator):
     integrator.payload_mass = 8_000
     integrator.h2_power_mass = vr.hydrogen_power_mass.value
     integrator.o2_power_mass = vr.oxygen_power_mass.value
-    integrator.acs_propellant_mass = vr.acs_propellant_mass.value
-    integrator.coolant_mass = vr.coolant_mass.value
-    integrator.sea_level_isp = vr.engine_specific_impulse_sl_opt.value
-    integrator.vacuum_isp = 429.7477666666666
+    integrator.acs_propellant_mass = vr.acs_propellant_mass.value  # to be varied
+    integrator.coolant_mass = vr.coolant_mass.value  # to be varied
+    integrator.sea_level_isp = vr.engine_specific_impulse_sl_opt.value  # to be varied
+    integrator.vacuum_isp = 429.7477666666666  # to be varied
     integrator.sea_level_thrust_chambers_number = vr.n_chambers_sl.value
     integrator.vacuum_thrust_chambers_number = vr.n_chambers_vac.value
-    integrator.landing_delta_v = vr.landing_delta_v.value
+    integrator.landing_delta_v = vr.landing_delta_v.value  # to be varied
     integrator.deorbit_delta_v = vr.deorbit_delta_v.value + 50
     integrator.circularization_delta_v = vr.target_orbit_circularization_delta_v.value
     integrator.orbit_raising_delta_v = vr.orbit_raising_delta_v.value
     integrator.orbit_insertion_delta_v = vr.orbit_insertion_delta_v.value
-    integrator.of_ratio = vr.engine_mixture_ratio.value
-    integrator.vacuum_twr = vr.t_w_vac.value
+    integrator.of_ratio = vr.engine_mixture_ratio.value  # to be varied
+    integrator.vacuum_twr = vr.t_w_vac.value  # to be varied
     integrator.clearance_height = 2.5
     integrator.hydrogen_design_pressure = 2e5
     integrator.oxygen_design_pressure = 2.5e5
@@ -45,17 +45,17 @@ def add_unchanging_variables(integrator: mi.MassIntegrator):
     integrator.g_launch_force_ratio = 6
     integrator.bottom_radius = 5
     integrator.unchanging_subsystem_dry_masses = {
-        "acs": vr.acs_dry_mass.value,
-        "heat shield": vr.heat_shield_mass.value,
+        "acs": vr.acs_dry_mass.value,  # to be varied
+        "heat shield": vr.heat_shield_mass.value,  # to be varied
         "thrust chambers": vr.thrust_chamber_sl_mass.value
         * integrator.sea_level_thrust_chambers_number
         + vr.thrust_chamber_vac_mass.value * integrator.vacuum_thrust_chambers_number,
         "docking system": vr.docking_system_mass.value,
         "nose cone": vr.nose_cone_mass.value,
         "power": vr.power_dry_mass.value,
-        "avionics": vr.avionics_mass.value,
-        "wiring": vr.wiring_mass.value,
-        "interstage": vr.interstage_mass.value,
+        "avionics": vr.avionics_mass.value,  # to be varied
+        "wiring": vr.wiring_mass.value,  # to be varied
+        "interstage": vr.interstage_mass.value,  # to be varied
     }
 
 
@@ -105,21 +105,35 @@ def run_sensitivity(variable_names, n_steps=3, output_csv="sensitivity_results.c
     combos = list(itertools.product(*value_grids))
     args_list = [(combo, variable_names) for combo in combos]
 
-    # Parallel execution
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results_list = list(executor.map(single_run, args_list))
-
-    # Write to CSV
-    if results_list:
-        with open(output_csv, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=results_list[0].keys())
-            writer.writeheader()
-            writer.writerows(results_list)
-        print(f"Results written to {output_csv}")
-    else:
-        print("No results to write.")
+    # Write header first by running one job synchronously
+    first_row = single_run(args_list[0])
+    with open(output_csv, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=first_row.keys())
+        writer.writeheader()
+        writer.writerow(first_row)
+        # Now process the rest in parallel and write each row immediately
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            for row in executor.map(single_run, args_list[1:]):
+                writer.writerow(row)
+    print(f"Results written to {output_csv}")
 
 
 if __name__ == "__main__":
     # Example: sweep over hydrogen_power_mass and coolant_mass, 5 steps each
-    run_sensitivity(["hydrogen_power_mass", "coolant_mass"], n_steps=3)
+    # Run sensitivity analysis for all parameters marked as "to be varied"
+    to_be_varied = [
+        # "acs_propellant_mass",
+        "coolant_mass",
+        # "engine_specific_impulse_sl_opt",
+        # "landing_delta_v",
+        # "engine_mixture_ratio",
+        # "t_w_vac",
+        # "acs_dry_mass",
+        # "heat_shield_mass",
+        # "avionics_mass",
+        # "wiring_mass",
+        # "interstage_mass",
+    ]
+    run_sensitivity(to_be_varied, n_steps=3)
+
+    # WARNING: THIS PROGRAM EATS MEMORY LIKE WE EAT M&Ms
