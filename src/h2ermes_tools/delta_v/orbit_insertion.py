@@ -196,9 +196,6 @@ The delta V is 5618 m/s with thrust to weight ratio of 1.3 and -1.5 degrees offs
 The delta V is 5610 m/s with thrust to weight ratio of 1.4 and -3.5 degrees offset from gravity turn guidance.
 """
 
-delta_v_twr_relation = {'delta_v'               : [6210, 5937, 5810, 5739, 5673, 5645, 5629, 5618, 5610],
-                        'thrust_to_weight_ratio': [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4], }
-
 if __name__ == '__main__':
 
     start = time.time()
@@ -241,10 +238,3 @@ if __name__ == '__main__':
     print("delta_v:", hv.delta_v_from_final_mass(trajectory.loc[len(trajectory) - 1, 'mass_ratio'], specific_impulse))
     print('time:', end-start)
 
-    plt.plot(delta_v_twr_relation['thrust_to_weight_ratio'], delta_v_twr_relation['delta_v'], marker='x', label='Known Data')
-    plt.xlabel('Thrust to Weight Ratio')
-    plt.ylabel('Delta V [m/s]')
-    plt.title('Delta V vs Thrust to Weight Ratio')
-    plt.grid(True)
-    plt.legend()
-    plt.show()
