@@ -22,9 +22,6 @@ def plot_mission(initial_orbit:float,
     else:
         inner_body_radius = cn.earth_radius
 
-    # Set radial axis label
-    ax.set_xlabel("Altitude [km]")
-
     # plot earth
     if plot_inner_body is True:
         plot_circle(ax=ax,
@@ -101,6 +98,10 @@ def plot_mission(initial_orbit:float,
                 altitude=1.6e5,
                 step=step
                 )
+
+    # Set radial axis label
+    ax.set_xlabel("Altitude [km]")
+    ax.set_rlabel_position(270)  # Moves the radial tick labels to 45 degrees
 
     ax.set_rmax((up_phasing_altitude + inner_body_radius)/1000 * 1.1)
     ax.grid(True)
@@ -192,7 +193,7 @@ if __name__ == '__main__':
     plot_mission(
         initial_orbit=2e5,
         target_orbit=6e5,
-        up_phasing_altitude=7e5,
+        up_phasing_altitude=6e5,
         down_phasing_altitude=2e5,
         reentry_altitude=5e4,
         subtract_earth_radius=True,
