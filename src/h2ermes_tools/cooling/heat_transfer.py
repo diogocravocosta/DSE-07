@@ -447,7 +447,7 @@ class HeatShield:
         plt.figure(figsize=(9, 6))
         plt.xlabel("x [m]")
         plt.ylabel("Temperature [K]")
-        plt.title(f"1-D {len(x)}-node wall - explicit FTCS")
+        # plt.title(f"1-D {len(x)}-node wall - explicit FTCS")
         plt.grid(True)
         # Select evenly spaced indices to plot exactly num_profiles profiles (including first and last)
         if num_profiles > 1:

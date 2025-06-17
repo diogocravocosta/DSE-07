@@ -46,44 +46,34 @@ class Coolant:
             ).specific_heat
             for T in temperatures
         ]
-        conductivities = [
+        dynamic_viscosities = [
             self.fluid.with_state(
                 Input.temperature(T), Input.pressure(pressure)
-            ).conductivity
+            ).dynamic_viscosity
             for T in temperatures
         ]
 
         fig, axs = plt.subplots(4, 1, figsize=(15, 7))
-        axs[0].plot(temperatures, enthalpies, label="Enthalpy")
-        # axs[0].set_title("Coolant Enthalpy vs Temperature")
-        # axs[0].set_xlabel("Temperature (K)")
-        axs[0].set_ylabel("Enthalpy (J/kg)")
+        axs[0].plot(temperatures, enthalpies)
+        axs[0].set_ylabel(r"Enthalpy (J/kg)")
         axs[0].grid()
-        axs[0].legend()
+        # No legend
 
-        axs[1].plot(temperatures, density, label="Density")
-        # axs[1].set_title("Coolant Density vs Temperature")
-        # axs[1].set_xlabel("Temperature (K)")
-        axs[1].set_ylabel("Density (kg/m³)")
+        axs[1].plot(temperatures, density)
+        axs[1].set_ylabel(r"Density (kg/m$^3$)")
         axs[1].grid()
-        axs[1].legend()
+        # No legend
 
-        axs[2].plot(temperatures, specific_heats, label="Specific Heat")
-        # axs[2].set_title("Coolant Specific Heat vs Temperature")
-        # axs[2].set_xlabel("Temperature (K)")
-        axs[2].set_ylabel("Specific Heat (J/kg·K)")
+        axs[2].plot(temperatures, specific_heats)
+        axs[2].set_ylabel(r"Specific Heat $c_p$ (J/kg$\cdot$K)")
         axs[2].grid()
-        axs[2].legend()
+        # No legend
 
-        axs[3].plot(temperatures, conductivities, label="Thermal Conductivity")
-        axs[3].set_xlabel("Temperature (K)")
-        axs[3].set_ylabel("Thermal Conductivity (W/m·K)")
+        axs[3].plot(temperatures, dynamic_viscosities)
+        axs[3].set_xlabel(r"Temperature $T$ (K)")
+        axs[3].set_ylabel(r"Dynamic Viscosity $\mu$ (Pa$\cdot$s)")
         axs[3].grid()
-        axs[3].legend()
-
-        plt.suptitle(
-            f"Coolant Properties for Hydrogen at P = {round(coolant_inlet_pressure.value * 1e-5, 1)} bar"
-        )
+        # No legend
 
         plt.tight_layout()
         plt.show()
@@ -205,7 +195,7 @@ if __name__ == "__main__":
     coolant = Coolant(fluid=hydrogen, channel=channel, mass_flow=0.1)
 
     # --- Quick Tests ---
-    # coolant.plot_coolant_properties()
+    coolant.plot_coolant_properties()
     reynolds_number = coolant.get_reynolds_number()
     nusselt_number = coolant.get_nusselt_number_taylor(reynolds_number)
     heat_transfer_coefficient = coolant.get_heat_transfer_coefficient()
