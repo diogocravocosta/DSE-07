@@ -427,7 +427,7 @@ def thickness_optimization_fatigue(phi,
     print("Miner m and c coefficients are:",miner_m_coefficient,miner_m_coefficient)
     # Conditions
     plot = False
-    crack_cond = True
+
 
     sigma_global_loading = loading_phases(delta_T_earth,
                                           delta_T_tank,
@@ -548,7 +548,7 @@ if __name__ == "__main__":
 
     material = mat.Material(
         density=7850,
-        youngs_modulus=200e9,
+        youngs_modulus=220e9,
         thermal_expansion_coefficient=1.5e-6,  # Changed from thermal_expansion_coefficient
         fracture_toughness=200,
         yield_strength=500e6)
@@ -593,7 +593,7 @@ if __name__ == "__main__":
                                        max_thrust2weight,
                                        const_miner = 1884,
                                        exp_coeff_miner = -0.155,
-                                       min_launches=15,
+                                       min_launches=20,
                                        safety_factor=2,
                                        time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
                                        a_crack_depth=0.001,

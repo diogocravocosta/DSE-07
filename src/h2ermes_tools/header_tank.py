@@ -62,14 +62,14 @@ if __name__ == '__main__':
     rho_h2 = 71 #kg/m3
     rho_o2 = 1141 #kg/m3
     liquid_fraction = 0.9
-    thickness_h2_header = 0.0024
-    thickness_o2_header = 0.003
+    thickness_h2_header = 0.002
+    thickness_o2_header = 0.002
     deltaT_wall = 273+50-77
-    pressure = 1e6
+    pressure = 3e5
     safety_factor = 2
     thermal_conductivity_insulation = 3.8e-3
     material = mat.Material(density = 7850,
-                            youngs_modulus=200e9,
+                            youngs_modulus=220e9,
                             fracture_strength=800e6,
                             yield_strength=500e6,
                             thermal_conductivity = 0.1,
@@ -88,4 +88,3 @@ if __name__ == '__main__':
 
     print("Radius of LH2 tank",radius_h2_header,"m with mass",mass_h2_header,"kg.")
     print("Radius of LOX tank",radius_o2_header,"m with mass",mass_o2_header,"kg.")
-    print('heat flux:',q)
