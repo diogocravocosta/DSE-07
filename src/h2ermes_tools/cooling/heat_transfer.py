@@ -437,6 +437,7 @@ class HeatShield:
         all_times,
         x,
         num_profiles=10,
+        save=False,
     ):
         min_temp = 13.8
         max_temp = getattr(SS310, "maximum_temperature", 1500)
@@ -473,6 +474,7 @@ class HeatShield:
         _cbar = plt.colorbar(sm, label="Temperature [K]", ax=plt.gca())
         plt.legend()
         plt.tight_layout()
+        plt.savefig("heat_shield_sim.pdf")
         plt.show()
 
     @staticmethod
@@ -665,8 +667,8 @@ if __name__ == "__main__":
         heat_shield_diameter=10.0,
         sphere_height=2.5,
     )
-    # all_temperatures, all_times, x, fourier_number, time_step, node_spacing = hs.run_simulation()
-    # hs.plot_profiles(all_temperatures, all_times, x)
+    all_temperatures, all_times, x, fourier_number, time_step, node_spacing = hs.run_simulation()
+    hs.plot_profiles(all_temperatures, all_times, x)
     # hs.animate_profiles(all_temperatures, all_times, x)
     # hs.print_summary(all_temperatures[-1], node_spacing, time_step, fourier_number)
 
