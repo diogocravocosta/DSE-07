@@ -170,6 +170,54 @@ class Material:
         plt.grid(True)
         plt.show()
 
+    def plot_all_properties(self, temperature_range):
+        """
+        Plot all six main material properties in a single figure with subplots.
+        """
+        fig, axs = plt.subplots(2, 3, figsize=(14, 8))
+        axs = axs.flatten()
+        # 1. Specific Heat
+        axs[0].plot(temperature_range, self.specific_heat(temperature_range))
+        axs[0].set_title(r"Specific Heat $c_p$ [J/kg/K]")
+        axs[0].set_ylabel(r"$c_p$")
+        axs[0].grid(True)
+        axs[0].tick_params(labelbottom=False)
+        # 2. Thermal Conductivity
+        axs[1].plot(temperature_range, self.thermal_conductivity(temperature_range))
+        axs[1].set_title(r"Thermal Conductivity $k$ [W/m/K]")
+        axs[1].set_ylabel(r"$k$")
+        axs[1].grid(True)
+        axs[1].tick_params(labelbottom=False)
+        # 3. Thermal Expansion Coefficient
+        axs[2].plot(temperature_range, self.thermal_expansion_coeffient(temperature_range))
+        axs[2].set_title(r"Thermal Expansion Coefficient $\alpha$ [1/K]")
+        axs[2].set_ylabel(r"$\alpha$")
+        axs[2].grid(True)
+        axs[2].tick_params(labelbottom=False)
+        # 4. Yield Strength
+        axs[3].plot(temperature_range, self.yield_strength(temperature_range))
+        axs[3].set_title(r"Yield Strength $\sigma_y$ [Pa]")
+        axs[3].set_ylabel(r"$\sigma_y$")
+        axs[3].grid(True)
+        # 5. Young's Modulus
+        axs[4].plot(temperature_range, self.youngs_modulus(temperature_range))
+        axs[4].set_title(r"Young's Modulus $E$ [Pa]")
+        axs[4].set_ylabel(r"$E$")
+        axs[4].grid(True)
+        # 6. Thermal Diffusivity (skip first point)
+        axs[5].plot(temperature_range[1:], self.thermal_diffusivity(temperature_range[1:]))
+        axs[5].set_title(r"Thermal Diffusivity $\alpha_{th}$ [m$^2$/s]")
+        axs[5].set_ylabel(r"$\alpha_{th}$")
+        axs[5].grid(True)
+        # Only bottom row gets x-labels
+        for i in range(3):
+            axs[i].tick_params(labelbottom=False)
+        for i in range(3, 6):
+            axs[i].set_xlabel(r"Temperature $T$ [K]")
+        plt.tight_layout()
+        plt.savefig(f"src/data/materials/{self.name.lower()}_properties.pdf")
+        plt.show()
+
 
 # Ti-6Al-4V at room temperature
 k = 6.7  # thermal conductivity [W/m/K]
@@ -302,33 +350,4 @@ if __name__ == "__main__":
     temperature_range = np.linspace(
         13.8, 1273, 100
     )  # Temperature range from 300 K to 1273 K
-    SS310.plot_property(
-        temperature_range, SS310.specific_heat, "Specific Heat [J/kg/K]"
-    )
-    SS310.plot_property(
-        temperature_range, SS310.thermal_conductivity, "Thermal Conductivity [W/m/K]"
-    )
-    SS310.plot_property(
-        temperature_range,
-        SS310.thermal_expansion_coeffient,
-        "Thermal Expansion Coefficient [1/K]",
-    )
-    SS310.plot_property(temperature_range, SS310.yield_strength, "Yield Strength [Pa]")
-    SS310.plot_property(temperature_range, SS310.youngs_modulus, "Young's Modulus [Pa]")
-    SS310.plot_property(
-        temperature_range, SS310.thermal_diffusivity, "Thermal Diffusivity [m^2/s]"
-    )
-
-    SS304.plot_property(
-        temperature_range, SS304.specific_heat, "Specific Heat [J/kg/K]"
-    )
-    SS304.plot_property(
-        temperature_range, SS304.thermal_conductivity, "Thermal Conductivity [W/m/K]"
-    )
-    SS304.plot_property(
-        temperature_range,
-        SS304.thermal_expansion_coeffient,
-        "Thermal Expansion Coefficient [1/K]",
-    )
-    SS304.plot_property(temperature_range, SS304.yield_strength, "Yield Strength [Pa]")
-    SS304.plot_property(temperature_range, SS304.youngs_modulus, "Young's Modulus [Pa]")
+    SS310.plot_all_properties(temperature_range)
