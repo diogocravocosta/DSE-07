@@ -70,8 +70,9 @@ class BluntBody:
         calculating axial and normal coefficients
         '''
         self.aoa_all = np.linspace(0.1 * np.pi / 180, self.alpha_max, 100)
-        print('alpha max', self.alpha_max)
-        print("angle", self.aoa_all)
+        self.aoa_all = np.linspace(0.1 * np.pi / 180, 30 * np.pi / 180, 100)
+        #print('alpha max', self.alpha_max)
+        #print("angle", self.aoa_all)
         self.c_x_cap = 0.5 * (np.sin(self.aoa_all)**2) * (np.sin(self.mu_b)**2) + \
         (1 + np.cos(self.mu_b)**2) * (np.cos(self.aoa_all)**2)
         self.c_y_cap = np.sin(self.aoa_all) * np.cos(self.aoa_all) * (np.sin(self.mu_b)**2)
@@ -170,8 +171,42 @@ class BluntBody:
 
         plt.show()
 
+    def subsonic_aerodynamics(self, file_name_base, file_name_nose):
+        print("\033[91mVerify that the output file from RASAero is updated for the current geometry\033[0m")
+        self.radius_gyration = np.sqrt(self.moment_inertia / self.mass)
+                                       
+        current_dir = os.path.dirname(__file__)
+        data_path = os.path.join(current_dir, '..', 'data', file_name_base)
+        data_path = os.path.abspath(data_path)
+        print("Resolved path:", data_path)
+        data_base = pd.read_csv(data_path)
 
-    def stability(self, file_name, velocity, density, deviation, moment_inertia, aoa):
+        current_dir = os.path.dirname(__file__)
+        data_path = os.path.join(current_dir, '..', 'data', file_name_nose)
+        data_path = os.path.abspath(data_path)
+        print("Resolved path:", data_path)
+        data_nose = pd.read_csv(data_path)
+
+        self.data_alpha_0 = data_base[data_base["Alpha"] == 0]
+        self.data_alpha_2 = data_base[data_base["Alpha"] == 2]
+        self.data_alpha_4 = data_base[data_base["Alpha"] == 4]
+
+        self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"])/ 2)
+
+        reentry_data = self.data_alpha_4[self.data_alpha_4["Mach"] < 0.9]
+        self.mach_subsonic_reentry = np.array(reentry_data["Mach"])
+        self.cl_subsonic_reentry = np.array(reentry_data["CL"])
+        self.cd_subsonic_reentry = np.array(reentry_data["CD"])
+
+        self.data_alpha_4_nose = data_nose[data_nose["Alpha"] == 4]
+        liftoff_data = self.data_alpha_4_nose[self.data_alpha_4["Mach"] < 0.9]
+        self.mach_subsonic_liftoff = np.array(liftoff_data["Mach"])
+        self.cl_subsonic_liftoff = np.array(liftoff_data["CL"])
+        self.cd_subsonic_liftoff = np.array(liftoff_data["CD"])
+
+        
+
+    def stability(self, velocity, density, deviation, moment_inertia, aoa, xcg):
         '''
         Function: To assess stability of a geometry
         Input: Requires CSV file output from RASAero and now a bunch more stuff
@@ -184,52 +219,39 @@ class BluntBody:
 
             more variable that should be added
         '''
-
-        print("\033[91mVerify that the output file from RASAero is updated for the current geometry\033[0m")
         self.moment_inertia = moment_inertia
-        self.radius_gyration = np.sqrt(self.moment_inertia / self.mass)
-                                       
-        current_dir = os.path.dirname(__file__)
-        data_path = os.path.join(current_dir, '..', 'data', file_name)
-        data_path = os.path.abspath(data_path)
-        print("Resolved path:", data_path)
-        data = pd.read_csv(data_path)
-
-        data_alpha_0 = data[data["Alpha"] == 0]
-        self.data_alpha_2 = data[data["Alpha"] == 2]
-        self.data_alpha_4 = data[data["Alpha"] == 4]
-        self.RASAero_mach = np.array(self.data_alpha_4["Mach"])
-
-        self.cl_alpha_rasaero = np.array((self.data_alpha_4["CL"])/ 2)
-
-        data_drag_4 = self.data_alpha_4['CD']
-        data_lift_4 = self.data_alpha_4["CL"]
-        self.cd_4 = np.array(data_drag_4)
-        self.cl_4 = np.array(data_lift_4)
-    
         self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.cone_max_radius*2)**2)) * self.c_axial
-        #self.cmq_cmadot = -1 * (4*self.moment_inertia / (self.mass * (self.sphere_radius*2)**2)) * self.c_d
-        #self.cmq = (self.cl_alpha_calc - (2*self.c_d)) / (self.mass * (self.sphere_radius*2)**2 / self.moment_inertia)
 
     
         '''
-        Force calculations
+        Force calculations Hypersonic
         '''
         self.dynamic_pressure = 0.5 * density * velocity**2
         self.cap_force = self.dynamic_pressure * self.reference_area * self.c_y_cap
         self.cone_force = self.dynamic_pressure * self.reference_area * np.array(self.c_y_cone)
 
+        '''
+        Force calculations subsonic
+        '''
+        self.subsonic_force = self.dynamic_pressure * self.reference_area * 0.35
 
         '''
-        Calculating cm_alpha 
+        Calculating cm_alpha hypersonic
         '''
         self.cap_centroid = self.sphere_radius
         x_b = self.sphere_radius * (1 - np.cos(self.mu_b))
         self.cone_centroid = x_b + (self.cone_length - ((2 * self.cone_length)/(3 * (np.cos(self.cone_half_angle))**2)))
         self.total_moment = (self.cap_centroid * self.cap_force) + (self.cone_centroid * self.cone_force)
         self.total_moment_arm = ((self.sphere_radius * self.cap_force) + (self.cone_centroid * self.cone_force)) / (self.cap_force + self.cone_force)
-        self.moment_xcg = (self.total_moment - 10*self.cap_force) * -1
+        self.moment_xcg = (self.total_moment - xcg*self.cap_force) * -1
         self.c_moment = self.moment_xcg / (self.dynamic_pressure * self.reference_area * self.cone_max_radius)
+
+        '''
+        cm_alpha subsonic
+        '''
+        self.total_moment_subsonic = self.subsonic_force * self.total_moment_arm
+        self.moment_xcg_subsonic = (self.total_moment_subsonic - xcg*self.subsonic_force) * -1
+        self.c_moment_subsonic = self.moment_xcg_subsonic / (self.dynamic_pressure * self.reference_area * self.cone_max_radius)
         
         min_index = np.where(self.c_moment == min(self.c_moment))
         max_index = np.where(self.c_moment == max(self.c_moment))
@@ -241,36 +263,43 @@ class BluntBody:
         '''
         Oscillations constant velocity, constant density
         '''
+        print("\033[91mCheck if the pitch-damping and axial-coeffs value have been changed for what you want\033[0m")
 
-        #self.time = np.arange(0 , 10, 0.0001)
-        
-        # eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2) / (8 * self.moment_inertia)) * -0.4
-        # omega = np.sqrt(-1 * self.dynamic_pressure * ((self.reference_area * self.cone_max_radius * 2) / self.moment_inertia) * self.cm_alpha)
+        self.pitch_damping = [-0.3775, -0.365, -0.35]
+        #self.axial_coeff = [1,2,0.5]
+        c_a = 1.75
 
-        
-        cmq_cmadot = -0.4 #remember to change later
-        c_a = 2 #remember to change later
         t1 = 2*self.mass / (density * velocity * self.reference_area * c_a)
-        #t2 = 2*self.mass / (density * 330 * self.reference_area * c_a)
         self.time = np.arange(t1, t1+0.5, 0.001)
-        eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2)**2 ) * cmq_cmadot / (8 * self.moment_inertia)
-        omega = np.sqrt(-1 * density * velocity**2 * self.reference_area * (self.cone_max_radius * 2) * self.cm_alpha / (2 * self.moment_inertia))
+        self.alpha_const_all = []
+        self.alpha_decel_all = []
+        for i in range(3):
+            cmq_cmadot = self.pitch_damping[i]
+            c_a = 2
+            eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2)**2 ) * cmq_cmadot / (8 * self.moment_inertia)
+            omega = np.sqrt(-1 * density * velocity**2 * self.reference_area * (self.cone_max_radius * 2) * self.cm_alpha / (2 * self.moment_inertia))
 
-        self.alpha_const = (deviation * (np.pi / 180) * np.exp(eta_1 * self.time) * np.cos(omega * self.time))
+            alpha_const = (deviation * (np.pi / 180) * np.exp(eta_1 * self.time) * np.cos(omega * self.time))
+            self.alpha_const_all.append(alpha_const)
 
         '''
         Oscillations decelleration, constant density
         '''
-        
-        mu = ((self.mass * (self.cone_max_radius*2)**2 * cmq_cmadot) / (4 * self.moment_inertia * c_a)) + 1
-        nu_sqrt = mu**2 - ((2*self.mass*self.cone_max_radius*2*self.cm_alpha)/(density*self.reference_area*self.moment_inertia*c_a**2))
-        nu1 = (8*self.mass**2 * self.cm_alpha) / (np.pi * density * self.cone_max_radius*2 * self.moment_inertia * c_a**2) 
-        nu_sqrt = (mu**2 - nu1)
-        nu = np.sqrt(nu_sqrt)
-        delta = (np.arctan2(mu,nu) - nu*np.log(t1)) 
-        #delta = 0
-        A = deviation / (t1**mu * np.cos(nu * np.log(t1) + delta))
-        self.alpha_decel = A * ((self.time)**mu) * np.cos(nu * np.log(self.time) + delta)
+        for i in range(3):
+            cmq_cmadot = self.pitch_damping[i]
+            c_a = 2
+            mu = ((self.mass * (self.cone_max_radius*2)**2 * cmq_cmadot) / (4 * self.moment_inertia * c_a)) + 1
+            nu_sqrt = mu**2 - ((2*self.mass*self.cone_max_radius*2*self.cm_alpha)/(density*self.reference_area*self.moment_inertia*c_a**2))
+            nu1 = (8*self.mass**2 * self.cm_alpha) / (np.pi * density * self.cone_max_radius*2 * self.moment_inertia * c_a**2) 
+            nu_sqrt = (mu**2 - nu1)
+            nu = np.sqrt(nu_sqrt)
+            delta = (np.arctan2(mu,nu) - nu*np.log(t1)) 
+            #delta = 0
+            A = deviation / (t1**mu * np.cos(nu * np.log(t1) + delta))
+            alpha_decel = A * ((self.time)**mu) * np.cos(nu * np.log(self.time) + delta)
+
+            self.alpha_decel_all.append(alpha_decel)
+
         
 
     def analysis(self):
@@ -299,17 +328,9 @@ class BluntBody:
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
 
-        x = taper_ratios
+        x1 = taper_ratios
         y = np.array(max_ld_aoa) * 180/np.pi
-        z = np.array(max_ld)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.scatter(x, y, z, c=z, cmap="viridis")
-
-        ax.set_xlabel('Taper Ratios')
-        ax.set_ylabel('Angle of attack')
-        ax.set_zlabel('L/D')
+        z1 = np.array(max_ld)
 
         plt.show()
 
@@ -326,18 +347,46 @@ class BluntBody:
             max_ld.append(body.lift_over_drag[max_ld_index])
             max_ld_aoa.append(body.aoa_all[max_ld_index])
 
-        x = sphericity_radius
+        x2 = sphericity_radius
         y = np.array(max_ld_aoa) * 180/np.pi
-        z = np.array(max_ld)
+        z2 = np.array(max_ld)
+        '''
+        Plots
+        '''
+        colors = {
+        "cyan": "#00FFFF",
+        "black": "#000000",
+        "white": "#FFFFFF",
+        "darkblue": "#0C2340",
+        "turquoise": "#00B8C8",
+        "royalblue": "#0076C2",
+        "purple": "#6F1D77",
+        "pink": "#EF60A3",
+        "bordeaux": "#A50034",
+        "red": "#E03C31",
+        "orange": "#EC6842",
+        "yellow": "#FFB81C",
+        "green": "#6CC24A",
+        "forestgreen": "#009B77",
+        "darkgray": "#5C5C5C"
+        }
+        plt.figure()
+        plt.scatter(x2, z2, label="Effect of Base Bluntness", color="purple")
+        plt.xlabel("Arc height of base sphere[m]", fontsize=12)
+        plt.ylabel("Maximum L/D", fontsize=12)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("aero_base_bluntness_effect.pdf")
 
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.scatter(x, y, z, c=z, cmap="viridis")
+        plt.figure()
+        plt.scatter(x1, z1, label="Effect of Cone Taper", color="royalblue")
+        plt.xlabel("Taper ratio of Cone[min radius/max radius]", fontsize=12)
+        plt.ylabel("Maximum L/D", fontsize=12)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("aero_cone_taper_effect.pdf")
 
-        ax.set_xlabel('Base arc height')
-        ax.set_ylabel('Angle of attack')
-        ax.set_zlabel('L/D')
-
+        plt.tight_layout()
         plt.show()
 
     def plots(self):
@@ -408,66 +457,93 @@ class BluntBody:
         }
 
         deg = self.aoa_all * 180 / np.pi
-
-        # --- Aerodynamic Coefficients ---
+        # --- Lift, Drag and Ratio Subsonic ---
         plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.c_y_cap + self.c_y_cone, label="Normal Force Coeff", color=colors["royalblue"], linewidth=2)
-        plt.plot(deg, self.c_x_cap + self.c_x_cone, label="Axial Force Coeff", color=colors["red"], linewidth=2)
-        plt.plot(deg, self.normal_over_axial, label="Normal / Axial Ratio", color=colors["green"], linewidth=2)
-        plt.title("Force Coefficients vs Angle of Attack", fontsize=14)
+        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry / self.cd_subsonic_reentry, label="Subsonic L/D (Re-entry)", color=colors['bordeaux'], linewidth=2)
+        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry, label="Subsonic Lift Coefficient (Re-entry)", color=colors["green"], linewidth=2)
+        plt.plot(self.mach_subsonic_reentry, self.cd_subsonic_reentry, label="Subsonic Drag Coefficient (Re-entry)", color=colors["royalblue"], linewidth=2)
+        #plt.title("Lift and Drag Characteristics", fontsize=14)
+        plt.xlabel("Mach Number", fontsize=12)
+        plt.ylabel("Coefficient", fontsize=12)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("aero_lift-drag-coeffs-subsonic-reentry.pdf")
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_liftoff / self.cd_subsonic_liftoff, label="Subsonic L/D (Launch)", color=colors['bordeaux'], linewidth=2)
+        plt.plot(self.mach_subsonic_liftoff, self.cl_subsonic_liftoff, label="Subsonic Lift Coefficient (Launch)", color=colors["green"], linewidth=2)
+        plt.plot(self.mach_subsonic_liftoff, self.cd_subsonic_liftoff, label="Subsonic Drag Coefficient (Launch)", color=colors["royalblue"], linewidth=2)
+        #plt.title("Lift and Drag Characteristics", fontsize=14)
+        plt.xlabel("Mach Number", fontsize=12)
+        plt.ylabel("Coefficient", fontsize=12)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("aero_lift-drag-coeffs-subsonic-launch.pdf")
+
+        # --- Lift, Drag and Ratio Hypersonic ---
+        plt.figure(figsize=(10, 6))
+        plt.plot(deg, self.lift_over_drag, label="Hypersonic L/D", color=colors["bordeaux"], linewidth=2)
+        plt.plot(deg, self.c_l, label="Hypersonic Lift Coefficient", color=colors["green"], linewidth=2)
+        plt.plot(deg, self.c_d, label="Hypesonic Drag Coefficient", color=colors["royalblue"], linewidth=2)
+        #plt.title("Lift and Drag Characteristics", fontsize=14)
         plt.xlabel("Angle of Attack (deg)", fontsize=12)
         plt.ylabel("Coefficient", fontsize=12)
         plt.legend()
         plt.grid(True)
+        plt.savefig("aero_lift-drag-coeffs.pdf")
 
-        # --- Lift, Drag and Ratio ---
-        plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.lift_over_drag, label="Lift / Drag", color=colors["bordeaux"], linewidth=2)
-        plt.plot(deg, self.c_l, label="Lift Coefficient", color=colors["green"], linewidth=2)
-        plt.plot(deg, self.c_d, label="Drag Coefficient", color=colors["royalblue"], linewidth=2)
-        plt.title("Lift and Drag Characteristics", fontsize=14)
-        plt.xlabel("Angle of Attack (deg)", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-
-        # --- Axial and Normal ---
+        # --- Axial and Normal Hypersonic---
         plt.figure(figsize=(10, 6))
         plt.plot(deg, self.c_axial, label="Axial Coefficient", color=colors["royalblue"], linewidth=2)
         plt.plot(deg, self.c_normal, label="Normal Coefficient", color=colors["forestgreen"], linewidth=2)
-        plt.title("Axial vs Normal Coefficients", fontsize=14)
+        #plt.title("Axial vs Normal Coefficients", fontsize=14)
         plt.xlabel("Angle of Attack (deg)", fontsize=12)
         plt.ylabel("Coefficient", fontsize=12)
         plt.legend()
         plt.grid(True)
+        plt.savefig("aero_normal-axial-coeffs.pdf")
 
         # --- Pitch Damping Coefficient ---
         plt.figure(figsize=(10, 6))
         plt.plot(deg, self.cmq_cmadot, label='Pitch Damping Coefficient', color=colors["purple"], linewidth=2)
-        plt.title("Pitch Damping Coefficient", fontsize=14)
+        #plt.title("Pitch Damping Coefficient", fontsize=14)
         plt.xlabel("Angle of Attack (deg)", fontsize=12)
         plt.ylabel("Coefficient", fontsize=12)
         plt.legend()
         plt.grid(True)
+        plt.savefig("aero_pitch-damping-coeff.pdf")
 
         # --- Moment Coefficient ---
         plt.figure(figsize=(10, 6))
         plt.plot(deg, self.c_moment, label='Moment Coefficient', color=colors["bordeaux"], linewidth=2)
-        plt.title("Moment Coefficient vs AoA", fontsize=14)
+        #plt.title("Moment Coefficient vs AoA", fontsize=14)
         plt.xlabel("Angle of Attack (deg)", fontsize=12)
         plt.ylabel("Moment Coefficient", fontsize=12)
         plt.legend()
         plt.grid(True)
+        plt.savefig("aero_moment-coeffs.pdf")
 
         # --- Stability over Time ---
         plt.figure(figsize=(10, 6))
-        plt.plot(self.time, self.alpha_decel, label='Decelerating Stability', color=colors["red"], linewidth=2, alpha = 0.6)
-        plt.plot(self.time, self.alpha_const * 180 / np.pi, label="Constant Velocity Stability", color=colors["royalblue"], linewidth=2)
-        plt.title("Stability vs Time", fontsize=14)
+        plt.plot(self.time, self.alpha_const_all[0] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2,)
+        plt.plot(self.time, self.alpha_const_all[1] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[1]}", color=colors["bordeaux"], linewidth=2)
+        plt.plot(self.time, self.alpha_const_all[2] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2)
+        #plt.title("Stability vs Time", fontsize=14)
         plt.xlabel("Time (s)", fontsize=12)
         plt.ylabel("Angle of Attack (deg)", fontsize=12)
         plt.legend()
         plt.grid(True)
+        plt.savefig("aero_stability_constvelocity.pdf")
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.time, self.alpha_decel_all[0], label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2, linestyle = "dotted", alpha = 0.5)
+        plt.plot(self.time, self.alpha_decel_all[1], label=f"cmq_cmadot = {self.pitch_damping[1]}", color=colors["bordeaux"], linewidth=2)
+        plt.plot(self.time, self.alpha_decel_all[2], label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2, linestyle = "dotted", alpha = 0.5)
+        plt.xlabel("Time (s)", fontsize=12)
+        plt.ylabel("Angle of Attack (deg)", fontsize=12)
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("aero_stability_decelvelocity.pdf")
 
         plt.tight_layout()
         plt.show()
@@ -480,11 +556,11 @@ def run():
     # base_arc_height = 0.5
     # mass = 28000
 
-    cone_length = 28.63
-    cone_max_radius = 5
+    cone_length = 30
+    cone_max_radius = 10.625/2
     cone_min_radius = 2.5
     base_arc_height = 0.5
-    mass = 45000
+    mass = 40000
 
     # cone_length = 13.95
     # cone_max_radius = 5
@@ -496,8 +572,9 @@ def run():
     print("sphere radius: ", body.sphere_radius)
     #body.draw_geometry()
     body.hypersonic_aerodynamics()
-    body.stability(file_name = "HermesV1-RASAero.csv", velocity = 4000, density = 4.0084E-2, deviation = 3, moment_inertia=231368.0069, aoa = 16)
+    body.stability(velocity = 4000, density = 4.0084E-2, deviation = 3, moment_inertia=231368.0069, aoa = 16)
     #body.analysis()
+    body.subsonic_aerodynamics(file_name_base= "HermesV1-RASAero.csv", file_name_nose="HermesV1-RASAero-Nose.csv")
     body.plots()
 
 
