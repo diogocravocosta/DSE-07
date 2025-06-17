@@ -77,6 +77,15 @@ class ReferenceFrame:
 
             self.M = self.E - self.e * np.sin(self.E)
 
+        # propulsion (P)
+        if self.frame_1 == "propulsion" or self.frame_2 == "propulsion":
+            if self.frame_1 == "propulsion":
+                propulsion_dictionary = self.frame_1_dict
+            else:
+                propulsion_dictionary = self.frame_2_dict
+            self.epsilon_p = propulsion_dictionary["elevation_angle_thrust"]
+            self.psi_p = propulsion_dictionary["azimuth_angle_thrust"]
+
         # rotating planetocentric (R)
         if self.frame_1 == "rotating" or self.frame_2 == "rotating":
             if self.frame_1 == "rotating":
@@ -85,19 +94,6 @@ class ReferenceFrame:
                 rotating_dictionary = self.frame_2_dict
             self.omega_cb = rotating_dictionary["rotational_rate_central_body"]
             self.t_r = rotating_dictionary["epoch_time"]
-
-
-
-
-        # vertical (V)
-        if self.frame_1 == "vertical" or self.frame_2 == "vertical":
-            if self.frame_1 == "vertical":
-                vertical_dictionary = self.frame_1_dict
-            else:
-                vertical_dictionary = self.frame_2_dict
-
-            self.tau_v = vertical_dictionary["longitude"]
-            self.delta_v = vertical_dictionary["latitude"]
 
         # trajectory - groundspeed (TG)
         if self.frame_1 == "traj_g" or self.frame_2 == "traj_g":
@@ -119,8 +115,15 @@ class ReferenceFrame:
             self.gamma_a = traj_a_dictionary["flight_path_angle"]
             self.chi_a = traj_a_dictionary["heading"]
 
+        # vertical (V)
+        if self.frame_1 == "vertical" or self.frame_2 == "vertical":
+            if self.frame_1 == "vertical":
+                vertical_dictionary = self.frame_1_dict
+            else:
+                vertical_dictionary = self.frame_2_dict
 
-
+            self.tau_v = vertical_dictionary["longitude"]
+            self.delta_v = vertical_dictionary["latitude"]
 
         # wind (W)
         if self.frame_1 == "wind" or self.frame_2 == "wind":
@@ -132,14 +135,7 @@ class ReferenceFrame:
             self.gamma_w = wind_dictionary["flight_path_angle"]
             self.chi_w = wind_dictionary["heading"]
 
-        # propulsion (P)
-        if self.frame_1 == "propulsion" or self.frame_2 == "propulsion":
-            if self.frame_1 == "propulsion":
-                propulsion_dictionary = self.frame_1_dict
-            else:
-                propulsion_dictionary = self.frame_2_dict
-            self.epsilon_p = propulsion_dictionary["elevation_angle_thrust"]
-            self.psi_p = propulsion_dictionary["azimuth_angle_thrust"]
+
 
     def position_and_velocity(self):
 
@@ -197,6 +193,7 @@ class ReferenceFrame:
         C_AB = self.C_x(alpha_1) * self.C_z(alpha_3) * self.C_y(-alpha_2)
 
     # FRAME TRANSFORMATIONS
+    # from AA
     def aerodynamic_to_trajectory_a(self):
         # AA to TA
         C_TAAA = self.C_x(self.sigma_a)
@@ -215,63 +212,7 @@ class ReferenceFrame:
 
         return C_TGAA
 
-    def inertial_to_orbital(self):
-        # I to L
-        C_LI = self.C_z((-self.omega_pericenter+self.theta)) * self.C_x(self.i) * self.C_z(self.omega_asc_node)
-
-        # I to O
-        a = np.array([np.cos(self.omega_asc_node), np.sin(self.omega_asc_node),0])
-
-        C_OI = np.array([[np.cos(self.i)+((np.cos(self.omega_asc_node))**2)*(1-np.cos(self.i)),
-                            np.cos(self.omega_asc_node)*np.sin(self.omega_asc_node)*(1-np.cos(self.i)),
-                            -np.sin(self.omega_asc_node)*np.sin(self.i)],
-                         [np.cos(self.omega_asc_node)*np.sin(self.omega_asc_node)*(1-np.cos(self.i)),
-                            np.cos(self.i)+((np.sin(self.omega_asc_node))**2)*(1-np.cos(self.i)),
-                            np.cos(self.omega_asc_node)*np.sin(self.i)],
-                         [np.sin(self.omega_asc_node)*np.sin(self.i),
-                            -np.cos(self.omega_asc_node)*np.sin(self.i),
-                            np.cos(self.i)]])
-        lbd = self.omega_asc_node + (self.omega_pericenter + self.theta)
-
-        # L to O
-        C_LO = np.array([[np.cos(lbd), np.sin(lbd), 0],
-                         [-np.sin(lbd), np.cos(lbd), 0],
-                         [0, 0, 1]])
-
-        return C_LI, C_OI, C_LO
-
-    def rotating_to_inertial(self):
-        # R to I
-        C_IR = self.C_z(self.omega_cb * self.t_r)
-
-        return C_IR
-
-    def vertical_to_rotating(self):
-        # V to R
-        C_RV = self.C_z(-self.tau_v) * self.C_y((np.pi/2) + self.delta_v)
-
-        return C_RV
-
-    def wind_to_vertical(self):
-        # W to V
-        C_VW = self.C_z(-self.chi_w) * self.C_y(-self.gamma_w)
-
-        return C_VW
-
-    def trajectory_g_to_vertical(self):
-        # TG to V
-        C_VTG = self.C_z(-self.chi_g) * self.C_y(-self.gamma_g)
-
-        return C_VTG
-
-    def trajectory_a_to_vertical(self):
-        # TA to V
-        C_VTA = self.C_z(-self.chi_a) * self.C_y(-self.gamma_a)
-
-        return C_VTA
-
-
-
+    # from B
     def body_to_aerodynamic_air(self):
         # B to AA
         C_AAB = self.C_z(self.beta_a) * self.C_y(-self.alpha_a)
@@ -305,11 +246,80 @@ class ReferenceFrame:
 
         return C_TB
 
+    # from I
+    def inertial_to_orbital(self):
+        # I to L
+        C_LI = self.C_z((-self.omega_pericenter+self.theta)) * self.C_x(self.i) * self.C_z(self.omega_asc_node)
+
+        # I to O
+        a = np.array([np.cos(self.omega_asc_node), np.sin(self.omega_asc_node),0])
+
+        C_OI = np.array([[np.cos(self.i)+((np.cos(self.omega_asc_node))**2)*(1-np.cos(self.i)),
+                            np.cos(self.omega_asc_node)*np.sin(self.omega_asc_node)*(1-np.cos(self.i)),
+                            -np.sin(self.omega_asc_node)*np.sin(self.i)],
+                         [np.cos(self.omega_asc_node)*np.sin(self.omega_asc_node)*(1-np.cos(self.i)),
+                            np.cos(self.i)+((np.sin(self.omega_asc_node))**2)*(1-np.cos(self.i)),
+                            np.cos(self.omega_asc_node)*np.sin(self.i)],
+                         [np.sin(self.omega_asc_node)*np.sin(self.i),
+                            -np.cos(self.omega_asc_node)*np.sin(self.i),
+                            np.cos(self.i)]])
+        lbd = self.omega_asc_node + (self.omega_pericenter + self.theta)
+
+        # L to O
+        C_LO = np.array([[np.cos(lbd), np.sin(lbd), 0],
+                         [-np.sin(lbd), np.cos(lbd), 0],
+                         [0, 0, 1]])
+
+        return C_LI, C_OI, C_LO
+
+    # from R
+    def rotating_to_inertial(self):
+        # R to I
+        C_IR = self.C_z(self.omega_cb * self.t_r)
+
+        return C_IR
+
+    # from T
+    def trajectory_g_to_vertical(self):
+        # TG to V
+        C_VTG = self.C_z(-self.chi_g) * self.C_y(-self.gamma_g)
+
+        return C_VTG
+
+    def trajectory_a_to_vertical(self):
+        # TA to V
+        C_VTA = self.C_z(-self.chi_a) * self.C_y(-self.gamma_a)
+
+        return C_VTA
+
+    # from V
+    def vertical_to_rotating(self):
+        # V to R
+        C_RV = self.C_z(-self.tau_v) * self.C_y((np.pi/2) + self.delta_v)
+
+        return C_RV
+
     def vertical_to_inertial(self):
         # V to I
         C_IV = self.C_z(self.omega_cb * self.t_r) * self.C_y((np.pi / 2) + self.delta_v)
 
         return C_IV
+
+    # from W
+    def wind_to_vertical(self):
+        # W to V
+        C_VW = self.C_z(-self.chi_w) * self.C_y(-self.gamma_w)
+
+        return C_VW
+
+
+
+
+
+
+
+
+
 
 
 
