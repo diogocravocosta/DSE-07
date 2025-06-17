@@ -135,8 +135,6 @@ class ReferenceFrame:
             self.gamma_w = wind_dictionary["flight_path_angle"]
             self.chi_w = wind_dictionary["heading"]
 
-
-
     def position_and_velocity(self):
 
         # rotational
@@ -323,7 +321,7 @@ class ReferenceFrame:
 
 
 
-        
+
 
 
 
@@ -371,3 +369,4 @@ print(calc)
 
 
 
+print(solutions)
