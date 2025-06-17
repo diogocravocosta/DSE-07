@@ -17,15 +17,15 @@ lift_drag_ratio = 0.13
 # v_entry = 7974.762214
 beta = 1/scale_height
 entry_angle = 0.023604017
-entry_height = 54785.96378050152
+entry_height = 100000
 drag_coefficient = 1.6
 surface = np.pi * 4.92**2
-mass = 33000
+mass = 39000
 density_0 = 1.225
 # Define the constants and parameters
 v_circular = 7844.195565
 
-v_entry_ratio = 0.7715028214990949
+v_entry_ratio = 1.01657
 print("V_entry / V_circular = ",v_entry_ratio)
 
 v_entry_ratio_sq = v_entry_ratio**2

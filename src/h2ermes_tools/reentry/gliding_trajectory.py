@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.integrate import simpson
-import hvplot.pandas
 
 # internal
 import data.constants as ct
@@ -96,8 +95,7 @@ class GlidingEntry:
         self.flight_range_ratio = self.get_flight_range_ratio()
 
         # flight time
-        self.t_h, self.t_min, self.t_sec = self.get_flight_time()
-        self.t = np.linspace(0, self.t_sec, len(self.alt_array))
+        self.t_h, self.t_min, self.t_sec = self.get_flight_time()                         # s
 
         # DECELERATION
         # maximum deceleration TODO
@@ -113,15 +111,14 @@ class GlidingEntry:
 
         # dataframe TODO
         self.dataframe = pd.DataFrame({
-#                                       "normalized_velocity_ratio": self.v_ratio,
-#                                        "equilibrium_glide_angle": self.flight_path_angle_equilibrium_deg,
-#                                        "loads": self.a,
-#                                        "deceleration": self.a*9.81,
-#                                        "deceleration_ratio": self.a / self.a_max,
-                                        "heatflux_ratio": np.flip(self.q_normalized),
-                                        "heatflux": np.flip(self.qc),
-                                         "v": np.flip(self.v),
-                                        "t": self.t,
+                                       "normalized_velocity_ratio": self.v_ratio,
+                                        "equilibrium_glide_angle": self.flight_path_angle_equilibrium_deg,
+                                        "loads": self.a,
+                                        "deceleration": self.a*9.81,
+                                        "deceleration_ratio": self.a / self.a_max,
+                                        "heatflux_ratio": self.q_normalized,
+                                        "heatflux": self.qc,
+                                         "v": self.v
                                          }, index = [self.alt_array/1000])
     def get_constants(self):
         # TESTED
@@ -231,12 +228,11 @@ class GlidingEntry:
 
     def get_gliding_deceleration(self):
         # CORRECT
-        a = (1/self.lift_drag_ratio) * (1 - (self.v_ratio ** 2)) - (2 / (self.beta * self.R_e * self.v_ratio ** 2))
+        a = (1/self.lift_drag_ratio) * (1 - (self.v_ratio ** 2))- (2 / (self.beta * self.R_e * self.v_ratio ** 2))
 
         v_ratio = (2 / (self.beta * self.R_e))**(1/4)
-        a_max = self.lift_drag_ratio ** (-1) * (1 - 2 * np.sqrt(2 / (self.beta * self.R_e)))
-        # a_max = (1/self.lift_drag_ratio) * (1 - (v_ratio ** 2) )
-                                            #- (2 / (self.beta * self.R_e * v_ratio ** 2)))
+        # a_max_1 = self.lift_drag_ratio ** (-1) * (1 - 2 * np.sqrt(2 / (self.beta * self.R_e)))
+        a_max = (1/self.lift_drag_ratio) * (1 - (v_ratio ** 2) )- (2 / (self.beta * self.R_e * v_ratio ** 2))
 
         a_ratio = a/a_max
 
@@ -272,9 +268,9 @@ class GlidingEntry:
         return qc*1e-3, qc_max*1e-3, normalised_heat_flux
 
 glide = GlidingEntry("earth",
-                 100,
-                 7700,
-                 27000,
+                 54,
+                 6000,
+                 39000,
                  80,
                  5,
                  1.6,
@@ -284,12 +280,8 @@ glide = GlidingEntry("earth",
                  lift_parameter = None,
                  lift_drag_ratio = 0.13,
                  atmosphere = "exponential",
-                 boundary_layer = "laminar")
+                 boundary_layer = "turbulent")
 
 
-# print(len(glide.alt_array))
-# print(glide.a_max, glide.qc_max, glide.V_a_max, glide.flight_range_ratio*glide.R_e, glide.t_min)
-plot = glide.dataframe.hvplot(x = "t", y = "heatflux")
-hvplot.show(plot)
-
-glide.dataframe.to_csv("gliding_data.csv")
+print(glide.dataframe.iloc[2000])
+print(glide.a_max, glide.qc_max, glide.V_a_max, glide.flight_range_ratio*glide.R_e, glide.v_min)

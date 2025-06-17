@@ -2,8 +2,8 @@
 import numpy as np
 import math
 import pandas as pd
-from pyatmos import download_sw_nrlmsise00,read_sw_nrlmsise00
-from pyatmos import nrlmsise00
+# from pyatmos import download_sw_nrlmsise00,read_sw_nrlmsise00
+# from pyatmos import nrlmsise00
 from scipy.interpolate import CubicSpline
 
 # internal
@@ -371,59 +371,53 @@ class StandardAtmosphere:
 
         return rho_new
 
-
-
-
-
-
-
-class NrlmsiseAtmosphere:
-    def __init__(self,
-                 altitude,
-                 time,
-                 latitude,
-                 longitude,
-                 ) -> None:
-        # VARIABLES AND CONSTANTS
-        # gravitational acceleration at surface
-        self.g_0 = ct.g_0           # m/s^2
-        # radius of earth
-        self.Re = ct.earth_radius         # m
-        # height
-        self.altitude = altitude # km
-        self.time = time # UTC
-        self.latitude = latitude
-        self.longitude = longitude
-
-        # gas constants
-        self.R_star = ct.R_star
-        self.M = ct.molecular_mass
-        self.R = self.R_star / self.M
-        self.gamma = ct.gamma
-        self.rho_0 = ct.density_sea_level
-
-        # files
-        self.sw_data = self.space_weather_data()
-
-        # calculations
-        self.T_nrl, self.rho_nrl = self.atmosphere()
-
-    def space_weather_data(self):
-        # download space weather file
-        swfile = download_sw_nrlmsise00()
-
-        # read space weather data
-        swdata = read_sw_nrlmsise00(swfile)
-
-        return swdata
-
-    def atmosphere(self):
-        nrl00 = nrlmsise00(self.time, (self.latitude, self.longitude, self.altitude), self.sw_data)
-
-        T = nrl00.T
-        rho = nrl00.rho
-
-        return T, rho
+# class NrlmsiseAtmosphere:
+#     def __init__(self,
+#                  altitude,
+#                  time,
+#                  latitude,
+#                  longitude,
+#                  ) -> None:
+#         # VARIABLES AND CONSTANTS
+#         # gravitational acceleration at surface
+#         self.g_0 = ct.g_0           # m/s^2
+#         # radius of earth
+#         self.Re = ct.earth_radius         # m
+#         # height
+#         self.altitude = altitude # km
+#         self.time = time # UTC
+#         self.latitude = latitude
+#         self.longitude = longitude
+#
+#         # gas constants
+#         self.R_star = ct.R_star
+#         self.M = ct.molecular_mass
+#         self.R = self.R_star / self.M
+#         self.gamma = ct.gamma
+#         self.rho_0 = ct.density_sea_level
+#
+#         # files
+#         self.sw_data = self.space_weather_data()
+#
+#         # calculations
+#         self.T_nrl, self.rho_nrl = self.atmosphere()
+#
+#     def space_weather_data(self):
+#         # download space weather file
+#         swfile = download_sw_nrlmsise00()
+#
+#         # read space weather data
+#         swdata = read_sw_nrlmsise00(swfile)
+#
+#         return swdata
+#
+#     def atmosphere(self):
+#         nrl00 = nrlmsise00(self.time, (self.latitude, self.longitude, self.altitude), self.sw_data)
+#
+#         T = nrl00.T
+#         rho = nrl00.rho
+#
+#         return T, rho
 
 
 
