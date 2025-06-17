@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
+
+# matplotlib.rcParams["figure.dpi"] = 300
 
 import data.constants as cn
 from h2ermes_tools.delta_v.helpers import delta_v_from_final_mass
@@ -124,15 +127,16 @@ def plot_delta_v_vs_twr(velocities: list[float],
         for ballistic_coefficient in ballistic_coefficients:
             delta_vs = []
             for twr in thrust_to_weight_ratios:
-                df = landing_burn_with_drag(velocity, twr, ballistic_coefficient, specific_impulse)
+                df = landing_burn_with_drag(velocity, twr, ballistic_coefficient, specific_impulse, max_time=200)
                 delta_v = delta_v_from_final_mass(df['mass_fraction'].iloc[-1], specific_impulse)
                 delta_vs.append(delta_v)
             plt.plot(thrust_to_weight_ratios, delta_vs, label=f'BC={ballistic_coefficient} kg/m²')
-        plt.xlabel('Thrust-to-Weight Ratio (T/W)')
-        plt.ylabel('Delta V (m/s)')
-        plt.title(f'Delta V vs Thrust-to-Weight Ratio at {velocity} m/s')
+        plt.xlabel('Thrust-to-Weight Ratio [-]')
+        plt.ylabel('Delta V [m/s]')
+        # plt.title(f'Delta V vs Thrust-to-Weight Ratio at {velocity} m/s')
         plt.legend()
         plt.grid()
+        plt.savefig(f"landing_delta_v_velocity_{velocity}.pdf")
         plt.show()
 
 def example_usage():
@@ -168,7 +172,7 @@ if __name__ == "__main__":
 
     # Plot delta V vs thrust-to-weight ratio
     velocities = [100, 200, 400]  # m/s
-    thrust_to_weight_ratios = np.linspace(1.1, 3.0, 20)  # dimensionless
+    thrust_to_weight_ratios = np.linspace(1.15, 3.0, 100)  # dimensionless
     ballistic_coefficients = [100, 500, 1000, 2600, float('inf')]  # kg/m²
     specific_impulse = 360  # seconds
 
