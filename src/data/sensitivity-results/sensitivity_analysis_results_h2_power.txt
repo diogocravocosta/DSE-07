@@ -1,0 +1,17 @@
+H2 Power Mass Values:
+[15.6 19.5 23.4]
+
+Gross Masses:
+[np.float64(300123.4470597991), np.float64(300165.8234318721), np.float64(300132.1368842148)]
+
+Dry Masses:
+[np.float64(39533.25584094826), np.float64(39536.27727675448), np.float64(39530.43227716982)]
+
+Total Hydrogen Masses:
+[np.float64(56704.13405729192), np.float64(56715.142577091785), np.float64(56710.14853636296)]
+
+Total Oxygen Masses:
+[np.float64(203121.05716155889), np.float64(203149.4035780258), np.float64(203126.556070682)]
+
+ACS Propellant Masses:
+[765, 765, 765]

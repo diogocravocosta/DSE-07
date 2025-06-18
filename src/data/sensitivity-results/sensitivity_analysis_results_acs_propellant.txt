@@ -1,0 +1,14 @@
+Gross Masses:
+[np.float64(295643.06106818427), np.float64(301588.8483776109), np.float64(307176.7696680168)]
+
+Dry Masses:
+[np.float64(39123.51129335846), np.float64(39609.80846833762), np.float64(40063.55797880476)]
+
+Total Hydrogen Masses:
+[np.float64(56027.97775657102), np.float64(56924.05979148293), np.float64(57734.032120900876)]
+
+Total Oxygen Masses:
+[np.float64(200109.07201825478), np.float64(204098.73011779034), np.float64(207849.1795683111)]
+
+ACS Propellant Masses:
+[np.float64(382.5), np.float64(956.25), np.float64(1530.0)]

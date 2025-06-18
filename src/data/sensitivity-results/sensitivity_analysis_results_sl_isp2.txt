@@ -1,0 +1,17 @@
+Sea Level ISP Values:
+[325.48059 361.6451  397.80961]
+
+Gross Masses:
+[np.float64(308178.1879737337), np.float64(300123.4470597991), np.float64(291078.26084242505)]
+
+Dry Masses:
+[np.float64(40216.10270131334), np.float64(39533.25584094826), np.float64(38534.946130146825)]
+
+Total Hydrogen Masses:
+[np.float64(58042.30610779046), np.float64(56704.13405729192), np.float64(55244.05316436721)]
+
+Total Oxygen Masses:
+[np.float64(209154.77916462987), np.float64(203121.05716155889), np.float64(196534.26154791098)]
+
+ACS Propellant Masses:
+[765, 765, 765]
