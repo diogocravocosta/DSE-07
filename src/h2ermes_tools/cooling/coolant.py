@@ -25,7 +25,7 @@ class Coolant:
         self.heat_transfer_coefficient = self.get_heat_transfer_coefficient()
 
     def plot_coolant_properties(
-        self, temperatures=np.linspace(13.8, 300, 100), pressure=10e5
+        self, temperatures=np.linspace(13.8, 300, 100), pressure=50e5
     ):
         enthalpies = [
             self.fluid.with_state(
@@ -53,7 +53,7 @@ class Coolant:
             for T in temperatures
         ]
 
-        fig, axs = plt.subplots(4, 1, figsize=(15, 7))
+        fig, axs = plt.subplots(4, 1, figsize=(15, 10))
         axs[0].plot(temperatures, enthalpies)
         axs[0].set_ylabel(r"Enthalpy (J/kg)")
         axs[0].grid()
@@ -76,6 +76,7 @@ class Coolant:
         # No legend
 
         plt.tight_layout()
+        plt.savefig("coolant_properties.pdf")
         plt.show()
 
     def get_nusselt_number_taylor(

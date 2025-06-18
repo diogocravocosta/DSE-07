@@ -292,12 +292,12 @@ youngs_modulus_data = np.genfromtxt(
     "src/data/materials/ss310-youngs-modulus.csv", delimiter=",", skip_header=1
 )
 
-SS310.set_specific_heat(cp_data[:, 0] + 273.15, cp_data[:, 1])
-SS310.set_thermal_conductivity(k_data[:, 0] + 273.15, k_data[:, 1])
-SS310.set_thermal_expansion_coefficient(cte_data[:, 0] + 273.15, cte_data[:, 1])
-SS310.set_yield_strength(yield_strength_data[:, 0] + 273.15, yield_strength_data[:, 1])
-SS310.set_youngs_modulus(youngs_modulus_data[:, 0] + 273.15, youngs_modulus_data[:, 1])
-SS310.set_thermal_diffusivity(np.linspace(10, 1273, 100))
+# SS310.set_specific_heat(cp_data[:, 0] + 273.15, cp_data[:, 1])
+# SS310.set_thermal_conductivity(k_data[:, 0] + 273.15, k_data[:, 1])
+# SS310.set_thermal_expansion_coefficient(cte_data[:, 0] + 273.15, cte_data[:, 1])
+# SS310.set_yield_strength(yield_strength_data[:, 0] + 273.15, yield_strength_data[:, 1])
+# SS310.set_youngs_modulus(youngs_modulus_data[:, 0] + 273.15, youngs_modulus_data[:, 1])
+# SS310.set_thermal_diffusivity(np.linspace(10, 1273, 100))
 
 # SS304 (SS 1.4301)
 k = ss304_data["thermal_conductivity"]

@@ -38,7 +38,7 @@ def simulate_channel(mdot, p_in, T_in, L, D, q_flux, n_segments):
 
         Re = (G * D) / state_avg.dynamic_viscosity
 
-        f_D = (0.79 * np.log(Re) - 1.64) ** -2 if Re >= 2300 else 64 / Re
+        f_D = (1.82 * np.log(Re) - 1.64) ** -2 if Re >= 2300 else 64 / Re
 
         dp_friction = (f_D * G**2) / (2 * state_avg.density * D) * dz
         dp_momentum = G**2 * (1 / state_i_plus_1.density - 1 / state_i.density)
@@ -60,39 +60,21 @@ def plot_results(results, inlet_pressure, channel=None, mass_flow=None):
     z, p, T, rho = results["z"], results["p"], results["T"], results["rho"]
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 9), sharex=False)
-    fig.suptitle(r"1D Supercritical Hydrogen Channel Simulation")
     axs = axs.flatten()
 
-    axs[0].plot(z, p / 1e5, label=r"$P$")
+    axs[0].plot(z, p / 1e5)
     axs[0].set_ylabel(r"Pressure $P$ (bar)")
-    axs[0].set_title(r"Pressure vs. Channel Length $z$")
-    axs[0].legend()
+    axs[0].set_xlabel(r"Channel Length $z$ (m)")
     axs[0].grid(True)
-    # No x-label for top row
 
-    axs[1].plot(z, T, label=r"$T$")
-    try:
-        T_pc = FluidsList.ParaHydrogen.with_state(
-            Input.pressure(inlet_pressure), Input.quality(0)
-        ).temperature
-        axs[1].axhline(
-            y=T_pc,
-            linestyle="--",
-            label=fr"Pseudo-critical $T$ at {inlet_pressure / 1e6} MPa",
-        )
-        axs[1].legend()
-    except Exception:
-        pass  # Fails if pressure is above critical
+    axs[1].plot(z, T)
     axs[1].set_ylabel(r"Temperature $T$ (K)")
-    axs[1].set_title(r"Temperature vs. Channel Length $z$")
+    axs[1].set_xlabel(r"Channel Length $z$ (m)")
     axs[1].grid(True)
-    # No x-label for top row
 
-    axs[2].plot(z, rho, label=r"$\rho$")
+    axs[2].plot(z, rho)
     axs[2].set_ylabel(r"Density $\rho$ (kg/m$^3$)")
     axs[2].set_xlabel(r"Channel Length $z$ (m)")
-    axs[2].set_title(r"Density vs. Channel Length $z$")
-    axs[2].legend()
     axs[2].grid(True)
 
     # Nusselt number vs. channel length (Taylor relationship)
@@ -111,39 +93,59 @@ def plot_results(results, inlet_pressure, channel=None, mass_flow=None):
             Pr = fluid.prandtl
             Nu = 0.023 * (Re ** 0.8) * (Pr ** 0.4) * (0.55 ** (-0.57 - (1.59 / 1.0)))
             nusselts.append(Nu)
-        axs[3].plot(z, nusselts, label=r"Nusselt Number $Nu$")
-        axs[3].set_ylabel(r"Nusselt Number $Nu$")
+        axs[3].plot(z, nusselts)
+        axs[3].set_ylabel(r"Nusselt Number Nu")
         axs[3].set_xlabel(r"Channel Length $z$ (m)")
-        axs[3].set_title(r"Nusselt Number vs. Channel Length $z$")
-        axs[3].legend()
         axs[3].grid(True)
     else:
         axs[3].set_visible(False)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig("cooling_channel_simulation.pdf")
     plt.show()
 
 
 if __name__ == "__main__":
-    p_inlet = 4e6  # Pascals
+    from h2ermes_tools.cooling.channel import CircularChannel, RectangularChannel
+
+    # Circular channel example (existing)
+    p_inlet = 50e5  # Pascals
     mass_flow = 0.002  # kg/s
-    channel_diameter = 0.01  # m
-    channel_length = 20.0  # m
-    channel_roughness = 1e-5  # m (example value)
+    # channel_diameter = 0.01  # m
+    # channel_length = 20.0  # m
+    # channel_roughness = 1e-5  # m (example value)
 
-    from h2ermes_tools.cooling.channel import CircularChannel
+    # channel = CircularChannel(channel_diameter, channel_length, channel_roughness)
 
-    channel = CircularChannel(channel_diameter, channel_length, channel_roughness)
+    # sim_results = simulate_channel(
+    #     mdot=mass_flow,  # kg/s
+    #     p_in=p_inlet,  # Pa
+    #     T_in=20,  # K
+    #     L=channel_length,  # m
+    #     D=channel_diameter,  # m
+    #     q_flux=50000,  # W/m^2
+    #     n_segments=200,
+    # )
 
-    sim_results = simulate_channel(
+    # if sim_results:
+    #     plot_results(sim_results, p_inlet, channel=channel, mass_flow=mass_flow)
+
+    # Rectangular channel example
+    rect_width = 10e-3  # m
+    rect_height = 2e-3  # m
+    rect_length = 40.0  # m
+    rect_roughness = 1e-5  # m
+    rect_channel = RectangularChannel(rect_width, rect_height, rect_length, rect_roughness)
+
+    sim_results_rect = simulate_channel(
         mdot=mass_flow,  # kg/s
         p_in=p_inlet,  # Pa
         T_in=20,  # K
-        L=channel_length,  # m
-        D=channel_diameter,  # m
+        L=rect_length,  # m
+        D=rect_channel.hydraulic_diameter,  # m
         q_flux=50000,  # W/m^2
         n_segments=200,
     )
 
-    if sim_results:
-        plot_results(sim_results, p_inlet, channel=channel, mass_flow=mass_flow)
+    if sim_results_rect:
+        plot_results(sim_results_rect, p_inlet, channel=rect_channel, mass_flow=mass_flow)

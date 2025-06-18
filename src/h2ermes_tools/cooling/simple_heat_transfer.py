@@ -112,7 +112,7 @@ def plot_profiles(
     plt.figure(figsize=(9, 6))
     plt.xlabel("x [m]")
     plt.ylabel("Temperature [K]")
-    plt.title(f"1-D {len(x)}-node wall - explicit FTCS")
+    # plt.title(f"1-D {len(x)}-node wall - explicit FTCS")
     plt.grid(True)
     plot_every = max(1, len(all_times) // num_profiles)
     for i in range(0, len(all_times), plot_every):
@@ -134,6 +134,7 @@ def plot_profiles(
     _cbar = plt.colorbar(sm, label="Temperature [K]", ax=plt.gca())
     plt.legend()
     plt.tight_layout()
+    plt.savefig("simple_heat_transfer_profiles.pdf")
     plt.show()
 
 
