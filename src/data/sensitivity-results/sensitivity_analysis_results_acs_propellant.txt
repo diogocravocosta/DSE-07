@@ -1,3 +1,6 @@
+ACS Propellant Mass Values:
+[np.float64(382.5), np.float64(956.25), np.float64(1530.0)]
+
 Gross Masses:
 [np.float64(295643.06106818427), np.float64(301588.8483776109), np.float64(307176.7696680168)]
 
@@ -9,6 +12,3 @@ Total Hydrogen Masses:
 
 Total Oxygen Masses:
 [np.float64(200109.07201825478), np.float64(204098.73011779034), np.float64(207849.1795683111)]
-
-ACS Propellant Masses:
-[np.float64(382.5), np.float64(956.25), np.float64(1530.0)]
