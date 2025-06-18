@@ -133,5 +133,10 @@ payload_mass = [item /0.95 for item in payload_mass_delievered]
 
 boil_off = [24674-item-3000 +215 for item in payload_mass]
 print(boil_off)
+p_insertion = 2
+
+V_gh2_insertion = (56700) 
+#p_start = p_insertion*V_gh2_insertion/V_gh2_start
+
 
 #linear_model = linear_regression(payload_mass_delievered,time_to_refuel)

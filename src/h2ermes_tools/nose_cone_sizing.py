@@ -72,7 +72,14 @@ def heat_flux_stagnation(time,radius):
         qs.append(chapman_simplified_stagnation_heat_flux(radius,velocity_vec[i],air_densities[i]))
 
     #force=  aerodynamic_load(air_densities,velocity_vec,radius,time)
-
+    plt.figure(figsize=(8, 5))
+    plt.plot(time, qs, label="Stagnation Heat Flux (qs)")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Heat Flux [W/m²]")
+    plt.title("Stagnation Point Heat Flux vs Time")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
     return qs
 
 def radiative_temperature(total_heat_flux,time,material,sigma_boltzman):
@@ -399,6 +406,7 @@ if __name__ =="__main__":
     heat_transfer_coefficient_insulation = 0.2 # W/m2/K
     thermal_conductivity_insulation = 4e-3#heat_transfer_coefficient_insulation*thickness_insulation*10
 
+
     emissivity_mli = 0.05
     Cp_insulation = 1
     density_insulation = mass_per_area_insulation/0.0004
@@ -411,21 +419,15 @@ if __name__ =="__main__":
     n_node_mli = 0
     t_end = 170
     T_initial = 300
-    safety_factor = 1.3
+    safety_factor = 2
     heatflux = heat_flux_stagnation(time,radius)
     material_steel = mat.Material(density = 7850,
-                            youngs_modulus=200e9,
-                            fracture_strength=800e6,
-                            yield_strength=500e6,
+                                  youngs_modulus=200e9,
                             thermal_conductivity = 16,
                             specific_heat = 500,
                             emissivity=0.5,
                             absorptivity = 0.5)
     
-    material_insulation = mat.Material(density = 7850,
-                            thermal_conductivity = 3.7e-3,
-                            emissivity = 0.5,
-                            specific_heat = 500)
     #print(radiative_temperature([1180,230],radius,[1,1.5],material_steel,sigma_boltzman))
     time_mission,total_heat_flux = total_flux_mission(dt,t_end,solar_power,planetary_power,albedo_power,radius,material_steel,cs,600000)
 
@@ -455,25 +457,25 @@ if __name__ =="__main__":
         mass_per_area_insulation)
     
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(time, T_inner_record_steel, label="FDM Inner Temperature (Steel)")
-    #plt.plot(time, T_inner_record_mli, label="FDM Inner Temperature (MLI)")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Temperature [K]")
-    plt.title("FDM Inner Temperature vs Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time, T_inner_record_steel, label="FDM Inner Temperature (Steel)")
+    # #plt.plot(time, T_inner_record_mli, label="FDM Inner Temperature (MLI)")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Temperature [K]")
+    # plt.title("FDM Inner Temperature vs Time")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
-    # Plot heat_radiation_propagation against time
-    plt.figure(figsize=(8, 5))
-    plt.plot(time, heat_radiation_propagation, label="Heat Radiation Propagation")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Heat Radiation [W]")
-    plt.title("Heat Radiation Propagation vs Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # # Plot heat_radiation_propagation against time
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time, heat_radiation_propagation, label="Heat Radiation Propagation")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Heat Radiation [W]")
+    # plt.title("Heat Radiation Propagation vs Time")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
     
 

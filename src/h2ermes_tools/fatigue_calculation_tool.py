@@ -48,7 +48,7 @@ def nasa_pressure_combined_load_stress(material, thickness_tank, phi, radius_sma
     term1 = gamma / np.sqrt(3 * (1 - mu ** 2))
     stiffness_term = (term1 + delta_gamma) * (
             2 * np.pi * material.E * thickness_tank ** 2 * np.cos(np.radians(phi)) ** 2)
-    pressure_term = np.pi * radius_small ** 2 * pressure_tank
+    pressure_term = np.pi * (radius_small) ** 2 * pressure_tank
     P_cr = stiffness_term + pressure_term
     stress = mechanical_stress(P_cr, radius_small, thickness_tank, phi)
     return stress
@@ -123,7 +123,7 @@ def cycle_launch(stress_cycle, launches):
 
 def critical_crack_depth_calc(material, Y_geometry_factor, sigma_max):
     """
-    Calculates the thickness at which a crack will propagate by taking into account max applied sigma and material toughness.
+   calculates critical crack depth
     """
     critical_crack_depth = (material.Kic / (Y_geometry_factor * sigma_max * 1e-6)) ** 2 / np.pi
     return critical_crack_depth
@@ -227,7 +227,7 @@ def loading_phases(delta_T_earth,
                    g_reentry_force_ratio,
                    dry_mass,
                    time_mission,
-                   plot):
+                   plot_stress):
     """
     Calculates the loading conditions for different phases in the mission.
     Also calculates the individual load ratios for the different conditions (thermal, pressure, mechanical).
@@ -253,7 +253,7 @@ def loading_phases(delta_T_earth,
     sigma_thermal_launch = 0  #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi)
     sigma_pressure_launch = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
                                                                pressure_launch_tank)
-    sigma_axial_launch = mechanical_stress(thrust_engines, tank_radius, thickness_tank, phi)
+    sigma_axial_launch = mechanical_stress(launch_mass * g_launch_force_ratio * cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_launch = sigma_thermal_launch + sigma_pressure_launch + sigma_axial_launch
 
     # Orbit - Right before docking
@@ -265,13 +265,13 @@ def loading_phases(delta_T_earth,
     sigma_thermal_dock = thermal_stress(delta_T_tank, material.E, material.cte, phi)
     sigma_pressure_dock = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
                                                              pressure_after_dock)
-    stress_comb_dock = sigma_thermal_orbit + sigma_pressure_orbit
+    stress_comb_dock = sigma_thermal_dock + sigma_pressure_dock
 
     # Worst point during re-entry
     sigma_thermal_reentry = thermal_stress(delta_T_tank_extreme, material.E, material.cte, phi)
     sigma_axial_reentry = mechanical_stress(g_reentry_force_ratio * cs.g_0 * dry_mass, tank_radius, thickness_tank, phi)
     sigma_pressure_reentry = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
-                                                                pressure_vent)
+                                                                pressure_vent )
     stress_comb_reentry = sigma_thermal_reentry + sigma_pressure_reentry + sigma_axial_reentry
 
     # On launch pad
@@ -305,21 +305,45 @@ def loading_phases(delta_T_earth,
                            sigma_pressure_dock, sigma_pressure_reentry, 0]
     R_load_ratio_pressure = R_calculation(sigma_pressure_load)
     #print("Maximum stress ratio R pressure: ", R_load_ratio_pressure)
-    if plot is True:
+    
+    if plot_stress is True:
+        plot_stress = False
+        # Example: names for each bar (customize as needed)
+        bar_names = ['Start', 'Max Q', '2nd Stage', 'Orbit', 'Dock', 'Re-entry', 'Launchpad']
+        # Plot bar graph for total stress
+        plt.figure(figsize=(8, 5))
+        # Plot stacked bar chart for individual loading contributions
+        width = 0.6
+        sigma_pressure = np.array(sigma_pressure_load) / 1e6
+        sigma_thermal = np.array(sigma_thermal_load) / 1e6
+        sigma_mechanical = np.array(sigma_mechanical_load) / 1e6
+
+        # For mechanical, set zeros to np.nan so they don't show up in the stack
+        sigma_mechanical_plot = np.where(np.array(sigma_mechanical_load) == 0, np.nan, sigma_mechanical)
+
+        plt.bar(bar_names, sigma_pressure, width, label='Pressure', color='#2196f3', bottom=0)  # Sky blue
+        plt.bar(bar_names, sigma_thermal, width, label='Thermal', color='#ffb347', bottom=sigma_pressure)  # Darker orange
+        plt.bar(bar_names, sigma_mechanical_plot, width, label='Mechanical', color='#76c893',
+            bottom=sigma_pressure + sigma_thermal)  # Darker green
+        plt.legend()
+        plt.xlabel('Mission Phase')
+        plt.ylabel('Total Stress (MPa)')
+        plt.tight_layout()
+
         plt.figure(figsize=(8, 5))
         plt.plot(time_mission, np.array(sigma_pressure_load) / 1e6, marker='o', label='Pressure Stress')
         plt.plot(time_mission, np.array(sigma_thermal_load) / 1e6, marker='s', label='Thermal Stress')
         plt.plot(time_mission, np.array(sigma_mechanical_load) / 1e6, marker='^', label='Mechanical Stress')
         plt.plot(time_mission, np.array(sigma_global_loading) / 1e6, marker='x', label='Total Stress')
-        plt.xlabel('Mission Time (hours)')
+        plt.xlabel('Loading Points')
         plt.ylabel('Stress (MPa)')
-        plt.title('Pressure, Thermal, Mechanical and Total Stress vs Mission Time')
+        plt.title('Pressure, Thermal, Mechanical and Total Stress vs Different Loading Points')
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
         plt.show()
 
-    return sigma_global_loading
+    return plot_stress,sigma_global_loading
 
 
 def rainflow_counting(loading_series):
@@ -420,16 +444,16 @@ def thickness_optimization_fatigue(phi,
     paris_coeff_C = 5.131e-17 / 1e3  # convert from mm/cycle to m/cycle
     paris_exp_m = 7.02  # dimensionless
 
-    # MAT200 paper --- 1884, -0.1555
+    # MAT200 paper --- 6721.4, -0.319
 
     miner_m_coefficient = -1 / exp_coeff_miner
     miner_c_coefficient = 10 ** (np.log10(const_miner) / -exp_coeff_miner)
-    print("Miner m and c coefficients are:",miner_m_coefficient,miner_m_coefficient)
+    print("Miner m and c coefficients are:",miner_m_coefficient,miner_c_coefficient)
     # Conditions
     plot = False
 
-
-    sigma_global_loading = loading_phases(delta_T_earth,
+    plot_stress = False
+    plot_stress,sigma_global_loading = loading_phases(delta_T_earth,
                                           delta_T_tank,
                                           delta_T_tank_extreme,
                                           material,
@@ -447,7 +471,7 @@ def thickness_optimization_fatigue(phi,
                                           g_reentry_force_ratio,
                                           dry_mass,
                                           time_mission,
-                                          plot)
+                                          plot_stress)
     stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))  # Result in Mpa
 
     # with paris equation - crack growth
@@ -488,7 +512,7 @@ def thickness_optimization_fatigue(phi,
         print("Failure was predicted due to Miners Law. Thickness will be increased")
     while damage > 1:
         thickness_tank = thickness_tank + 0.0001
-        sigma_global_loading = loading_phases(delta_T_earth,
+        plot_stress, sigma_global_loading = loading_phases(delta_T_earth,
                                               delta_T_tank,
                                               delta_T_tank_extreme,
                                               material,
@@ -506,14 +530,33 @@ def thickness_optimization_fatigue(phi,
                                               g_reentry_force_ratio,
                                               dry_mass,
                                               time_mission,
-                                              plot)
+                                              plot_stress)
         stress_range, stress_cycle = rainflow_counting(cycle_launch(sigma_global_loading, 1e-6))
         damage = miners(stress_range, miner_c_coefficient, miner_m_coefficient, stress_cycle, safety_factor, min_launches)[2]
 
         if thickness_tank > 0.01:
-            raise RuntimeError("failed on Miners equation fatigue calculation")
+            raise RuntimeError("Unfeasible design solution. Thickness is more than 1 cm.")
     damage,launches = fatigue_miner_estimation(stress_range,miner_c_coefficient,miner_m_coefficient,stress_cycle,safety_factor,min_launches,plot)
-    print("Final damage number is:",damage,"which means it will survive",launches,"Launches")
+    plot_stress, sigma_global_loading = loading_phases(delta_T_earth,
+                                              delta_T_tank,
+                                              delta_T_tank_extreme,
+                                              material,
+                                              phi,
+                                              thickness_tank,
+                                              tank_radius,
+                                              pressure_launch_tank,
+                                              pressure_after_dock,
+                                              launch_mass,
+                                              cs,
+                                              g_launch_force_ratio,
+                                              thrust_engines,
+                                              pressure_vent,
+                                              pressure_dock_vent,
+                                              g_reentry_force_ratio,
+                                              dry_mass,
+                                              time_mission,
+                                              plot_stress=False)
+
     return thickness_tank
 
 def miner_coefficients(stress, cycles):
@@ -540,7 +583,7 @@ if __name__ == "__main__":
     # min_launches = 25
 
     # Geometry Properties
-    phi = 6  # degrees, conical head angle, later import from tank sizing file in final sizing.
+    phi = 8  # degrees, conical head angle, later import from tank sizing file in final sizing.
     tank_radius = 5  # 5 # m, tank radius, later import from tank sizing file in final sizing.
     thickness_tank = 0.002  # m, tank thickness later import from tank sizing file in final sizing.
 
@@ -555,14 +598,12 @@ if __name__ == "__main__":
 
     # # Mass Inputss
     fuel_reentry_LH2 = 3000  # kg, fuel mass during re-entry
-    dry_mass = 20000  # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
-    launch_mass = 220000  # kg, total launch mass to be corrected
+    dry_mass = 40000  # kg, dry mass of the rocket, later import from tank sizing file in final sizing.
+    launch_mass = 300000  # kg, total launch mass to be corrected
     payload_mass = 15500
 
-    # Forces and time inputs
-    # time_mission = [0, 0.1, 0.3, 18, 21, 23, 24]  # hours, mission time points
     g_reentry_force_ratio = 6
-    g_launch_force_ratio = 6
+    g_launch_force_ratio = 4.5
     max_thrust2weight = 4.3
 
     #Extrapolated parameters
@@ -574,11 +615,6 @@ if __name__ == "__main__":
     # Cryogenic paper miner coeff --- 408,-0.02
     # MAT200 paper --- 1884, -0.1555
 
-
-    # # Conditions
-    # plot = True
-    # crack_cond = True
-    #--------------------------------------------------------
 
     thickness_minimum_tank = thickness_optimization_fatigue(phi,
                                        tank_radius,
@@ -592,8 +628,8 @@ if __name__ == "__main__":
                                        g_launch_force_ratio,
                                        max_thrust2weight,
                                        const_miner = 1884,
-                                       exp_coeff_miner = -0.155,
-                                       min_launches=20,
+                                       exp_coeff_miner = -0.1555,
+                                       min_launches=25,
                                        safety_factor=2,
                                        time_mission=[0, 0.1, 0.3, 18, 21, 23, 24],
                                        a_crack_depth=0.001,
