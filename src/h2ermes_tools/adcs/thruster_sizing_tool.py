@@ -632,7 +632,7 @@ def aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_
     # Calculate the total mass of the ACS system
     total_mass_acs_system = total_mass_thrusters + (2 * tank_mass)
 
-    return total_mass_acs_system, total_power_thrusters, tank_mass, thickness_tank, radius_tank
+    return total_mass_acs_system, total_power_thrusters, tank_mass, thickness_tank, radius_tank, total_prop_mass_thrusters
 
 
 # total_mass_aocs = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate)
@@ -676,12 +676,14 @@ if __name__ == "__main__":
     # maneuver_time = burn_time  # in seconds, assuming a third of the maximum burn time for maneuvering
     # ang_acc_max = slew_rate / (maneuver_time)  # in rad/s^2
 
-    total_mass_aocs, total_power, singular_tank_mass, thickness_tank, radius_tank = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
+    total_mass_aocs, total_power, singular_tank_mass, thickness_tank, radius_tank, prop_mass_total = aocs_mass_function(MMOI_vehicle, COM, vehicle_dimensions, htp_density, slew_rate, burn_time, moment_arm_thrusters)
     print("The total mass of the Attitude and Orbit Control System (AOCS) is: ", total_mass_aocs, "kg")
     print("The total power requirement of the AOCS is: ", total_power, "W")
     # print("The mass of one tank is: ", singular_tank_mass, "kg")
+    print("total tank mass is: ", 2 * singular_tank_mass, "kg")  # Assuming two tanks for redundancy
     # print("The thickness of the tank is: ", thickness_tank, "m")
     print("The radius of the tank is: ", radius_tank, "m")
+    print("The total propellant mass of the AOCS is: ", prop_mass_total, "kg")
 
 
 # List of all torques
