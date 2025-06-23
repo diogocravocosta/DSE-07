@@ -275,7 +275,7 @@ if __name__ =='__main__':
     T_gh2_end_insertion_list= [187.7,222.07]
     volume_gh2_start_refuel_list = [484.85,424.44]
     m_gh2_start_refuel_list = [316.22,448.73]
-    pressure_start_refuel_list = [5.106e5,9.746e5]
+    pressure_start_refuel_list = [5.16e5,9.746e5]
     mass_lh2_after_refuel_list= [7566,5794]
     rho_lh2_after_refuel_list = [64.57,59.67]
     pressure_end_refuel = [3.212,5.436]
@@ -285,7 +285,7 @@ if __name__ =='__main__':
     boil_off_total = [item + mass_gh2_end_insertion for item in  change_in_lh2_refuel2reentry]
     print(boil_off_total)
     time = [6,14]
-    iter = 1
+    iter = 0
     pressure_end_refuel = pressure_drop_refuelling(a_coefficient,
                                                    b_coefficient,
                                                    volume_gh2_start_refuel=volume_gh2_start_refuel_list[iter],
@@ -293,13 +293,13 @@ if __name__ =='__main__':
                                                    pressure_start_refuel=pressure_start_refuel_list[iter],
                                                      mass_lh2_after_refuel=mass_lh2_after_refuel_list[iter],
                                                      rho_lh2_after_refuel=rho_lh2_after_refuel_list[iter])
-    pressure_end_refuel_sens = pressure_drop_refuelling(a_coefficient,
-                                                   b_coefficient,
-                                                   volume_gh2_start_refuel=457.4,
-                                                   m_gh2_start_refuel=510.3,
-                                                   pressure_start_refuel=8.2,
-                                                     mass_lh2_after_refuel=5030,
-                                                     rho_lh2_after_refuel=60.54)
+    # pressure_end_refuel_sens = pressure_drop_refuelling(a_coefficient,
+    #                                                b_coefficient,
+    #                                                volume_gh2_start_refuel=457.4,
+    #                                                m_gh2_start_refuel=510.3,
+    #                                                pressure_start_refuel=8.2,
+    #                                                  mass_lh2_after_refuel=5030,
+    #                                                  rho_lh2_after_refuel=60.54)
     boil_off_mass_try2 = []
     time = [6]
     #total_boil_off = total_boil_off_h2(P_min_vapor,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)

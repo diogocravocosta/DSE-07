@@ -72,14 +72,14 @@ def heat_flux_stagnation(time,radius):
         qs.append(chapman_simplified_stagnation_heat_flux(radius,velocity_vec[i],air_densities[i]))
 
     #force=  aerodynamic_load(air_densities,velocity_vec,radius,time)
-    plt.figure(figsize=(8, 5))
-    plt.plot(time, qs, label="Stagnation Heat Flux (qs)")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Heat Flux [W/m²]")
-    plt.title("Stagnation Point Heat Flux vs Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time, qs, label="Stagnation Heat Flux (qs)")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Heat Flux [W/m²]")
+    # plt.title("Stagnation Point Heat Flux vs Time")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
     return qs
 
 def radiative_temperature(total_heat_flux,time,material,sigma_boltzman):
@@ -227,7 +227,7 @@ def thickness_optimization(thickness_wall,
     max_temperature_list= []
     thickness_insulation_list = []
     while max_temperature >max_operating_temperature:
-        thickness_insulation = thickness_insulation + 0.0005
+        thickness_insulation = thickness_insulation + 0.00005
 
         max_temperature = fdm(thickness_wall,
         thickness_insulation,
@@ -279,7 +279,7 @@ def thickness_optimization(thickness_wall,
         density_insulation,
         thermal_conductivity_insulation)
     mass_mli,mass_tank = total_mass(density_insulation,radius,thickness_insulation_final,thickness_wall,material_steel)
-    print("Total mass of spherical nosecone: ",mass_mli+mass_tank,"kg. Mass of insulation:",mass_mli,"The final thickness of wall is",thickness_wall,"and the thickness of the insulation is: ",thickness_insulation_final,"m.")
+    print("Total mass of spherical nosecone: ",mass_mli+mass_tank,"kg. Mass of insulation and tank:",mass_mli,mass_tank," Kg. The final thickness of wall is",thickness_wall,"and the thickness of the insulation is: ",thickness_insulation_final,"m.")
     mass_total = mass_mli+mass_tank
     return mass_total, T_inner_record_steel,T_inner_record_mli,heat_radiation_propagation
 
@@ -415,7 +415,7 @@ if __name__ =="__main__":
     albedo_power = 13604.74  # W
 
     # FDM inputs
-    n_node_steel = 8
+    n_node_steel = 15
     n_node_mli = 0
     t_end = 170
     T_initial = 300

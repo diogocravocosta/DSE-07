@@ -126,6 +126,7 @@ def linear_regression(payload_mass_delievered,time_to_refuel):
     plt.show()
     return model
 
+
 payload_mass_delievered = [16753.25,16979.6,17206.4,17480,17685.2]
 time_to_refuel = [6,8,10,12,14]
 

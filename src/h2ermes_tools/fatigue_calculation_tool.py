@@ -171,7 +171,7 @@ def fatigue_paris_estimation(
                 if count < min_launches:
                     thickness = thickness + 0.001
                 break
-
+    plot = True           
     if plot == True:
         cycle = np.arange(0, count, 1)
         plt.figure(figsize=(8, 5))
@@ -197,6 +197,7 @@ def fatigue_miner_estimation(stress_range, miner_c, miner_m, stress_cycle, safet
         launches = launches - 1
         damage = miners(stress_range, miner_c, miner_m, stress_cycle, safety_factor, launches)[2]
     print('Damage count is:', damage, ". Expected number of launches:", launches)
+    plot = True
     if plot == True:
         plt.figure(figsize=(8, 5))
         plt.plot(cycle, Di, marker='o')
@@ -236,21 +237,21 @@ def loading_phases(delta_T_earth,
     # Different phases of mission and their loading conditions
     #------------------------------------------------------------
     # Before launch
-    sigma_thermal_start = thermal_stress(delta_T_earth, material.E, material.cte, phi)  # is valid for this.
+    sigma_thermal_start = 0#thermal_stress(delta_T_earth, material.E, material.cte, phi)  # is valid for this.
     sigma_pressure_start = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
                                                               pressure_launch_tank)
     sigma_axial_start = mechanical_stress(launch_mass * cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_start = sigma_thermal_start + sigma_pressure_start + sigma_axial_start
 
     # 1st stage max q
-    sigma_thermal_maxq = 0  #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi) # is valid for this.
+    sigma_thermal_maxq = thermal_stress(delta_T_earth, material.E, material.cte, phi)
     sigma_pressure_maxq = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
                                                              pressure_launch_tank)
     sigma_axial_maxq = mechanical_stress(launch_mass * g_launch_force_ratio * cs.g_0, tank_radius, thickness_tank, phi)
     stress_comb_maxq = sigma_thermal_maxq + sigma_pressure_maxq + sigma_axial_maxq
 
     # During second stage fire
-    sigma_thermal_launch = 0  #thermal_stress(delta_T_earth, material.E, material.cte,tank_radius, t, phi)
+    sigma_thermal_launch = thermal_stress(delta_T_earth, material.E, material.cte, phi)
     sigma_pressure_launch = nasa_pressure_combined_load_stress(material, thickness_tank, phi, tank_radius,
                                                                pressure_launch_tank)
     sigma_axial_launch = mechanical_stress(launch_mass * g_launch_force_ratio * cs.g_0, tank_radius, thickness_tank, phi)
@@ -305,7 +306,7 @@ def loading_phases(delta_T_earth,
                            sigma_pressure_dock, sigma_pressure_reentry, 0]
     R_load_ratio_pressure = R_calculation(sigma_pressure_load)
     #print("Maximum stress ratio R pressure: ", R_load_ratio_pressure)
-    
+    plot_stress = True
     if plot_stress is True:
         plot_stress = False
         # Example: names for each bar (customize as needed)
