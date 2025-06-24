@@ -6,6 +6,7 @@ from tank_sizing import TankSizer
 import csv
 import pandas as pd
 import os
+import matplotlib.animation as anim
 
 class BluntBody:
     '''
@@ -265,21 +266,24 @@ class BluntBody:
         '''
         print("\033[91mCheck if the pitch-damping and axial-coeffs value have been changed for what you want\033[0m")
 
-        self.pitch_damping = [-0.3775, -0.365, -0.35]
+        self.pitch_damping = [-0.75, -0.8, -0.85]
+        #for the plot
+        #self.pitch_damping = [0.05, -0.01, -0.1]
         #self.axial_coeff = [1,2,0.5]
         c_a = 1.75
 
         t1 = 2*self.mass / (density * velocity * self.reference_area * c_a)
-        self.time = np.arange(t1, t1+0.5, 0.001)
+        self.time = np.arange(t1, t1+0.5, 0.0001)
         self.alpha_const_all = []
         self.alpha_decel_all = []
         for i in range(3):
             cmq_cmadot = self.pitch_damping[i]
-            c_a = 2
-            eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2)**2 ) * cmq_cmadot / (8 * self.moment_inertia)
+            #eta_1 = (density * velocity * self.reference_area * (self.cone_max_radius * 2)**2 ) * cmq_cmadot / (8 * self.moment_inertia)
+            eta_1 = (density * velocity * self.reference_area / (4 * self.mass)) * (c_a + cmq_cmadot*(self.mass * (self.cone_max_radius*2)**2)/(2*self.moment_inertia))
             omega = np.sqrt(-1 * density * velocity**2 * self.reference_area * (self.cone_max_radius * 2) * self.cm_alpha / (2 * self.moment_inertia))
-
-            alpha_const = (deviation * (np.pi / 180) * np.exp(eta_1 * self.time) * np.cos(omega * self.time))
+            #delta = (np.arctan2(eta_1,omega) - omega*np.log(t1)) 
+            #alpha_const = (deviation * (np.pi / 180) * np.exp(eta_1 * self.time) * np.cos(omega * self.time))
+            alpha_const = deviation * np.exp(eta_1 * self.time) * np.cos(omega * self.time)
             self.alpha_const_all.append(alpha_const)
 
         '''
@@ -287,9 +291,9 @@ class BluntBody:
         '''
         for i in range(3):
             cmq_cmadot = self.pitch_damping[i]
-            c_a = 2
+            #c_a = 2
             mu = ((self.mass * (self.cone_max_radius*2)**2 * cmq_cmadot) / (4 * self.moment_inertia * c_a)) + 1
-            nu_sqrt = mu**2 - ((2*self.mass*self.cone_max_radius*2*self.cm_alpha)/(density*self.reference_area*self.moment_inertia*c_a**2))
+            #nu_sqrt = mu**2 - ((2*self.mass*self.cone_max_radius*2*self.cm_alpha)/(density*self.reference_area*self.moment_inertia*c_a**2))
             nu1 = (8*self.mass**2 * self.cm_alpha) / (np.pi * density * self.cone_max_radius*2 * self.moment_inertia * c_a**2) 
             nu_sqrt = (mu**2 - nu1)
             nu = np.sqrt(nu_sqrt)
@@ -376,7 +380,7 @@ class BluntBody:
         plt.ylabel("Maximum L/D", fontsize=12)
         plt.legend()
         plt.grid(True)
-        plt.savefig("aero_base_bluntness_effect.pdf")
+        plt.savefig("aero_base_bluntness_effect.png")
 
         plt.figure()
         plt.scatter(x1, z1, label="Effect of Cone Taper", color="royalblue")
@@ -384,7 +388,7 @@ class BluntBody:
         plt.ylabel("Maximum L/D", fontsize=12)
         plt.legend()
         plt.grid(True)
-        plt.savefig("aero_cone_taper_effect.pdf")
+        plt.savefig("aero_cone_taper_effect.png")
 
         plt.tight_layout()
         plt.show()
@@ -458,92 +462,92 @@ class BluntBody:
 
         deg = self.aoa_all * 180 / np.pi
         # --- Lift, Drag and Ratio Subsonic ---
-        plt.figure(figsize=(10, 6))
-        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry / self.cd_subsonic_reentry, label="Subsonic L/D (Re-entry)", color=colors['bordeaux'], linewidth=2)
-        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry, label="Subsonic Lift Coefficient (Re-entry)", color=colors["green"], linewidth=2)
-        plt.plot(self.mach_subsonic_reentry, self.cd_subsonic_reentry, label="Subsonic Drag Coefficient (Re-entry)", color=colors["royalblue"], linewidth=2)
-        #plt.title("Lift and Drag Characteristics", fontsize=14)
-        plt.xlabel("Mach Number", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_lift-drag-coeffs-subsonic-reentry.pdf")
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry / self.cd_subsonic_reentry, label="Subsonic L/D (Re-entry)", color=colors['bordeaux'], linewidth=2)
+        # plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_reentry, label="Subsonic Lift Coefficient (Re-entry)", color=colors["green"], linewidth=2)
+        # plt.plot(self.mach_subsonic_reentry, self.cd_subsonic_reentry, label="Subsonic Drag Coefficient (Re-entry)", color=colors["royalblue"], linewidth=2)
+        # #plt.title("Lift and Drag Characteristics", fontsize=14)
+        # plt.xlabel("Mach Number", fontsize=12)
+        # plt.ylabel("Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_lift-drag-coeffs-subsonic-reentry.png")
 
-        plt.figure(figsize=(10, 6))
-        plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_liftoff / self.cd_subsonic_liftoff, label="Subsonic L/D (Launch)", color=colors['bordeaux'], linewidth=2)
-        plt.plot(self.mach_subsonic_liftoff, self.cl_subsonic_liftoff, label="Subsonic Lift Coefficient (Launch)", color=colors["green"], linewidth=2)
-        plt.plot(self.mach_subsonic_liftoff, self.cd_subsonic_liftoff, label="Subsonic Drag Coefficient (Launch)", color=colors["royalblue"], linewidth=2)
-        #plt.title("Lift and Drag Characteristics", fontsize=14)
-        plt.xlabel("Mach Number", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_lift-drag-coeffs-subsonic-launch.pdf")
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(self.mach_subsonic_reentry, self.cl_subsonic_liftoff / self.cd_subsonic_liftoff, label="Subsonic L/D (Launch)", color=colors['bordeaux'], linewidth=2)
+        # plt.plot(self.mach_subsonic_liftoff, self.cl_subsonic_liftoff, label="Subsonic Lift Coefficient (Launch)", color=colors["green"], linewidth=2)
+        # plt.plot(self.mach_subsonic_liftoff, self.cd_subsonic_liftoff, label="Subsonic Drag Coefficient (Launch)", color=colors["royalblue"], linewidth=2)
+        # #plt.title("Lift and Drag Characteristics", fontsize=14)
+        # plt.xlabel("Mach Number", fontsize=12)
+        # plt.ylabel("Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_lift-drag-coeffs-subsonic-launch.png")
 
-        # --- Lift, Drag and Ratio Hypersonic ---
-        plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.lift_over_drag, label="Hypersonic L/D", color=colors["bordeaux"], linewidth=2)
-        plt.plot(deg, self.c_l, label="Hypersonic Lift Coefficient", color=colors["green"], linewidth=2)
-        plt.plot(deg, self.c_d, label="Hypesonic Drag Coefficient", color=colors["royalblue"], linewidth=2)
-        #plt.title("Lift and Drag Characteristics", fontsize=14)
-        plt.xlabel("Angle of Attack (deg)", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_lift-drag-coeffs.pdf")
+        # # --- Lift, Drag and Ratio Hypersonic ---
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(deg, self.lift_over_drag, label="Hypersonic L/D", color=colors["bordeaux"], linewidth=2)
+        # plt.plot(deg, self.c_l, label="Hypersonic Lift Coefficient", color=colors["green"], linewidth=2)
+        # plt.plot(deg, self.c_d, label="Hypesonic Drag Coefficient", color=colors["royalblue"], linewidth=2)
+        # #plt.title("Lift and Drag Characteristics", fontsize=14)
+        # plt.xlabel("Angle of Attack (deg)", fontsize=12)
+        # plt.ylabel("Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_lift-drag-coeffs.png")
 
-        # --- Axial and Normal Hypersonic---
-        plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.c_axial, label="Axial Coefficient", color=colors["royalblue"], linewidth=2)
-        plt.plot(deg, self.c_normal, label="Normal Coefficient", color=colors["forestgreen"], linewidth=2)
-        #plt.title("Axial vs Normal Coefficients", fontsize=14)
-        plt.xlabel("Angle of Attack (deg)", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_normal-axial-coeffs.pdf")
+        # # --- Axial and Normal Hypersonic---
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(deg, self.c_axial, label="Axial Coefficient", color=colors["royalblue"], linewidth=2)
+        # plt.plot(deg, self.c_normal, label="Normal Coefficient", color=colors["forestgreen"], linewidth=2)
+        # #plt.title("Axial vs Normal Coefficients", fontsize=14)
+        # plt.xlabel("Angle of Attack (deg)", fontsize=12)
+        # plt.ylabel("Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_normal-axial-coeffs.png")
 
-        # --- Pitch Damping Coefficient ---
-        plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.cmq_cmadot, label='Pitch Damping Coefficient', color=colors["purple"], linewidth=2)
-        #plt.title("Pitch Damping Coefficient", fontsize=14)
-        plt.xlabel("Angle of Attack (deg)", fontsize=12)
-        plt.ylabel("Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_pitch-damping-coeff.pdf")
+        # # --- Pitch Damping Coefficient ---
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(deg, self.cmq_cmadot, label='Pitch Damping Coefficient', color=colors["purple"], linewidth=2)
+        # #plt.title("Pitch Damping Coefficient", fontsize=14)
+        # plt.xlabel("Angle of Attack (deg)", fontsize=12)
+        # plt.ylabel("Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_pitch-damping-coeff.png")
 
-        # --- Moment Coefficient ---
-        plt.figure(figsize=(10, 6))
-        plt.plot(deg, self.c_moment, label='Moment Coefficient', color=colors["bordeaux"], linewidth=2)
-        #plt.title("Moment Coefficient vs AoA", fontsize=14)
-        plt.xlabel("Angle of Attack (deg)", fontsize=12)
-        plt.ylabel("Moment Coefficient", fontsize=12)
-        plt.legend()
-        plt.grid(True)
-        plt.savefig("aero_moment-coeffs.pdf")
+        # # --- Moment Coefficient ---
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(deg, self.c_moment, label='Moment Coefficient', color=colors["bordeaux"], linewidth=2)
+        # #plt.title("Moment Coefficient vs AoA", fontsize=14)
+        # plt.xlabel("Angle of Attack (deg)", fontsize=12)
+        # plt.ylabel("Moment Coefficient", fontsize=12)
+        # plt.legend()
+        # plt.grid(True)
+        # plt.savefig("aero_moment-coeffs.png")
 
         # --- Stability over Time ---
         plt.figure(figsize=(10, 6))
-        plt.plot(self.time, self.alpha_const_all[0] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2,)
-        plt.plot(self.time, self.alpha_const_all[1] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[1]}", color=colors["bordeaux"], linewidth=2)
-        plt.plot(self.time, self.alpha_const_all[2] * 180 / np.pi, label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2)
+        plt.plot(self.time, self.alpha_const_all[0] , label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2,)
+        plt.plot(self.time, self.alpha_const_all[1] , label=f"cmq_cmadot = {self.pitch_damping[1]}", color=colors["bordeaux"], linewidth=2)
+        plt.plot(self.time, self.alpha_const_all[2] , label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2)
         #plt.title("Stability vs Time", fontsize=14)
         plt.xlabel("Time (s)", fontsize=12)
-        plt.ylabel("Angle of Attack (deg)", fontsize=12)
+        plt.ylabel("Angle of Attack (deg) with Constant Velocity", fontsize=12)
         plt.legend()
         plt.grid(True)
-        plt.savefig("aero_stability_constvelocity.pdf")
+        plt.savefig("aero_stability_constvelocity.png")
 
         plt.figure(figsize=(10, 6))
-        plt.plot(self.time, self.alpha_decel_all[0], label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2, linestyle = "dotted", alpha = 0.5)
+        plt.plot(self.time, self.alpha_decel_all[0], label=f"cmq_cmadot = {self.pitch_damping[0]}", color=colors["darkblue"], linewidth=2)
         plt.plot(self.time, self.alpha_decel_all[1], label=f"cmq_cmadot = {self.pitch_damping[1]}", color=colors["bordeaux"], linewidth=2)
-        plt.plot(self.time, self.alpha_decel_all[2], label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2, linestyle = "dotted", alpha = 0.5)
+        plt.plot(self.time, self.alpha_decel_all[2], label=f"cmq_cmadot = {self.pitch_damping[2]}", color=colors["forestgreen"], linewidth=2)
         plt.xlabel("Time (s)", fontsize=12)
-        plt.ylabel("Angle of Attack (deg)", fontsize=12)
+        plt.ylabel("Angle of Attack (deg) with Decelerating Velocity", fontsize=12)
         plt.legend()
         plt.grid(True)
-        plt.savefig("aero_stability_decelvelocity.pdf")
+        plt.savefig("aero_stability_decelvelocity.png")
 
         plt.tight_layout()
         plt.show()
@@ -572,10 +576,26 @@ def run():
     print("sphere radius: ", body.sphere_radius)
     #body.draw_geometry()
     body.hypersonic_aerodynamics()
-    body.stability(velocity = 4000, density = 4.0084E-2, deviation = 3, moment_inertia=231368.0069, aoa = 16)
+    body.stability(velocity = 4000, density = 4.0084E-2, deviation = 3, moment_inertia=540000, aoa = 16, xcg = 7.5)
     #body.analysis()
     body.subsonic_aerodynamics(file_name_base= "HermesV1-RASAero.csv", file_name_nose="HermesV1-RASAero-Nose.csv")
     body.plots()
+    time = body.time
+    alpha1 = body.alpha_const_all[1]
+    alpha2 = body.alpha_decel_all[1]
+    print(body.time)
+    print(body.alpha_decel_all[1])
+    print(body.alpha_const_all[1])
+
+    plt.figure()
+    plt.scatter(time, alpha1, color = 'red')
+    plt.scatter(time, alpha2, color = 'blue')
+    plt.show()
+
+
+
+
+
 
 
 if __name__ == "__main__":
