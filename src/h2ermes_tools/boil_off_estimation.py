@@ -284,7 +284,7 @@ if __name__ =='__main__':
 
     boil_off_total = [item + mass_gh2_end_insertion for item in  change_in_lh2_refuel2reentry]
     print(boil_off_total)
-    time = [6,14]
+    time_insertion_to_dock = [6,14]
     iter = 0
     pressure_end_refuel = pressure_drop_refuelling(a_coefficient,
                                                    b_coefficient,
@@ -303,3 +303,4 @@ if __name__ =='__main__':
     boil_off_mass_try2 = []
     time = [6]
     #total_boil_off = total_boil_off_h2(P_min_vapor,T_gh2_launch,R,m_h2_tot,m_payload,ro,ri,h,rho_lh2_20k,solar_power, planetary_power, albedo_power,material, heat_load_data, boil_off_mass,p_vent, T_vapor,T_vapor_refuel, a,b,h2_nm,m_h2_reentry,m_h2_dock,worst_case,h2_depot)
+    
